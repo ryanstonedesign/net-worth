@@ -37,13 +37,15 @@ export default function Dashboard({
 
   return (
     <div>
+      {/* Page header label */}
+      <div className="hero-eyebrow" style={{ paddingTop: 28 }}>Net Worth</div>
+
       {/* Hero */}
       <div className="hero">
         <div className="hero-amount">{formatCurrency(netWorth)}</div>
-        <div className="hero-eyebrow">Net Worth</div>
 
-        {/* Month selector sits below the label */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
+        {/* Month selector */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
           <MonthSelector month={selectedMonth} onChange={onMonthChange} />
         </div>
       </div>

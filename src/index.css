@@ -279,7 +279,7 @@ a { text-decoration: none; color: inherit; }
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--c-ink-mute);
-  margin-top: 12px;
+  text-align: center;
 }
 .hero-amount {
   font-size: clamp(88px, 26vw, 152px);
