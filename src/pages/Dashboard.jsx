@@ -39,7 +39,6 @@ export default function Dashboard({
   const prevMonth = getPrevMonth(selectedMonth)
   const delta = prevMonth != null ? netWorth - getNetWorth(prevMonth) : null
   const nwStr = formatCurrency(netWorth)
-  const heroFontSize = `${Math.min(22, 145 / nwStr.length)}vw`
   const history = getHistory()
   const filteredHistory = getFilteredHistory(history, timeRange)
   const snapshot = getSnapshot(selectedMonth)
@@ -53,7 +52,7 @@ export default function Dashboard({
       {/* Hero — left aligned */}
       <div className="hero">
         <div className="hero-eyebrow">Net Worth</div>
-        <div className="hero-amount" style={{ fontSize: heroFontSize }}>{nwStr}</div>
+        <div className="hero-amount">{nwStr}</div>
         {delta !== null && (
           <div className={`hero-delta-line${delta > 0 ? ' positive' : delta < 0 ? ' negative' : ''}`}>
             {delta >= 0 ? '+' : ''}{formatCurrency(delta)} this month
