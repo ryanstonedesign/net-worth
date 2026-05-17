@@ -28,6 +28,8 @@ export default function Dashboard({
   const netWorth = getNetWorth(selectedMonth)
   const prevMonth = getPrevMonth(selectedMonth)
   const delta = prevMonth != null ? netWorth - getNetWorth(prevMonth) : null
+  const nwStr = formatCurrency(netWorth)
+  const heroFontSize = `${Math.min(22, 145 / nwStr.length)}vw`
   const history = getHistory()
   const snapshot = getSnapshot(selectedMonth)
   const assets = getTotalAssets(selectedMonth)
@@ -42,7 +44,7 @@ export default function Dashboard({
 
       {/* Hero */}
       <div className="hero">
-        <div className="hero-amount">{formatCurrency(netWorth)}</div>
+        <div className="hero-amount" style={{ fontSize: heroFontSize }}>{nwStr}</div>
 
         {/* Month selector */}
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>

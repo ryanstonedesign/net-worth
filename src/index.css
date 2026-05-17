@@ -282,10 +282,10 @@ a { text-decoration: none; color: inherit; }
   text-align: center;
 }
 .hero-amount {
-  font-size: clamp(88px, 26vw, 152px);
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 1;
+  white-space: nowrap;
   background: linear-gradient(145deg, var(--c-ink) 0%, #2a7a8c 60%, var(--c-primary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
