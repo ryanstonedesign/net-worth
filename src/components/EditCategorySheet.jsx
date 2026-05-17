@@ -96,10 +96,10 @@ export default function EditCategorySheet({
 
       {/* Accounts */}
       <div style={{ marginBottom: 24 }}>
-        <div className="form-label" style={{ marginBottom: 10 }}>Accounts</div>
+        <div className="form-label" style={{ marginBottom: 8 }}>Accounts</div>
 
         {accounts.length > 0 && (
-          <div style={{ borderTop: '1px solid rgba(200,215,220,0.4)', marginBottom: 10 }}>
+          <div style={{ borderTop: '1px solid rgba(200,215,220,0.4)', marginBottom: 8 }}>
             {accounts.map(acc => (
               <div key={acc.id} className="manage-account-row">
                 <span className="manage-account-name">{acc.name}</span>
@@ -150,7 +150,7 @@ export default function EditCategorySheet({
       {!isNew && (
         <button
           style={{
-            display: 'block', width: '100%', marginTop: 12, padding: '10px',
+            display: 'block', width: '100%', marginTop: 12, padding: '12px',
             background: 'none', border: 'none', cursor: 'pointer',
             fontSize: 13, fontWeight: 600, color: 'var(--c-danger)',
             fontFamily: 'var(--font)',

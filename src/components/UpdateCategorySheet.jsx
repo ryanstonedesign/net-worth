@@ -57,7 +57,7 @@ export default function UpdateCategorySheet({ category, month, snapshot, onSave,
 
       {category.accounts.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '24px 0 8px' }}>
-          <div style={{ fontSize: 28, marginBottom: 10 }}>📋</div>
+          <div style={{ fontSize: 28, marginBottom: 8 }}>📋</div>
           <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 6 }}>No accounts yet</div>
           <div style={{ fontSize: 13, color: 'var(--c-ink-mute)', marginBottom: 20 }}>
             Add accounts to start tracking this category.
@@ -72,7 +72,7 @@ export default function UpdateCategorySheet({ category, month, snapshot, onSave,
             {category.accounts.map(acc => (
               <div key={acc.id} style={{
                 display: 'flex', alignItems: 'center', gap: 12,
-                padding: '13px 0',
+                padding: '12px 0',
                 borderBottom: '1px solid rgba(200,215,220,0.35)',
               }}>
                 <div style={{ flex: 1, fontSize: 15, fontWeight: 500 }}>{acc.name}</div>
@@ -97,7 +97,7 @@ export default function UpdateCategorySheet({ category, month, snapshot, onSave,
 
           <div style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            padding: '14px 0 20px', fontSize: 13, fontWeight: 600, color: 'var(--c-ink-mute)',
+            padding: '12px 0 20px', fontSize: 13, fontWeight: 600, color: 'var(--c-ink-mute)',
           }}>
             <span>Total</span>
             <span style={{ color: 'var(--c-ink)', fontSize: 17 }}>{formatCurrency(total)}</span>

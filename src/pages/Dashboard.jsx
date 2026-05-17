@@ -53,11 +53,9 @@ export default function Dashboard({
       <div className="hero">
         <div className="hero-eyebrow">Net Worth</div>
         <div className="hero-amount">{nwStr}</div>
-        {delta !== null && (
-          <div className={`hero-delta-line${delta > 0 ? ' positive' : delta < 0 ? ' negative' : ''}`}>
-            {delta >= 0 ? '+' : ''}{formatCurrency(delta)} this month
-          </div>
-        )}
+        <div className={`hero-delta-line${delta != null && delta > 0 ? ' positive' : delta != null && delta < 0 ? ' negative' : ''}`}>
+          {delta == null ? '—' : `${delta >= 0 ? '+' : ''}${formatCurrency(delta)} this month`}
+        </div>
       </div>
 
       {/* Trend line */}

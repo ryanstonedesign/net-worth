@@ -8,14 +8,14 @@ function CustomTooltip({ active, payload }) {
     <div style={{
       background: 'rgba(242,250,252,0.97)',
       borderRadius: 14,
-      padding: '10px 16px',
+      padding: '8px 16px',
       boxShadow: '0 8px 32px rgba(10,40,60,0.18)',
       border: '1px solid rgba(200,232,244,0.7)',
       backdropFilter: 'blur(20px)',
       WebkitBackdropFilter: 'blur(20px)',
       fontFamily: 'var(--font)',
     }}>
-      <div style={{ fontSize: 12, fontWeight: 600, color: '#4E6F73', marginBottom: 3 }}>
+      <div style={{ fontSize: 12, fontWeight: 600, color: '#4E6F73', marginBottom: 4 }}>
         {formatMonthDisplay(month)}
       </div>
       <div style={{ fontSize: 17, fontWeight: 800, color: '#1C292B', letterSpacing: '-0.02em' }}>
