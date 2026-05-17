@@ -46,6 +46,13 @@ export default function Dashboard({
       <div className="hero">
         <div className="hero-amount" style={{ fontSize: heroFontSize }}>{nwStr}</div>
 
+        {/* Trend line sits right below the value, breaks out of hero padding */}
+        {history.length >= 2 && (
+          <div style={{ margin: '28px -24px 0' }}>
+            <NetWorthChart data={history} />
+          </div>
+        )}
+
         {/* Month selector */}
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
           <MonthSelector month={selectedMonth} onChange={onMonthChange} />
@@ -96,9 +103,6 @@ export default function Dashboard({
           </div>
         </button>
       </div>
-
-      {/* Trend chart */}
-      {history.length >= 2 && <NetWorthChart data={history} />}
 
       <div style={{ height: 40 }} />
 
