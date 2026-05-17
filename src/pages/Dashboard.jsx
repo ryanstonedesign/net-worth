@@ -39,25 +39,13 @@ export default function Dashboard({
     <div>
       {/* Hero */}
       <div className="hero">
-        <div className="hero-eyebrow">Net Worth</div>
         <div className="hero-amount">{formatCurrency(netWorth)}</div>
+        <div className="hero-eyebrow">Net Worth</div>
 
-        {/* Month selector sits below the total */}
-        <div style={{ display: 'flex', justifyContent: 'center', margin: '16px 0 12px' }}>
+        {/* Month selector sits below the label */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
           <MonthSelector month={selectedMonth} onChange={onMonthChange} />
         </div>
-        {delta != null ? (
-          <div className={`hero-delta ${delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'neutral'}`}>
-            {delta > 0
-              ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-              : delta < 0
-              ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-              : null}
-            {formatDelta(delta)} vs {formatMonthShort(prevMonth)}
-          </div>
-        ) : (
-          <div className="hero-delta neutral" style={{ fontSize: 13 }}>Add a category below to start</div>
-        )}
       </div>
 
       {/* Asset / Liability summary */}
