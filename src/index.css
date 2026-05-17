@@ -269,19 +269,42 @@ a { text-decoration: none; color: inherit; }
   backdrop-filter: blur(40px) saturate(1.8);
   -webkit-backdrop-filter: blur(40px) saturate(1.8);
   border-radius: 32px 32px 0 0;
-  padding: 12px 20px calc(var(--safe-bottom) + 32px);
   width: 100%;
   max-width: 600px;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
+  max-height: calc(100vh - 64px);
+  display: flex;
+  flex-direction: column;
   animation: slideUp 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.modal-top {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px 8px;
 }
 .modal-handle {
   width: 36px; height: 4px;
   background: var(--c-border);
   border-radius: 2px;
-  margin: 0 auto 20px;
+}
+.modal-close-btn {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: rgba(200,215,220,0.35);
+  border: none;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--c-ink-mute);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.modal-close-btn:hover { background: rgba(200,215,220,0.6); color: var(--c-ink); }
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  padding: 8px 20px calc(var(--safe-bottom) + 32px);
 }
 .modal-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
 
@@ -662,6 +685,21 @@ a { text-decoration: none; color: inherit; }
 }
 .manage-account-row:last-child { border-bottom: none; }
 .manage-account-name { flex: 1; font-size: 13px; font-weight: 500; }
+.manage-account-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--c-ink);
+  font-family: var(--font);
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid transparent;
+  padding: 2px 0;
+  outline: none;
+  transition: border-bottom-color 0.2s;
+}
+.manage-account-input:focus { border-bottom-color: var(--c-primary); }
 .del-btn {
   width: 28px; height: 28px;
   border-radius: 50%;

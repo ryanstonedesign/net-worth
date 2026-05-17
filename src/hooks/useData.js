@@ -80,6 +80,17 @@ export function useData() {
     }))
   }, [])
 
+  const renameAccount = useCallback((categoryId, accountId, newName) => {
+    setData(d => ({
+      ...d,
+      categories: d.categories.map(c =>
+        c.id === categoryId
+          ? { ...c, accounts: c.accounts.map(a => a.id === accountId ? { ...a, name: newName } : a) }
+          : c
+      ),
+    }))
+  }, [])
+
   const updateCategorySnapshot = useCallback((month, entries) => {
     setData(d => ({
       ...d,
@@ -139,6 +150,7 @@ export function useData() {
     deleteCategory,
     addAccount,
     deleteAccount,
+    renameAccount,
     updateCategorySnapshot,
     getSnapshot,
     getCategoryTotal,

@@ -39,6 +39,7 @@ export default function Dashboard({
   deleteCategory,
   addAccount,
   deleteAccount,
+  renameAccount,
   updateCategorySnapshot,
   getSnapshot,
   getCategoryTotal,
@@ -174,6 +175,7 @@ export default function Dashboard({
           onClose={() => setEditSheet(null)}
           addAccount={addAccount}
           deleteAccount={deleteAccount}
+          renameAccount={renameAccount}
         />
       )}
     </div>

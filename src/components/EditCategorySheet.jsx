@@ -9,6 +9,7 @@ export default function EditCategorySheet({
   onClose,
   addAccount,
   deleteAccount,
+  renameAccount,
 }) {
   const isNew = !category
   const [name, setName] = useState(category?.name ?? '')
@@ -17,6 +18,10 @@ export default function EditCategorySheet({
   const [icon, setIcon] = useState(category?.icon ?? CATEGORY_ICONS[0])
   const [newAccName, setNewAccName] = useState('')
   const [localAccounts, setLocalAccounts] = useState([])
+  // Track edited names for existing accounts before blur-save
+  const [nameEdits, setNameEdits] = useState(() =>
+    Object.fromEntries((category?.accounts ?? []).map(a => [a.id, a.name]))
+  )
   const accInputRef = useRef(null)
 
   const handleAddLocalAcc = () => {
@@ -101,7 +106,26 @@ export default function EditCategorySheet({
           <div style={{ borderTop: '1px solid rgba(200,215,220,0.4)', marginBottom: 8 }}>
             {accounts.map(acc => (
               <div key={acc.id} className="manage-account-row">
-                <span className="manage-account-name">{acc.name}</span>
+                {isNew ? (
+                  <input
+                    className="manage-account-input"
+                    value={acc.name}
+                    onChange={e => setLocalAccounts(list =>
+                      list.map(a => a.id === acc.id ? { ...a, name: e.target.value } : a)
+                    )}
+                  />
+                ) : (
+                  <input
+                    className="manage-account-input"
+                    value={nameEdits[acc.id] ?? acc.name}
+                    onChange={e => setNameEdits(n => ({ ...n, [acc.id]: e.target.value }))}
+                    onBlur={() => {
+                      const next = (nameEdits[acc.id] ?? '').trim()
+                      if (next && next !== acc.name) renameAccount(category.id, acc.id, next)
+                      else setNameEdits(n => ({ ...n, [acc.id]: acc.name }))
+                    }}
+                  />
+                )}
                 <button
                   className="del-btn"
                   onClick={() => {
