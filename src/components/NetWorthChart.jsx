@@ -3,7 +3,15 @@ import { formatMonthDisplay, formatCurrency } from '../utils'
 
 function CustomTooltip({ active, payload }) {
   if (!active || !payload?.length) return null
-  const { month, netWorth } = payload[0].payload
+  const point = payload[0]?.payload
+  if (!point) return null
+
+  const isForecast = !!point.isForecast
+  const value = isForecast
+    ? (point.forecast ?? point.historical)
+    : (point.historical ?? point.forecast)
+  if (value == null) return null
+
   return (
     <div style={{
       background: 'rgba(242,250,252,0.97)',
@@ -16,28 +24,47 @@ function CustomTooltip({ active, payload }) {
       fontFamily: 'var(--font)',
     }}>
       <div style={{ fontSize: 12, fontWeight: 600, color: '#4E6F73', marginBottom: 4 }}>
-        {formatMonthDisplay(month)}
+        {formatMonthDisplay(point.month)}{isForecast ? ' · Est.' : ''}
       </div>
-      <div style={{ fontSize: 17, fontWeight: 800, color: '#1C292B', letterSpacing: '-0.02em' }}>
-        {formatCurrency(netWorth)}
+      <div style={{
+        fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em',
+        color: isForecast ? '#4E6F73' : '#1C292B',
+      }}>
+        {formatCurrency(value)}
       </div>
     </div>
   )
 }
 
-export default function NetWorthChart({ data, height = 160 }) {
+export default function NetWorthChart({ data, forecastData = [], height = 160 }) {
   if (!data || data.length < 2) return null
 
-  const isUp = data[data.length - 1].netWorth >= data[0].netWorth
+  const hasForecast = forecastData.length > 0
+  const lastHistorical = data[data.length - 1]
+  const endPoint = hasForecast ? forecastData[forecastData.length - 1] : lastHistorical
+  const isUp = endPoint.netWorth >= data[0].netWorth
   const color = isUp ? '#1AB766' : '#EF4444'
   const gradId = isUp ? 'nwGradUp' : 'nwGradDown'
+  const fGradId = isUp ? 'nwForecastUp' : 'nwForecastDown'
+
+  // Build combined dataset: historical and forecast dataKeys on same points
+  const combined = data.map(d => ({ ...d, historical: d.netWorth, forecast: null }))
+  if (hasForecast) {
+    // Junction: last historical point seeds the forecast line for continuity
+    combined[combined.length - 1] = { ...combined[combined.length - 1], forecast: lastHistorical.netWorth }
+    forecastData.forEach(d => combined.push({ ...d, historical: null, forecast: d.netWorth }))
+  }
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <AreaChart data={data} margin={{ top: 8, right: 4, left: 4, bottom: 4 }}>
+      <AreaChart data={combined} margin={{ top: 8, right: 4, left: 4, bottom: 4 }}>
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={color} stopOpacity={0.28} />
+            <stop offset="100%" stopColor={color} stopOpacity={0} />
+          </linearGradient>
+          <linearGradient id={fGradId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity={0.1} />
             <stop offset="100%" stopColor={color} stopOpacity={0} />
           </linearGradient>
         </defs>
@@ -47,14 +74,30 @@ export default function NetWorthChart({ data, height = 160 }) {
         />
         <Area
           type="monotone"
-          dataKey="netWorth"
+          dataKey="historical"
           stroke={color}
           strokeWidth={2.5}
           fill={`url(#${gradId})`}
           dot={{ r: 3.5, fill: color, strokeWidth: 0 }}
           activeDot={{ r: 6, fill: color, stroke: 'white', strokeWidth: 2 }}
           isAnimationActive={false}
+          connectNulls={false}
         />
+        {hasForecast && (
+          <Area
+            type="monotone"
+            dataKey="forecast"
+            stroke={color}
+            strokeWidth={2}
+            strokeOpacity={0.45}
+            strokeDasharray="6 4"
+            fill={`url(#${fGradId})`}
+            dot={{ r: 3, fill: color, fillOpacity: 0.45, strokeWidth: 0 }}
+            activeDot={{ r: 5, fill: color, fillOpacity: 0.65, stroke: 'white', strokeWidth: 2 }}
+            isAnimationActive={false}
+            connectNulls={false}
+          />
+        )}
       </AreaChart>
     </ResponsiveContainer>
   )

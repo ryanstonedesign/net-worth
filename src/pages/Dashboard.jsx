@@ -3,15 +3,31 @@ import MonthSelector from '../components/MonthSelector'
 import CategoryCard from '../components/CategoryCard'
 import NetWorthChart from '../components/NetWorthChart'
 import EditCategorySheet from '../components/EditCategorySheet'
-import { formatCurrency, formatDelta, formatMonthShort } from '../utils'
+import { formatCurrency, formatDelta, formatMonthShort, getAdjacentMonth } from '../utils'
 
 const RANGE_OPTIONS = ['1M', '3M', '6M', '1Y', 'ALL']
-const RANGE_COUNTS = { '1M': 2, '3M': 3, '6M': 6, '1Y': 12 }
+const RANGE_COUNTS   = { '1M': 2,  '3M': 3,  '6M': 6,  '1Y': 12 }
+const FORECAST_MONTHS = { '1M': 1, '3M': 3,  '6M': 6,  '1Y': 12 }
 
 function getFilteredHistory(history, range) {
   if (range === 'ALL') return history
   const n = RANGE_COUNTS[range] ?? history.length
   return history.length <= n ? history : history.slice(-n)
+}
+
+function generateForecast(filteredHistory, range) {
+  if (filteredHistory.length < 2) return []
+  const count = range === 'ALL'
+    ? filteredHistory.length - 1
+    : FORECAST_MONTHS[range] ?? 1
+  const first = filteredHistory[0]
+  const last  = filteredHistory[filteredHistory.length - 1]
+  const slope = (last.netWorth - first.netWorth) / (filteredHistory.length - 1)
+  return Array.from({ length: count }, (_, i) => ({
+    month: getAdjacentMonth(last.month, i + 1),
+    netWorth: Math.round(last.netWorth + slope * (i + 1)),
+    isForecast: true,
+  }))
 }
 
 export default function Dashboard({
@@ -35,33 +51,42 @@ export default function Dashboard({
   const [editSheet, setEditSheet] = useState(null) // category obj | 'new' | null
   const [timeRange, setTimeRange] = useState('ALL')
 
-  const netWorth = getNetWorth(selectedMonth)
-  const prevMonth = getPrevMonth(selectedMonth)
-  const delta = prevMonth != null ? netWorth - getNetWorth(prevMonth) : null
-  const nwStr = formatCurrency(netWorth)
-  const history = getHistory()
+  const history        = getHistory()
   const filteredHistory = getFilteredHistory(history, timeRange)
-  const snapshot = getSnapshot(selectedMonth)
-  const assets = getTotalAssets(selectedMonth)
+  const forecastData   = generateForecast(filteredHistory, timeRange)
+  const forecastMap    = Object.fromEntries(forecastData.map(d => [d.month, d.netWorth]))
+
+  const lastDataMonth  = history.length > 0 ? history[history.length - 1].month : null
+  const isEstimated    = !!(lastDataMonth && selectedMonth > lastDataMonth && selectedMonth in forecastMap)
+
+  const netWorth       = getNetWorth(selectedMonth)
+  const displayNetWorth = isEstimated ? forecastMap[selectedMonth] : netWorth
+  const prevMonth      = getPrevMonth(selectedMonth)
+  const delta          = !isEstimated && prevMonth != null ? netWorth - getNetWorth(prevMonth) : null
+
+  const snapshot    = getSnapshot(selectedMonth)
+  const assets      = getTotalAssets(selectedMonth)
   const liabilities = getTotalLiabilities(selectedMonth)
   const hasLiabilities = data.categories.some(c => c.type === 'liability')
-  const editCat = editSheet && editSheet !== 'new' ? editSheet : null
+  const editCat     = editSheet && editSheet !== 'new' ? editSheet : null
 
   return (
     <div>
       {/* Hero — left aligned */}
       <div className="hero">
         <div className="hero-eyebrow">Net Worth</div>
-        <div className="hero-amount">{nwStr}</div>
-        <div className={`hero-delta-line${delta != null && delta > 0 ? ' positive' : delta != null && delta < 0 ? ' negative' : ''}`}>
-          {delta == null ? '—' : `${delta >= 0 ? '+' : ''}${formatCurrency(delta)} this month`}
+        <div className={`hero-amount${isEstimated ? ' estimated' : ''}`}>
+          {formatCurrency(displayNetWorth)}
+        </div>
+        <div className={`hero-delta-line${!isEstimated && delta != null && delta > 0 ? ' positive' : !isEstimated && delta != null && delta < 0 ? ' negative' : ''}`}>
+          {isEstimated ? 'Estimated' : delta == null ? '—' : `${delta >= 0 ? '+' : ''}${formatCurrency(delta)} this month`}
         </div>
       </div>
 
-      {/* Trend line */}
+      {/* Trend line + forecast */}
       {filteredHistory.length >= 2 && (
         <div style={{ padding: '20px 20px 0' }}>
-          <NetWorthChart data={filteredHistory} height={180} />
+          <NetWorthChart data={filteredHistory} forecastData={forecastData} height={180} />
         </div>
       )}
 

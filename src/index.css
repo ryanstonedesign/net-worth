@@ -296,6 +296,9 @@ a { text-decoration: none; color: inherit; }
   color: var(--c-ink);
   margin-bottom: 8px;
 }
+.hero-amount.estimated {
+  color: var(--c-ink-mute);
+}
 .hero-delta-line {
   font-size: 13px;
   font-weight: 600;
