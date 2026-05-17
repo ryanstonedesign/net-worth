@@ -285,10 +285,7 @@ a { text-decoration: none; color: inherit; }
   font-weight: 800;
   letter-spacing: -0.03em;
   line-height: 1;
-  background: linear-gradient(145deg, var(--c-ink) 0%, #2a7a8c 60%, var(--c-primary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--c-ink);
   margin-bottom: 8px;
 }
 .hero-delta-line {
