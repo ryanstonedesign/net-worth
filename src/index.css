@@ -84,7 +84,7 @@ a { text-decoration: none; color: inherit; }
   overflow-x: hidden;
   overscroll-behavior-y: contain;
   padding-top: var(--safe-top);
-  padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 24px);
+  padding-bottom: calc(var(--safe-bottom) + 48px);
   -webkit-overflow-scrolling: touch;
 }
 
@@ -247,7 +247,7 @@ a { text-decoration: none; color: inherit; }
   backdrop-filter: blur(40px) saturate(1.8);
   -webkit-backdrop-filter: blur(40px) saturate(1.8);
   border-radius: 32px 32px 0 0;
-  padding: 12px 20px calc(var(--nav-height) + var(--safe-bottom) + 24px);
+  padding: 12px 20px calc(var(--safe-bottom) + 32px);
   width: 100%;
   max-width: 600px;
   max-height: 92vh;
@@ -341,8 +341,26 @@ a { text-decoration: none; color: inherit; }
 .cat-card {
   flex: 0 0 170px;
   padding: 18px 18px 20px;
-  cursor: default;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  border: none;
 }
+.cat-card:hover { transform: translateY(-2px); }
+.cat-card:active { transform: scale(0.96); }
+.cat-card-edit {
+  position: absolute;
+  top: 11px; right: 11px;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.55);
+  border: none;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--c-ink-mute);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  z-index: 2;
+}
+.cat-card-edit:hover { background: rgba(25,174,194,0.15); color: var(--c-primary); }
 .cat-card-icon-wrap {
   width: 42px; height: 42px;
   border-radius: 13px;
@@ -371,6 +389,43 @@ a { text-decoration: none; color: inherit; }
   color: var(--c-ink-mute);
   margin-top: 3px;
   font-weight: 500;
+}
+.cat-card-hint {
+  font-size: 11px;
+  color: var(--c-primary);
+  margin-top: 3px;
+  font-weight: 600;
+  opacity: 0.75;
+}
+/* Add category card */
+.cat-card-add {
+  flex: 0 0 110px;
+  height: auto;
+  min-height: 160px;
+  border-radius: var(--r-card);
+  border: 2px dashed rgba(25,174,194,0.35);
+  background: rgba(25,174,194,0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, transform 0.18s;
+  font-family: var(--font);
+}
+.cat-card-add:hover {
+  background: rgba(25,174,194,0.1);
+  border-color: rgba(25,174,194,0.65);
+  transform: translateY(-2px);
+}
+.cat-card-add:active { transform: scale(0.96); }
+.cat-card-add-icon {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(25,174,194,0.14);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--c-primary);
 }
 
 /* ── Summary row (assets / liabilities) ── */

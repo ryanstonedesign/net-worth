@@ -24,10 +24,11 @@ export function useData() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)) } catch {}
   }, [data])
 
-  const addCategory = useCallback((cat) => {
-    const id = `cat_${Date.now()}`
-    setData(d => ({ ...d, categories: [...d.categories, { ...cat, id, accounts: [] }] }))
-    return id
+  const addCategoryWithAccounts = useCallback((cat, accounts = []) => {
+    const catId = `cat_${Date.now()}`
+    const withIds = accounts.map((a, i) => ({ ...a, id: `acc_${Date.now()}_${i}` }))
+    setData(d => ({ ...d, categories: [...d.categories, { ...cat, id: catId, accounts: withIds }] }))
+    return catId
   }, [])
 
   const updateCategory = useCallback((id, updates) => {
@@ -79,8 +80,14 @@ export function useData() {
     }))
   }, [])
 
-  const setMonthSnapshot = useCallback((month, values) => {
-    setData(d => ({ ...d, snapshots: { ...d.snapshots, [month]: values } }))
+  const updateCategorySnapshot = useCallback((month, entries) => {
+    setData(d => ({
+      ...d,
+      snapshots: {
+        ...d.snapshots,
+        [month]: { ...(d.snapshots[month] || {}), ...entries },
+      },
+    }))
   }, [])
 
   const getSnapshot = useCallback((month) => data.snapshots[month] || {}, [data.snapshots])
@@ -105,10 +112,6 @@ export function useData() {
       .map(month => ({ month, netWorth: getNetWorth(month) }))
   }, [data.snapshots, getNetWorth])
 
-  const getSortedMonths = useCallback(() => {
-    return Object.keys(data.snapshots).sort()
-  }, [data.snapshots])
-
   const getPrevMonth = useCallback((month) => {
     const months = Object.keys(data.snapshots).sort()
     const idx = months.indexOf(month)
@@ -119,31 +122,28 @@ export function useData() {
     const snap = data.snapshots[month] || {}
     return data.categories
       .filter(c => c.type !== 'liability')
-      .reduce((total, cat) =>
-        total + cat.accounts.reduce((sum, acc) => sum + (snap[acc.id] || 0), 0), 0)
+      .reduce((t, cat) => t + cat.accounts.reduce((s, a) => s + (snap[a.id] || 0), 0), 0)
   }, [data])
 
   const getTotalLiabilities = useCallback((month) => {
     const snap = data.snapshots[month] || {}
     return data.categories
       .filter(c => c.type === 'liability')
-      .reduce((total, cat) =>
-        total + cat.accounts.reduce((sum, acc) => sum + (snap[acc.id] || 0), 0), 0)
+      .reduce((t, cat) => t + cat.accounts.reduce((s, a) => s + (snap[a.id] || 0), 0), 0)
   }, [data])
 
   return {
     data,
-    addCategory,
+    addCategoryWithAccounts,
     updateCategory,
     deleteCategory,
     addAccount,
     deleteAccount,
-    setMonthSnapshot,
+    updateCategorySnapshot,
     getSnapshot,
     getCategoryTotal,
     getNetWorth,
     getHistory,
-    getSortedMonths,
     getPrevMonth,
     getTotalAssets,
     getTotalLiabilities,
