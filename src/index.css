@@ -344,8 +344,9 @@ a { text-decoration: none; color: inherit; }
 }
 .cat-card-header {
   display: flex;
-  align-items: center;
-  gap: 14px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 10px;
 }
 .cat-card-icon-wrap {
   width: 44px; height: 44px;
@@ -354,24 +355,13 @@ a { text-decoration: none; color: inherit; }
   font-size: 20px;
   flex-shrink: 0;
 }
-.cat-card-body {
-  flex: 1;
-  min-width: 0;
-}
 .cat-card-label {
   font-size: 12px;
-  font-weight: 600;
-  color: var(--c-ink-mute);
-  margin-bottom: 2px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.cat-card-amount {
-  font-size: 22px;
   font-weight: 700;
-  letter-spacing: -0.025em;
-  color: var(--c-ink);
-  line-height: 1.1;
+  color: var(--c-ink-mute);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 12px;
 }
 .cat-card-edit {
   flex-shrink: 0;
@@ -387,18 +377,15 @@ a { text-decoration: none; color: inherit; }
 .cat-card-edit:hover { background: rgba(25,174,194,0.15); color: var(--c-primary); }
 /* Inline accounts */
 .cat-accounts {
-  margin-top: 16px;
   border-top: 1px solid rgba(200,215,220,0.45);
   padding-top: 4px;
 }
 .cat-account-row {
   display: flex;
   align-items: center;
-  gap: 10px;
   padding: 7px 0;
-  border-bottom: 1px solid rgba(200,215,220,0.3);
+  border-bottom: 1px solid rgba(200,215,220,0.28);
 }
-.cat-account-row:last-child { border-bottom: none; }
 .cat-account-name {
   flex: 1;
   font-size: 14px;
@@ -408,17 +395,6 @@ a { text-decoration: none; color: inherit; }
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-.cat-account-input-wrap {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  flex-shrink: 0;
-}
-.cat-account-prefix {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--c-ink-mute);
 }
 .cat-account-input {
   width: 120px;
@@ -430,14 +406,34 @@ a { text-decoration: none; color: inherit; }
   font-size: 14px;
   font-weight: 600;
   color: var(--c-ink);
-  padding: 3px 2px;
+  padding: 3px 0;
   outline: none;
   transition: border-color 0.2s;
+  flex-shrink: 0;
 }
-.cat-account-input:focus {
-  border-bottom-color: var(--c-primary);
+.cat-account-input:focus { border-bottom-color: var(--c-primary); }
+.cat-account-input::placeholder { color: rgba(78,111,115,0.4); }
+/* Total row */
+.cat-account-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0 2px;
+  margin-top: 2px;
+  border-top: 1px solid rgba(200,215,220,0.45);
 }
-.cat-account-input::placeholder { color: rgba(78,111,115,0.45); }
+.cat-total-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--c-ink-mute);
+}
+.cat-total-amount {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
 .cat-empty-accounts {
   margin-top: 14px;
   padding-top: 14px;

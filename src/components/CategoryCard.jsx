@@ -1,6 +1,13 @@
 import { useState, useCallback } from 'react'
 import { formatCurrency, parseAmount } from '../utils'
 
+function formatDisplay(raw) {
+  if (raw === '' || raw == null) return ''
+  const n = parseAmount(raw)
+  if (n === 0 && raw === '') return ''
+  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+}
+
 export default function CategoryCard({ category, snapshot, onUpdate, onEdit }) {
   const [values, setValues] = useState(() => {
     const v = {}
@@ -9,10 +16,12 @@ export default function CategoryCard({ category, snapshot, onUpdate, onEdit }) {
     })
     return v
   })
+  const [focused, setFocused] = useState(null)
 
   const total = category.accounts.reduce((s, a) => s + parseAmount(values[a.id] || '0'), 0)
 
   const handleBlur = useCallback(() => {
+    setFocused(null)
     const entries = {}
     category.accounts.forEach(acc => {
       if (values[acc.id] !== '') entries[acc.id] = parseAmount(values[acc.id])
@@ -22,19 +31,11 @@ export default function CategoryCard({ category, snapshot, onUpdate, onEdit }) {
 
   return (
     <div className="card cat-card">
-      {/* Header */}
+
+      {/* Icon row: icon left, edit right */}
       <div className="cat-card-header">
         <div className="cat-card-icon-wrap" style={{ background: category.color + '22' }}>
           {category.icon}
-        </div>
-        <div className="cat-card-body">
-          <div className="cat-card-label">{category.name}</div>
-          <div
-            className="cat-card-amount"
-            style={{ color: category.type === 'liability' ? 'var(--c-danger)' : 'var(--c-ink)' }}
-          >
-            {formatCurrency(total)}
-          </div>
         </div>
         <button className="cat-card-edit" onClick={onEdit} title="Edit category">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -43,27 +44,41 @@ export default function CategoryCard({ category, snapshot, onUpdate, onEdit }) {
         </button>
       </div>
 
+      {/* Category name sits below icon */}
+      <div className="cat-card-label">{category.name}</div>
+
       {/* Accounts */}
       {category.accounts.length > 0 ? (
         <div className="cat-accounts">
           {category.accounts.map(acc => (
             <div key={acc.id} className="cat-account-row">
               <span className="cat-account-name">{acc.name}</span>
-              <div className="cat-account-input-wrap">
-                <span className="cat-account-prefix">$</span>
-                <input
-                  className="cat-account-input"
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="0"
-                  value={values[acc.id] || ''}
-                  onChange={e => setValues(v => ({ ...v, [acc.id]: e.target.value }))}
-                  onFocus={e => e.target.select()}
-                  onBlur={handleBlur}
-                />
-              </div>
+              <input
+                className="cat-account-input"
+                type="text"
+                inputMode="decimal"
+                placeholder="$0"
+                value={focused === acc.id ? values[acc.id] : formatDisplay(values[acc.id])}
+                onFocus={e => { setFocused(acc.id); e.target.select() }}
+                onChange={e => {
+                  const raw = e.target.value.replace(/[^0-9.]/g, '')
+                  setValues(v => ({ ...v, [acc.id]: raw }))
+                }}
+                onBlur={handleBlur}
+              />
             </div>
           ))}
+
+          {/* Total row */}
+          <div className="cat-account-total">
+            <span className="cat-total-label">Total</span>
+            <span
+              className="cat-total-amount"
+              style={{ color: category.type === 'liability' ? 'var(--c-danger)' : 'var(--c-ink)' }}
+            >
+              {formatCurrency(total)}
+            </span>
+          </div>
         </div>
       ) : (
         <div className="cat-empty-accounts">
