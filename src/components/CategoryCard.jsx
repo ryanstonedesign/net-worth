@@ -32,20 +32,17 @@ export default function CategoryCard({ category, snapshot, onUpdate, onEdit }) {
   return (
     <div className="card cat-card">
 
-      {/* Icon row: icon left, edit right */}
       <div className="cat-card-header">
         <div className="cat-card-icon-wrap" style={{ background: category.color + '22' }}>
           {category.icon}
         </div>
+        <div className="cat-card-label">{category.name}</div>
         <button className="cat-card-edit" onClick={onEdit} title="Edit category">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
           </svg>
         </button>
       </div>
-
-      {/* Category name sits below icon */}
-      <div className="cat-card-label">{category.name}</div>
 
       {/* Accounts */}
       {category.accounts.length > 0 ? (

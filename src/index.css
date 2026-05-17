@@ -238,8 +238,10 @@ a { text-decoration: none; color: inherit; }
   -webkit-backdrop-filter: blur(10px);
   z-index: 200;
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding-top: 64px;
   animation: fadeIn 0.2s ease;
 }
 .modal-sheet {
@@ -250,8 +252,9 @@ a { text-decoration: none; color: inherit; }
   padding: 12px 20px calc(var(--safe-bottom) + 32px);
   width: 100%;
   max-width: 600px;
-  max-height: 92vh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
   animation: slideUp 0.32s cubic-bezier(0.32, 0.72, 0, 1);
 }
 .modal-handle {
@@ -344,9 +347,9 @@ a { text-decoration: none; color: inherit; }
 }
 .cat-card-header {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 10px;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 .cat-card-icon-wrap {
   width: 44px; height: 44px;
@@ -356,12 +359,14 @@ a { text-decoration: none; color: inherit; }
   flex-shrink: 0;
 }
 .cat-card-label {
-  font-size: 12px;
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
   font-weight: 700;
-  color: var(--c-ink-mute);
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  margin-bottom: 12px;
+  color: var(--c-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .cat-card-edit {
   flex-shrink: 0;
