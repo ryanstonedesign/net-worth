@@ -271,7 +271,7 @@ a { text-decoration: none; color: inherit; }
 /* ── Hero ── */
 .hero {
   text-align: center;
-  padding: 0 24px 100px;
+  padding: 0 24px 24px;
 }
 .hero-eyebrow {
   font-size: 11px;

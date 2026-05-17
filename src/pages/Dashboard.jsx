@@ -42,21 +42,21 @@ export default function Dashboard({
       {/* Page header label */}
       <div className="hero-eyebrow" style={{ paddingTop: 28 }}>Net Worth</div>
 
-      {/* Hero */}
+      {/* Hero — number only, no bottom padding */}
       <div className="hero">
         <div className="hero-amount" style={{ fontSize: heroFontSize }}>{nwStr}</div>
+      </div>
 
-        {/* Trend line sits right below the value, breaks out of hero padding */}
-        {history.length >= 2 && (
-          <div style={{ margin: '28px -24px 0' }}>
-            <NetWorthChart data={history} />
-          </div>
-        )}
-
-        {/* Month selector */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
-          <MonthSelector month={selectedMonth} onChange={onMonthChange} />
+      {/* Trend line — standard 20px page padding */}
+      {history.length >= 2 && (
+        <div style={{ padding: '0 20px' }}>
+          <NetWorthChart data={history} />
         </div>
+      )}
+
+      {/* Month selector */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100, marginBottom: 48 }}>
+        <MonthSelector month={selectedMonth} onChange={onMonthChange} />
       </div>
 
       {/* Asset / Liability summary */}
