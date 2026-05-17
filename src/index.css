@@ -271,7 +271,7 @@ a { text-decoration: none; color: inherit; }
 /* ── Hero ── */
 .hero {
   text-align: center;
-  padding: 24px 24px 36px;
+  padding: 0 24px 100px;
 }
 .hero-eyebrow {
   font-size: 11px;
@@ -279,7 +279,7 @@ a { text-decoration: none; color: inherit; }
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--c-ink-mute);
-  margin-top: 10px;
+  margin-top: 12px;
 }
 .hero-amount {
   font-size: clamp(88px, 26vw, 152px);
@@ -290,7 +290,7 @@ a { text-decoration: none; color: inherit; }
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  padding: 100px 0;
+  padding-top: 100px;
 }
 .hero-delta {
   display: inline-flex;
