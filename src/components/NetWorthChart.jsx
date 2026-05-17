@@ -25,7 +25,7 @@ function CustomTooltip({ active, payload }) {
   )
 }
 
-export default function NetWorthChart({ data }) {
+export default function NetWorthChart({ data, height = 160 }) {
   if (!data || data.length < 2) return null
 
   const isUp = data[data.length - 1].netWorth >= data[0].netWorth
@@ -33,7 +33,7 @@ export default function NetWorthChart({ data }) {
   const gradId = isUp ? 'nwGradUp' : 'nwGradDown'
 
   return (
-    <ResponsiveContainer width="100%" height={110}>
+    <ResponsiveContainer width="100%" height={height}>
       <AreaChart data={data} margin={{ top: 8, right: 4, left: 4, bottom: 4 }}>
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">

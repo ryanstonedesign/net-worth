@@ -5,6 +5,15 @@ import NetWorthChart from '../components/NetWorthChart'
 import EditCategorySheet from '../components/EditCategorySheet'
 import { formatCurrency, formatDelta, formatMonthShort } from '../utils'
 
+const RANGE_OPTIONS = ['1M', '3M', '6M', '1Y', 'ALL']
+const RANGE_COUNTS = { '1M': 2, '3M': 3, '6M': 6, '1Y': 12 }
+
+function getFilteredHistory(history, range) {
+  if (range === 'ALL') return history
+  const n = RANGE_COUNTS[range] ?? history.length
+  return history.length <= n ? history : history.slice(-n)
+}
+
 export default function Dashboard({
   data,
   selectedMonth,
@@ -24,6 +33,7 @@ export default function Dashboard({
   getTotalLiabilities,
 }) {
   const [editSheet, setEditSheet] = useState(null) // category obj | 'new' | null
+  const [timeRange, setTimeRange] = useState('ALL')
 
   const netWorth = getNetWorth(selectedMonth)
   const prevMonth = getPrevMonth(selectedMonth)
@@ -31,6 +41,7 @@ export default function Dashboard({
   const nwStr = formatCurrency(netWorth)
   const heroFontSize = `${Math.min(22, 145 / nwStr.length)}vw`
   const history = getHistory()
+  const filteredHistory = getFilteredHistory(history, timeRange)
   const snapshot = getSnapshot(selectedMonth)
   const assets = getTotalAssets(selectedMonth)
   const liabilities = getTotalLiabilities(selectedMonth)
@@ -39,23 +50,41 @@ export default function Dashboard({
 
   return (
     <div>
-      {/* Page header label */}
-      <div className="hero-eyebrow" style={{ paddingTop: 28 }}>Net Worth</div>
-
-      {/* Hero — number only, no bottom padding */}
+      {/* Hero — left aligned */}
       <div className="hero">
+        <div className="hero-eyebrow">Net Worth</div>
         <div className="hero-amount" style={{ fontSize: heroFontSize }}>{nwStr}</div>
+        {delta !== null && (
+          <div className={`hero-delta-line${delta > 0 ? ' positive' : delta < 0 ? ' negative' : ''}`}>
+            {delta >= 0 ? '+' : ''}{formatCurrency(delta)} this month
+          </div>
+        )}
       </div>
 
-      {/* Trend line — standard 20px page padding */}
+      {/* Trend line */}
+      {filteredHistory.length >= 2 && (
+        <div style={{ padding: '20px 20px 0' }}>
+          <NetWorthChart data={filteredHistory} height={180} />
+        </div>
+      )}
+
+      {/* Time range filter */}
       {history.length >= 2 && (
-        <div style={{ padding: '0 20px' }}>
-          <NetWorthChart data={history} />
+        <div className="range-pills">
+          {RANGE_OPTIONS.map(r => (
+            <button
+              key={r}
+              className={`range-pill${timeRange === r ? ' active' : ''}`}
+              onClick={() => setTimeRange(r)}
+            >
+              {r}
+            </button>
+          ))}
         </div>
       )}
 
       {/* Month selector */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100, marginBottom: 48 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32, marginBottom: 28 }}>
         <MonthSelector month={selectedMonth} onChange={onMonthChange} />
       </div>
 

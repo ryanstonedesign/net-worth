@@ -270,8 +270,7 @@ a { text-decoration: none; color: inherit; }
 
 /* ── Hero ── */
 .hero {
-  text-align: center;
-  padding: 0 24px 24px;
+  padding: 36px 20px 0;
 }
 .hero-eyebrow {
   font-size: 11px;
@@ -279,7 +278,7 @@ a { text-decoration: none; color: inherit; }
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--c-ink-mute);
-  text-align: center;
+  margin-bottom: 4px;
 }
 .hero-amount {
   font-weight: 800;
@@ -290,28 +289,50 @@ a { text-decoration: none; color: inherit; }
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  padding-top: 100px;
+  margin-bottom: 8px;
 }
-.hero-delta {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.hero-delta-line {
   font-size: 14px;
   font-weight: 600;
-  padding: 7px 16px;
-  border-radius: 999px;
-  background: rgba(240,248,250,0.65);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 1px 8px rgba(10,40,60,0.08);
-}
-.hero-delta.positive { color: var(--c-tertiary); }
-.hero-delta.negative { color: var(--c-danger); }
-.hero-delta.neutral { color: var(--c-ink-mute); }
-.hero-sub {
-  font-size: 13px;
   color: var(--c-ink-mute);
-  margin-top: 8px;
-  font-weight: 500;
+}
+.hero-delta-line.positive { color: var(--c-tertiary); }
+.hero-delta-line.negative { color: var(--c-danger); }
+
+/* ── Range pills ── */
+.range-pills {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+  margin-top: 10px;
+  border-top: 1px solid rgba(200,215,220,0.4);
+}
+.range-pill {
+  flex: 1;
+  padding: 10px 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--c-ink-mute);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+  letter-spacing: 0.04em;
+  text-align: center;
+  position: relative;
+  transition: color 0.15s;
+}
+.range-pill.active { color: var(--c-ink); }
+.range-pill.active::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 2px;
+  background: var(--c-primary);
+  border-radius: 1px;
 }
 
 /* ── Section ── */
