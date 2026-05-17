@@ -1,8 +1,7 @@
 import { formatMonthDisplay, getAdjacentMonth, getCurrentMonth } from '../utils'
 
-export default function MonthSelector({ month, onChange }) {
-  const current = getCurrentMonth()
-  const isMax = month >= current
+export default function MonthSelector({ month, onChange, maxMonth }) {
+  const isMax = month >= (maxMonth ?? getCurrentMonth())
 
   return (
     <div className="month-selector">

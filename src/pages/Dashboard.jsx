@@ -3,7 +3,7 @@ import MonthSelector from '../components/MonthSelector'
 import CategoryCard from '../components/CategoryCard'
 import NetWorthChart from '../components/NetWorthChart'
 import EditCategorySheet from '../components/EditCategorySheet'
-import { formatCurrency, formatDelta, formatMonthShort, getAdjacentMonth } from '../utils'
+import { formatCurrency, formatDelta, formatMonthShort, getAdjacentMonth, getCurrentMonth } from '../utils'
 
 const RANGE_OPTIONS = ['1M', '3M', '6M', '1Y', 'ALL']
 const RANGE_COUNTS   = { '1M': 2,  '3M': 3,  '6M': 6,  '1Y': 12 }
@@ -56,7 +56,8 @@ export default function Dashboard({
   const forecastData   = generateForecast(filteredHistory, timeRange)
   const forecastMap    = Object.fromEntries(forecastData.map(d => [d.month, d.netWorth]))
 
-  const lastDataMonth  = history.length > 0 ? history[history.length - 1].month : null
+  const lastDataMonth    = history.length > 0 ? history[history.length - 1].month : null
+  const maxForecastMonth = forecastData.length > 0 ? forecastData[forecastData.length - 1].month : getCurrentMonth()
   const isEstimated    = !!(lastDataMonth && selectedMonth > lastDataMonth && selectedMonth in forecastMap)
 
   const netWorth       = getNetWorth(selectedMonth)
@@ -86,7 +87,7 @@ export default function Dashboard({
       {/* Trend line + forecast */}
       {filteredHistory.length >= 2 && (
         <div style={{ padding: '20px 20px 0' }}>
-          <NetWorthChart data={filteredHistory} forecastData={forecastData} height={180} />
+          <NetWorthChart data={filteredHistory} forecastData={forecastData} selectedMonth={selectedMonth} height={180} />
         </div>
       )}
 
@@ -107,7 +108,7 @@ export default function Dashboard({
 
       {/* Month selector */}
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32, marginBottom: 28 }}>
-        <MonthSelector month={selectedMonth} onChange={onMonthChange} />
+        <MonthSelector month={selectedMonth} onChange={onMonthChange} maxMonth={maxForecastMonth} />
       </div>
 
       {/* Asset / Liability summary */}

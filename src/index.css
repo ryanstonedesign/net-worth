@@ -64,6 +64,18 @@ a { text-decoration: none; color: inherit; }
   animation: orbShift 20s ease-in-out infinite;
 }
 
+@keyframes dotPulse {
+  0%   { transform: scale(1);   opacity: 0.5; }
+  65%  { transform: scale(3.2); opacity: 0;   }
+  100% { transform: scale(3.2); opacity: 0;   }
+}
+.dot-pulse-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: dotPulse 2s ease-out infinite;
+  pointer-events: none;
+}
+
 @keyframes orbShift {
   0%   { filter: hue-rotate(0deg)   saturate(1);    }
   30%  { filter: hue-rotate(18deg)  saturate(1.08); }

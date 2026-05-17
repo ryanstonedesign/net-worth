@@ -36,7 +36,7 @@ function CustomTooltip({ active, payload }) {
   )
 }
 
-export default function NetWorthChart({ data, forecastData = [], height = 160 }) {
+export default function NetWorthChart({ data, forecastData = [], selectedMonth, height = 160 }) {
   if (!data || data.length < 2) return null
 
   const hasForecast = forecastData.length > 0
@@ -47,12 +47,37 @@ export default function NetWorthChart({ data, forecastData = [], height = 160 })
   const gradId = isUp ? 'nwGradUp' : 'nwGradDown'
   const fGradId = isUp ? 'nwForecastUp' : 'nwForecastDown'
 
-  // Build combined dataset: historical and forecast dataKeys on same points
+  // Build combined dataset with separate dataKeys for each segment
   const combined = data.map(d => ({ ...d, historical: d.netWorth, forecast: null }))
   if (hasForecast) {
-    // Junction: last historical point seeds the forecast line for continuity
     combined[combined.length - 1] = { ...combined[combined.length - 1], forecast: lastHistorical.netWorth }
     forecastData.forEach(d => combined.push({ ...d, historical: null, forecast: d.netWorth }))
+  }
+
+  // Dot renderer for the historical area
+  const historicalDot = ({ cx, cy, payload }) => {
+    if (payload.historical == null || !isFinite(cx) || !isFinite(cy)) return null
+    const isSelected = payload.month === selectedMonth
+    if (isSelected) return (
+      <g>
+        <circle cx={cx} cy={cy} r={9} fill={color} opacity={0.22} className="dot-pulse-ring" />
+        <circle cx={cx} cy={cy} r={5} fill={color} />
+      </g>
+    )
+    return <circle cx={cx} cy={cy} r={3.5} fill={color} />
+  }
+
+  // Dot renderer for the forecast area (skip junction point — historical area owns it)
+  const forecastDot = ({ cx, cy, payload }) => {
+    if (payload.forecast == null || payload.historical != null || !isFinite(cx) || !isFinite(cy)) return null
+    const isSelected = payload.month === selectedMonth
+    if (isSelected) return (
+      <g>
+        <circle cx={cx} cy={cy} r={8} fill={color} opacity={0.18} className="dot-pulse-ring" />
+        <circle cx={cx} cy={cy} r={4.5} fill={color} opacity={0.65} />
+      </g>
+    )
+    return <circle cx={cx} cy={cy} r={3} fill={color} opacity={0.45} />
   }
 
   return (
@@ -78,7 +103,7 @@ export default function NetWorthChart({ data, forecastData = [], height = 160 })
           stroke={color}
           strokeWidth={2.5}
           fill={`url(#${gradId})`}
-          dot={{ r: 3.5, fill: color, strokeWidth: 0 }}
+          dot={historicalDot}
           activeDot={{ r: 6, fill: color, stroke: 'white', strokeWidth: 2 }}
           isAnimationActive={false}
           connectNulls={false}
@@ -92,8 +117,8 @@ export default function NetWorthChart({ data, forecastData = [], height = 160 })
             strokeOpacity={0.45}
             strokeDasharray="6 4"
             fill={`url(#${fGradId})`}
-            dot={{ r: 3, fill: color, fillOpacity: 0.45, strokeWidth: 0 }}
-            activeDot={{ r: 5, fill: color, fillOpacity: 0.65, stroke: 'white', strokeWidth: 2 }}
+            dot={forecastDot}
+            activeDot={{ r: 5, fill: color, fillOpacity: 0.7, stroke: 'white', strokeWidth: 2 }}
             isAnimationActive={false}
             connectNulls={false}
           />
