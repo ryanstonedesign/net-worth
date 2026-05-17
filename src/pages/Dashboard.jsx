@@ -37,22 +37,15 @@ export default function Dashboard({
 
   return (
     <div>
-      {/* Sticky month selector */}
-      <div style={{
-        position: 'sticky', top: 0, zIndex: 20,
-        display: 'flex', justifyContent: 'center',
-        padding: '18px 20px 12px',
-        background: 'rgba(220,232,236,0.7)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-      }}>
-        <MonthSelector month={selectedMonth} onChange={onMonthChange} />
-      </div>
-
       {/* Hero */}
       <div className="hero">
         <div className="hero-eyebrow">Net Worth</div>
         <div className="hero-amount">{formatCurrency(netWorth)}</div>
+
+        {/* Month selector sits below the total */}
+        <div style={{ display: 'flex', justifyContent: 'center', margin: '16px 0 12px' }}>
+          <MonthSelector month={selectedMonth} onChange={onMonthChange} />
+        </div>
         {delta != null ? (
           <div className={`hero-delta ${delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'neutral'}`}>
             {delta > 0
