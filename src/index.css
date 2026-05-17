@@ -263,7 +263,7 @@ a { text-decoration: none; color: inherit; }
   border-radius: 2px;
   margin: 0 auto 20px;
 }
-.modal-title { font-size: 22px; font-weight: 700; margin-bottom: 20px; }
+.modal-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -292,7 +292,7 @@ a { text-decoration: none; color: inherit; }
   margin-bottom: 8px;
 }
 .hero-delta-line {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--c-ink-mute);
 }
@@ -414,7 +414,7 @@ a { text-decoration: none; color: inherit; }
 }
 .cat-account-name {
   flex: 1;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--c-ink);
   min-width: 0;
@@ -429,7 +429,7 @@ a { text-decoration: none; color: inherit; }
   border: none;
   border-bottom: 1.5px solid transparent;
   font-family: var(--font);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--c-ink);
   padding: 3px 0;
@@ -456,7 +456,7 @@ a { text-decoration: none; color: inherit; }
   color: var(--c-ink-mute);
 }
 .cat-total-amount {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
@@ -555,7 +555,7 @@ a { text-decoration: none; color: inherit; }
 /* ── Chart ── */
 .chart-card { margin: 0 20px 28px; padding: 20px 12px 16px; }
 .chart-header { padding: 0 8px; margin-bottom: 8px; }
-.chart-title { font-size: 16px; font-weight: 700; }
+.chart-title { font-size: 17px; font-weight: 700; }
 .chart-subtitle { font-size: 12px; color: var(--c-ink-mute); margin-top: 2px; }
 
 /* ── Update page ── */
@@ -570,10 +570,10 @@ a { text-decoration: none; color: inherit; }
   width: 36px; height: 36px;
   border-radius: 11px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 18px;
+  font-size: 17px;
 }
 .update-cat-name { font-size: 15px; font-weight: 700; }
-.update-cat-total { margin-left: auto; font-size: 14px; font-weight: 600; color: var(--c-ink-mute); }
+.update-cat-total { margin-left: auto; font-size: 13px; font-weight: 600; color: var(--c-ink-mute); }
 .update-account-row {
   display: flex;
   align-items: center;
@@ -581,7 +581,7 @@ a { text-decoration: none; color: inherit; }
   gap: 12px;
   border-top: 1px solid rgba(200,215,220,0.35);
 }
-.update-account-name { flex: 1; font-size: 14px; font-weight: 500; }
+.update-account-name { flex: 1; font-size: 13px; font-weight: 500; }
 .update-amount-wrap { position: relative; }
 .update-amount-prefix {
   position: absolute;
@@ -600,7 +600,7 @@ a { text-decoration: none; color: inherit; }
   border-radius: 12px;
   padding: 8px 10px 8px 20px;
   font-family: var(--font);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--c-ink);
   outline: none;
@@ -628,7 +628,7 @@ a { text-decoration: none; color: inherit; }
   width: 44px; height: 44px;
   border-radius: 13px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 22px;
+  font-size: 20px;
   flex-shrink: 0;
 }
 .manage-cat-info { flex: 1; min-width: 0; }
@@ -641,7 +641,7 @@ a { text-decoration: none; color: inherit; }
   border-bottom: 1px solid rgba(200,215,220,0.28);
 }
 .manage-account-row:last-child { border-bottom: none; }
-.manage-account-name { flex: 1; font-size: 14px; font-weight: 500; }
+.manage-account-name { flex: 1; font-size: 13px; font-weight: 500; }
 .del-btn {
   width: 28px; height: 28px;
   border-radius: 50%;
@@ -725,8 +725,8 @@ a { text-decoration: none; color: inherit; }
   align-items: center; text-align: center;
   padding: 56px 32px; gap: 10px;
 }
-.empty-icon { font-size: 56px; margin-bottom: 6px; }
-.empty-title { font-size: 22px; font-weight: 700; }
+.empty-icon { font-size: 48px; margin-bottom: 6px; }
+.empty-title { font-size: 20px; font-weight: 700; }
 .empty-desc { font-size: 15px; color: var(--c-ink-mute); line-height: 1.55; max-width: 280px; }
 
 /* ── Page header ── */

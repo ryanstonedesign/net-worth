@@ -18,7 +18,7 @@ function CustomTooltip({ active, payload }) {
       <div style={{ fontSize: 12, fontWeight: 600, color: '#4E6F73', marginBottom: 3 }}>
         {formatMonthDisplay(month)}
       </div>
-      <div style={{ fontSize: 18, fontWeight: 800, color: '#1C292B', letterSpacing: '-0.02em' }}>
+      <div style={{ fontSize: 17, fontWeight: 800, color: '#1C292B', letterSpacing: '-0.02em' }}>
         {formatCurrency(netWorth)}
       </div>
     </div>

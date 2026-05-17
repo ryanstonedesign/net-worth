@@ -122,7 +122,7 @@ export default function EditCategorySheet({
           <input
             ref={accInputRef}
             className="input"
-            style={{ fontSize: 14 }}
+            style={{ fontSize: 13 }}
             placeholder="Account name"
             value={newAccName}
             onChange={e => setNewAccName(e.target.value)}
@@ -152,7 +152,7 @@ export default function EditCategorySheet({
           style={{
             display: 'block', width: '100%', marginTop: 12, padding: '10px',
             background: 'none', border: 'none', cursor: 'pointer',
-            fontSize: 14, fontWeight: 600, color: 'var(--c-danger)',
+            fontSize: 13, fontWeight: 600, color: 'var(--c-danger)',
             fontFamily: 'var(--font)',
           }}
           onClick={() => {
