@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import MonthSelector from '../components/MonthSelector'
+import CategoryCard from '../components/CategoryCard'
 import NetWorthChart from '../components/NetWorthChart'
-import UpdateCategorySheet from '../components/UpdateCategorySheet'
 import EditCategorySheet from '../components/EditCategorySheet'
 import { formatCurrency, formatDelta, formatMonthShort } from '../utils'
 
@@ -23,8 +23,7 @@ export default function Dashboard({
   getTotalAssets,
   getTotalLiabilities,
 }) {
-  const [updateSheet, setUpdateSheet] = useState(null)  // category id
-  const [editSheet, setEditSheet] = useState(null)       // category obj | 'new'
+  const [editSheet, setEditSheet] = useState(null) // category obj | 'new' | null
 
   const netWorth = getNetWorth(selectedMonth)
   const prevMonth = getPrevMonth(selectedMonth)
@@ -34,8 +33,6 @@ export default function Dashboard({
   const assets = getTotalAssets(selectedMonth)
   const liabilities = getTotalLiabilities(selectedMonth)
   const hasLiabilities = data.categories.some(c => c.type === 'liability')
-
-  const updateCat = updateSheet ? data.categories.find(c => c.id === updateSheet) : null
   const editCat = editSheet && editSheet !== 'new' ? editSheet : null
 
   return (
@@ -92,45 +89,17 @@ export default function Dashboard({
       </div>
 
       <div className="cat-scroll">
-        {data.categories.map(cat => {
-          const total = getCategoryTotal(cat, selectedMonth)
-          const pct = netWorth !== 0 ? Math.round((total / Math.abs(netWorth)) * 100) : 0
-          return (
-            <button
-              key={cat.id}
-              className="card cat-card"
-              onClick={() => setUpdateSheet(cat.id)}
-            >
-              <div className="cat-card-icon-wrap" style={{ background: cat.color + '22' }}>
-                {cat.icon}
-              </div>
-              <div className="cat-card-body">
-                <div className="cat-card-label">{cat.name}</div>
-                <div className="cat-card-amount" style={{ color: cat.type === 'liability' ? 'var(--c-danger)' : 'var(--c-ink)' }}>
-                  {formatCurrency(total)}
-                </div>
-              </div>
-              <div className="cat-card-right">
-                {total === 0
-                  ? <div className="cat-card-hint">tap to update</div>
-                  : netWorth !== 0
-                  ? <div className="cat-card-pct">{Math.abs(pct)}%</div>
-                  : null}
-              </div>
-              <button
-                className="cat-card-edit"
-                onClick={e => { e.stopPropagation(); setEditSheet(cat) }}
-                title="Edit category"
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                </svg>
-              </button>
-            </button>
-          )
-        })}
+        {data.categories.map(cat => (
+          <CategoryCard
+            key={cat.id + selectedMonth}
+            category={cat}
+            snapshot={snapshot}
+            onUpdate={entries => updateCategorySnapshot(selectedMonth, entries)}
+            onEdit={() => setEditSheet(cat)}
+          />
+        ))}
 
-        {/* Add category card */}
+        {/* Add category */}
         <button className="cat-card-add" onClick={() => setEditSheet('new')}>
           <div className="cat-card-add-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -146,21 +115,7 @@ export default function Dashboard({
       {/* Trend chart */}
       {history.length >= 2 && <NetWorthChart data={history} />}
 
-      {/* Bottom padding */}
       <div style={{ height: 40 }} />
-
-      {/* Update sheet */}
-      {updateCat && (
-        <UpdateCategorySheet
-          key={updateCat.id + selectedMonth}
-          category={updateCat}
-          month={selectedMonth}
-          snapshot={snapshot}
-          onSave={entries => updateCategorySnapshot(selectedMonth, entries)}
-          onEdit={() => setEditSheet(updateCat)}
-          onClose={() => setUpdateSheet(null)}
-        />
-      )}
 
       {/* Edit / new category sheet */}
       {editSheet && (
