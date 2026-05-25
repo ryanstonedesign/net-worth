@@ -343,6 +343,26 @@ a { text-decoration: none; color: inherit; }
 .hero-delta-line.positive { color: var(--c-tertiary); }
 .hero-delta-line.negative { color: var(--c-danger); }
 
+.hero-goal {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 10px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-ink-mute);
+  opacity: 0.75;
+  transition: opacity 0.15s;
+}
+.hero-goal:hover { opacity: 1; }
+.hero-goal-set { color: var(--c-primary); }
+.hero-goal-target { color: var(--c-ink-mute); }
+.hero-goal-time { color: var(--c-ink-mute); font-weight: 500; }
+
 /* ── Range pills ── */
 .range-pills {
   display: flex;

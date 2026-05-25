@@ -1,5 +1,5 @@
-import { AreaChart, Area, Tooltip, ResponsiveContainer } from 'recharts'
-import { formatMonthDisplay, formatCurrency } from '../utils'
+import { AreaChart, Area, Tooltip, ResponsiveContainer, ReferenceLine, YAxis } from 'recharts'
+import { formatMonthDisplay, formatCurrency, formatCompact } from '../utils'
 
 function CustomTooltip({ active, payload }) {
   if (!active || !payload?.length) return null
@@ -36,7 +36,26 @@ function CustomTooltip({ active, payload }) {
   )
 }
 
-export default function NetWorthChart({ data, forecastData = [], selectedMonth, height = 160 }) {
+function GoalLabel({ viewBox, goal }) {
+  if (!viewBox) return null
+  const { x, y, width } = viewBox
+  const label = `Goal ${formatCompact(goal)}`
+  return (
+    <text
+      x={x + width - 4}
+      y={y - 5}
+      textAnchor="end"
+      fill="#F59E0B"
+      fontSize={10}
+      fontWeight={700}
+      fontFamily="Sora, system-ui, sans-serif"
+    >
+      {label}
+    </text>
+  )
+}
+
+export default function NetWorthChart({ data, forecastData = [], selectedMonth, height = 160, goal = null }) {
   if (!data || data.length < 2) return null
 
   const hasForecast = forecastData.length > 0
@@ -53,6 +72,15 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
     combined[combined.length - 1] = { ...combined[combined.length - 1], forecast: lastHistorical.netWorth }
     forecastData.forEach(d => combined.push({ ...d, historical: null, forecast: d.netWorth }))
   }
+
+  // Y-axis domain — expand to include goal line if above data range
+  const allValues = combined.map(d => d.historical ?? d.forecast).filter(v => v != null)
+  const maxDataVal = allValues.length > 0 ? Math.max(...allValues) : 0
+  const minDataVal = allValues.length > 0 ? Math.min(...allValues) : 0
+  const goalAbove = goal != null && goal > maxDataVal
+  const yDomain = goalAbove
+    ? [minDataVal, Math.round(goal * 1.12)]
+    : ['auto', 'auto']
 
   // Dot renderer for the historical area
   const historicalDot = ({ cx, cy, payload }) => {
@@ -82,7 +110,7 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <AreaChart data={combined} margin={{ top: 8, right: 4, left: 4, bottom: 4 }}>
+      <AreaChart data={combined} margin={{ top: 20, right: 4, left: 4, bottom: 4 }}>
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={color} stopOpacity={0.28} />
@@ -93,10 +121,20 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
             <stop offset="100%" stopColor={color} stopOpacity={0} />
           </linearGradient>
         </defs>
+        <YAxis domain={yDomain} hide />
         <Tooltip
           content={<CustomTooltip />}
           cursor={{ stroke: 'rgba(28,41,43,0.12)', strokeWidth: 1, strokeDasharray: '4 3' }}
         />
+        {goal != null && (
+          <ReferenceLine
+            y={goal}
+            stroke="#F59E0B"
+            strokeDasharray="5 3"
+            strokeWidth={1.5}
+            label={<GoalLabel goal={goal} />}
+          />
+        )}
         <Area
           type="monotone"
           dataKey="historical"

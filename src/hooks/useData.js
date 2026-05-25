@@ -14,7 +14,7 @@ function loadData() {
     const s = localStorage.getItem(STORAGE_KEY)
     if (s) return JSON.parse(s)
   } catch {}
-  return { categories: [], snapshots: {} }
+  return { categories: [], snapshots: {}, goal: null }
 }
 
 export function useData() {
@@ -91,6 +91,10 @@ export function useData() {
     }))
   }, [])
 
+  const setGoal = useCallback((amount) => {
+    setData(d => ({ ...d, goal: amount }))
+  }, [])
+
   const updateCategorySnapshot = useCallback((month, entries) => {
     setData(d => ({
       ...d,
@@ -145,6 +149,8 @@ export function useData() {
 
   return {
     data,
+    goal: data.goal ?? null,
+    setGoal,
     addCategoryWithAccounts,
     updateCategory,
     deleteCategory,

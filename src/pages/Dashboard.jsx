@@ -3,7 +3,8 @@ import MonthSelector from '../components/MonthSelector'
 import CategoryCard from '../components/CategoryCard'
 import NetWorthChart from '../components/NetWorthChart'
 import EditCategorySheet from '../components/EditCategorySheet'
-import { formatCurrency, formatDelta, formatMonthShort, getAdjacentMonth, getCurrentMonth } from '../utils'
+import Modal from '../components/Modal'
+import { formatCurrency, formatCompact, getAdjacentMonth, getCurrentMonth, parseAmount } from '../utils'
 
 const RANGE_OPTIONS = ['1M', '3M', '6M', '1Y', 'ALL']
 const RANGE_COUNTS   = { '1M': 2,  '3M': 3,  '6M': 6,  '1Y': 12 }
@@ -30,10 +31,65 @@ function generateForecast(filteredHistory, range) {
   }))
 }
 
+function GoalEditor({ goal, onSave, onClose }) {
+  const [raw, setRaw] = useState(goal != null ? String(goal) : '')
+
+  const parsed = parseAmount(raw)
+  const valid  = raw.trim() !== '' && parsed > 0
+
+  return (
+    <>
+      <p style={{ fontSize: 13, color: 'var(--c-ink-mute)', marginBottom: 20, lineHeight: 1.5 }}>
+        Set a net worth target and see how your forecast tracks toward it.
+      </p>
+      <div className="form-group">
+        <label className="form-label">Target amount</label>
+        <div style={{ position: 'relative' }}>
+          <span style={{
+            position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)',
+            fontSize: 16, fontWeight: 600, color: 'var(--c-ink-mute)',
+          }}>$</span>
+          <input
+            className="input"
+            style={{ paddingLeft: 32, fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}
+            inputMode="decimal"
+            placeholder="500,000"
+            value={raw}
+            onChange={e => setRaw(e.target.value.replace(/[^0-9.,]/g, ''))}
+          />
+        </div>
+      </div>
+      <button
+        className="btn btn-primary btn-full"
+        style={{ marginTop: 8 }}
+        onClick={() => { if (valid) onSave(parsed) }}
+        disabled={!valid}
+      >
+        Save Goal
+      </button>
+      {goal != null && (
+        <button
+          style={{
+            display: 'block', width: '100%', marginTop: 12, padding: '12px',
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontSize: 13, fontWeight: 600, color: 'var(--c-danger)',
+            fontFamily: 'var(--font)',
+          }}
+          onClick={() => onSave(null)}
+        >
+          Clear Goal
+        </button>
+      )}
+    </>
+  )
+}
+
 export default function Dashboard({
   data,
   selectedMonth,
   onMonthChange,
+  goal,
+  setGoal,
   addCategoryWithAccounts,
   updateCategory,
   deleteCategory,
@@ -50,21 +106,39 @@ export default function Dashboard({
   getTotalLiabilities,
 }) {
   const [editSheet, setEditSheet] = useState(null) // category obj | 'new' | null
+  const [goalOpen, setGoalOpen]   = useState(false)
   const [timeRange, setTimeRange] = useState('ALL')
 
-  const history        = getHistory()
+  const history         = getHistory()
   const filteredHistory = getFilteredHistory(history, timeRange)
-  const forecastData   = generateForecast(filteredHistory, timeRange)
-  const forecastMap    = Object.fromEntries(forecastData.map(d => [d.month, d.netWorth]))
+  const forecastData    = generateForecast(filteredHistory, timeRange)
+  const forecastMap     = Object.fromEntries(forecastData.map(d => [d.month, d.netWorth]))
 
   const lastDataMonth    = history.length > 0 ? history[history.length - 1].month : null
   const maxForecastMonth = forecastData.length > 0 ? forecastData[forecastData.length - 1].month : getCurrentMonth()
-  const isEstimated    = !!(lastDataMonth && selectedMonth > lastDataMonth && selectedMonth in forecastMap)
+  const isEstimated      = !!(lastDataMonth && selectedMonth > lastDataMonth && selectedMonth in forecastMap)
 
-  const netWorth       = getNetWorth(selectedMonth)
+  const netWorth        = getNetWorth(selectedMonth)
   const displayNetWorth = isEstimated ? forecastMap[selectedMonth] : netWorth
-  const prevMonth      = getPrevMonth(selectedMonth)
-  const delta          = !isEstimated && prevMonth != null ? netWorth - getNetWorth(prevMonth) : null
+  const prevMonth       = getPrevMonth(selectedMonth)
+  const delta           = !isEstimated && prevMonth != null ? netWorth - getNetWorth(prevMonth) : null
+
+  // Months-to-goal: use full history slope for stability across range changes
+  const goalSlope = history.length >= 2
+    ? (history[history.length - 1].netWorth - history[0].netWorth) / (history.length - 1)
+    : null
+  const monthsToGoal = goal != null && goalSlope != null && goalSlope > 0 && netWorth < goal
+    ? Math.ceil((goal - netWorth) / goalSlope)
+    : null
+  const goalReached = goal != null && netWorth >= goal
+
+  const goalLabel = goalReached
+    ? 'Goal reached'
+    : monthsToGoal != null
+      ? monthsToGoal > 24
+        ? `~${Math.round(monthsToGoal / 12)} years to goal`
+        : `~${monthsToGoal} months to goal`
+      : null
 
   const snapshot    = getSnapshot(selectedMonth)
   const assets      = getTotalAssets(selectedMonth)
@@ -83,12 +157,27 @@ export default function Dashboard({
         <div className={`hero-delta-line${!isEstimated && delta != null && delta > 0 ? ' positive' : !isEstimated && delta != null && delta < 0 ? ' negative' : ''}`}>
           {isEstimated ? 'Estimated' : delta == null ? '—' : `${delta >= 0 ? '+' : ''}${formatCurrency(delta)} this month`}
         </div>
+
+        {/* Goal row */}
+        <button className="hero-goal" onClick={() => setGoalOpen(true)}>
+          {goal == null ? (
+            <span className="hero-goal-set">Set a goal</span>
+          ) : (
+            <>
+              <span className="hero-goal-target">Goal {formatCompact(goal)}</span>
+              {goalLabel && <span className="hero-goal-time"> · {goalLabel}</span>}
+            </>
+          )}
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 4, opacity: 0.5, flexShrink: 0 }}>
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
       </div>
 
       {/* Trend line + forecast */}
       {filteredHistory.length >= 2 && (
         <div style={{ padding: '20px 20px 0' }}>
-          <NetWorthChart data={filteredHistory} forecastData={forecastData} selectedMonth={selectedMonth} height={180} />
+          <NetWorthChart data={filteredHistory} forecastData={forecastData} selectedMonth={selectedMonth} height={180} goal={goal} />
         </div>
       )}
 
@@ -177,6 +266,17 @@ export default function Dashboard({
           deleteAccount={deleteAccount}
           renameAccount={renameAccount}
         />
+      )}
+
+      {/* Goal editor sheet */}
+      {goalOpen && (
+        <Modal title="Net Worth Goal" onClose={() => setGoalOpen(false)}>
+          <GoalEditor
+            goal={goal}
+            onSave={(v) => { setGoal(v); setGoalOpen(false) }}
+            onClose={() => setGoalOpen(false)}
+          />
+        </Modal>
       )}
     </div>
   )
