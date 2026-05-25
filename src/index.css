@@ -271,9 +271,10 @@ a { text-decoration: none; color: inherit; }
   border-radius: 32px 32px 0 0;
   width: 100%;
   max-width: 600px;
-  max-height: calc(100vh - 64px);
+  max-height: calc(100vh - 64px - env(safe-area-inset-top, 0px));
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   animation: slideUp 0.32s cubic-bezier(0.32, 0.72, 0, 1);
 }
 .modal-top {
