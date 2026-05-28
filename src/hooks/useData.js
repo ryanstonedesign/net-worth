@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react'
 const STORAGE_KEY = 'networth_v1'
 
 export const CATEGORY_COLORS = [
-  '#19AEC2', '#1239C4', '#1AB766', '#F59E0B',
+  '#5987A6', '#4E4D8F', '#4F9289', '#F59E0B',
   '#EF4444', '#8B5CF6', '#EC4899', '#F97316',
 ]
 

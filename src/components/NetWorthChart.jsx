@@ -14,21 +14,19 @@ function CustomTooltip({ active, payload }) {
 
   return (
     <div style={{
-      background: 'rgba(242,250,252,0.97)',
+      background: '#edf1f5',
       borderRadius: 14,
       padding: '8px 16px',
-      boxShadow: '0 8px 32px rgba(10,40,60,0.18)',
-      border: '1px solid rgba(200,232,244,0.7)',
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
+      boxShadow: '6px 6px 12px rgba(174,182,192,0.48), -6px -6px 12px rgba(255,255,255,1)',
+      border: 'none',
       fontFamily: 'var(--font)',
     }}>
-      <div style={{ fontSize: 12, fontWeight: 600, color: '#4E6F73', marginBottom: 4 }}>
+      <div style={{ fontSize: 12, fontWeight: 600, color: '#55636D', marginBottom: 4 }}>
         {formatMonthDisplay(point.month)}{isForecast ? ' · Est.' : ''}
       </div>
       <div style={{
-        fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em',
-        color: isForecast ? '#4E6F73' : '#1C292B',
+        fontSize: 17, fontWeight: 700, letterSpacing: '-0.02em',
+        color: isForecast ? '#55636D' : '#1F2529',
       }}>
         {formatCurrency(value)}
       </div>
@@ -48,7 +46,7 @@ function GoalLabel({ viewBox, goal }) {
       fill="#F59E0B"
       fontSize={10}
       fontWeight={700}
-      fontFamily="Sora, system-ui, sans-serif"
+      fontFamily="Afacad, system-ui, sans-serif"
     >
       {label}
     </text>
@@ -62,7 +60,7 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
   const lastHistorical = data[data.length - 1]
   const endPoint = hasForecast ? forecastData[forecastData.length - 1] : lastHistorical
   const isUp = endPoint.netWorth >= data[0].netWorth
-  const color = isUp ? '#1AB766' : '#EF4444'
+  const color = isUp ? '#4F9289' : '#EF4444'
   const gradId = isUp ? 'nwGradUp' : 'nwGradDown'
   const fGradId = isUp ? 'nwForecastUp' : 'nwForecastDown'
 

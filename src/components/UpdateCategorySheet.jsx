@@ -43,7 +43,7 @@ export default function UpdateCategorySheet({ category, month, snapshot, onSave,
           onClick={() => { onClose(); onEdit() }}
           style={{
             width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-            background: 'rgba(25,174,194,0.1)', border: 'none', cursor: 'pointer',
+            background: 'rgba(89,135,166,0.1)', border: 'none', cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: 'var(--c-primary)', transition: 'background 0.15s',
           }}
