@@ -19,9 +19,9 @@
   --neu-dark: rgba(174,182,192,0.48);
   --neu-light: rgba(255,255,255,1);
   --shadow-card: 12px 12px 22px rgba(174,182,192,0.3), -9px -9px 18px rgba(255,255,255,0.5);
-  --shadow-btn-primary: 6px 6px 12px rgba(174,182,192,0.48), -6px -6px 12px rgba(255,255,255,1), inset 1px 1px 0 rgba(255,255,255,0.44);
-  --shadow-btn-secondary: 6px 6px 12px rgba(174,182,192,0.44), -6px -6px 12px rgba(255,255,255,1), inset 1px 1px 0 rgba(255,255,255,0.78);
-  --shadow-neu-hover: 5px 5px 9px color-mix(in srgb, rgba(174,182,192,0.48) 84%, transparent), -5px -5px 9px color-mix(in srgb, rgba(255,255,255,1) 86%, transparent), inset 1px 1px 0 color-mix(in srgb, rgba(255,255,255,1) 72%, transparent);
+  --shadow-btn-primary: 6px 6px 12px rgba(174,182,192,0.3), -6px -6px 12px rgba(255,255,255,0.5), inset 1px 1px 0 rgba(255,255,255,0.44);
+  --shadow-btn-secondary: 6px 6px 12px rgba(174,182,192,0.3), -6px -6px 12px rgba(255,255,255,0.5), inset 1px 1px 0 rgba(255,255,255,0.78);
+  --shadow-neu-hover: 5px 5px 9px color-mix(in srgb, rgba(174,182,192,0.3) 84%, transparent), -5px -5px 9px color-mix(in srgb, rgba(255,255,255,0.5) 86%, transparent), inset 1px 1px 0 color-mix(in srgb, rgba(255,255,255,0.5) 72%, transparent);
   --shadow-neu-in: inset 4px 4px 8px rgba(174,182,192,0.5), inset -4px -4px 8px rgba(255,255,255,0.95);
 
   --nav-height: 76px;
@@ -107,22 +107,17 @@ a { text-decoration: none; color: inherit; }
   z-index: -1;
   pointer-events: none;
 }
+/* 1px gradient border — white, fading from full opacity at top to 0 at bottom. */
 .card::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(150deg,
-    color-mix(in srgb, #f8fafc 85%, transparent) 0%,
-    color-mix(in srgb, #f8fafc 25%, transparent) 30%,
-    transparent 55%,
-    color-mix(in srgb, #f8fafc 18%, transparent) 80%,
-    color-mix(in srgb, #f8fafc 55%, transparent) 100%);
+  background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
-  opacity: 0;
   pointer-events: none;
   z-index: 1;
 }
@@ -748,6 +743,7 @@ a { text-decoration: none; color: inherit; }
   background: var(--c-surface-muted);
   border-radius: 999px;
   padding: 4px;
+  position: relative;
 }
 .type-toggle-btn {
   flex: 1;
@@ -760,11 +756,26 @@ a { text-decoration: none; color: inherit; }
   cursor: pointer;
   border: none;
   background: none;
+  position: relative;
 }
 .type-toggle-btn.active {
   background: var(--c-surface);
   color: var(--c-primary);
-  box-shadow: 3px 3px 7px rgba(174,182,192,0.45), -3px -3px 7px rgba(255,255,255,0.95);
+  box-shadow: 3px 3px 7px rgba(174,182,192,0.3), -3px -3px 7px rgba(255,255,255,0.5);
+}
+/* 1px gradient border (white, fading top→bottom) on the toggle and its thumb */
+.type-toggle::before,
+.type-toggle-btn.active::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }
 
 /* ── Color swatches ── */
