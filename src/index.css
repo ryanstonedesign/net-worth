@@ -824,12 +824,49 @@ a { text-decoration: none; color: inherit; }
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
-.roll-glyph {
+.roll-digit {
+  position: relative;
   display: inline-block;
-  transition: opacity 0.26s ease, filter 0.26s ease;
-  will-change: opacity, filter;
 }
-.roll-glyph.no-anim { transition: none; }
+.roll-glyph,
+.roll-sep {
+  display: inline-block;
+}
+/* Outgoing glyph is taken out of flow so it overlays the incoming one. */
+.rg-leave {
+  position: absolute;
+  left: 0; top: 0;
+  width: 100%;
+  text-align: center;
+}
+.rg-enter,
+.rg-in { animation: rollInUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.rg-in.down { animation-name: rollInDown; }
+.rg-leave { animation: rollOutUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.rg-leave.down { animation-name: rollOutDown; }
+
+/* Travel reaches 0.75em, but opacity hits 0 by 0.3em so the visible portion
+   stays inside the line — never overlapping the eyebrow or delta text. */
+@keyframes rollInUp {
+  0%   { transform: translateY(0.75em);  opacity: 0; filter: blur(6px); }
+  50%  { transform: translateY(0.3em);   opacity: 0; filter: blur(4px); }
+  100% { transform: translateY(0);        opacity: 1; filter: blur(0); }
+}
+@keyframes rollOutUp {
+  0%   { transform: translateY(0);        opacity: 1; filter: blur(0); }
+  50%  { transform: translateY(-0.3em);   opacity: 0; filter: blur(4px); }
+  100% { transform: translateY(-0.75em);  opacity: 0; filter: blur(6px); }
+}
+@keyframes rollInDown {
+  0%   { transform: translateY(-0.75em); opacity: 0; filter: blur(6px); }
+  50%  { transform: translateY(-0.3em);  opacity: 0; filter: blur(4px); }
+  100% { transform: translateY(0);        opacity: 1; filter: blur(0); }
+}
+@keyframes rollOutDown {
+  0%   { transform: translateY(0);       opacity: 1; filter: blur(0); }
+  50%  { transform: translateY(0.3em);   opacity: 0; filter: blur(4px); }
+  100% { transform: translateY(0.75em);  opacity: 0; filter: blur(6px); }
+}
 .sr-only {
   position: absolute;
   width: 1px; height: 1px;
@@ -840,7 +877,8 @@ a { text-decoration: none; color: inherit; }
   border: 0;
 }
 @media (prefers-reduced-motion: reduce) {
-  .roll-glyph { transition: none; }
+  .rg-enter, .rg-in, .rg-leave { animation: none; }
+  .rg-leave { display: none; }
 }
 
 /* Chart dots fade in once the line has finished drawing */
