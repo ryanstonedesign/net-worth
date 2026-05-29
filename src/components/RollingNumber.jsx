@@ -1,62 +1,63 @@
 import { useState, useEffect, useRef } from 'react'
 import { formatCurrency } from '../utils'
 
-// A single digit position. When its value changes, the old glyph rolls out
-// (sliding + fading + blurring to zero opacity) while the new glyph rolls in
-// from the opposite side. Nothing is cropped — the glyphs reach zero opacity
-// before they travel far enough to overlap the text above or below. A digit
-// whose value doesn't change never animates.
-function Digit({ ch, dir, enterDelay }) {
-  const [stack, setStack] = useState([{ key: 'e', ch, mode: 'enter' }])
-  const prevCh = useRef(ch)
-  const seq = useRef(0)
-  const timer = useRef(null)
+const CELL = 1.35 // em — height of one digit cell and of the masked window
 
+// One digit position rendered as a vertical reel of 0-9 (twice, so it can spin
+// a full loop). It rolls THROUGH the intermediate digits to reach its target.
+// On mount it spins a full loop into place; on change it rolls from the old
+// digit to the new one. A digit whose value doesn't change never moves. The
+// reel's top/bottom edges are faded by a mask (see CSS) rather than cropped.
+function Digit({ value, enterDelay }) {
+  const [k, setK] = useState(value)          // reel index currently shown
+  const [anim, setAnim] = useState(false)    // transition enabled?
+  const [delay, setDelay] = useState(enterDelay)
+  const prev = useRef(value)
+  const mounted = useRef(false)
+
+  // Entrance — start on the first 0-9 set, then roll up a full loop into home.
   useEffect(() => {
-    if (prevCh.current === ch) return
-    prevCh.current = ch
-    seq.current += 1
-    const key = 's' + seq.current
-    setStack(prev => [
-      ...prev.filter(l => l.mode !== 'leave').map(l => ({ ...l, mode: 'leave' })),
-      { key, ch, mode: 'in' },
-    ])
-    if (timer.current) clearTimeout(timer.current)
-    timer.current = setTimeout(() => setStack([{ key, ch, mode: 'idle' }]), 650)
-    return () => { if (timer.current) clearTimeout(timer.current) }
-  }, [ch])
+    const r = requestAnimationFrame(() => { setAnim(true); setK(10 + value) })
+    mounted.current = true
+    prev.current = value
+    return () => cancelAnimationFrame(r)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-  const down = dir < 0 ? ' down' : ''
+  // Value change — roll from the old digit to the new one through the middle.
+  useEffect(() => {
+    if (!mounted.current || prev.current === value) return
+    prev.current = value
+    setDelay(0)
+    setAnim(true)
+    setK(10 + value)
+  }, [value])
+
   return (
     <span className="roll-digit" aria-hidden="true">
-      {stack.map(l => (
-        <span
-          key={l.key}
-          className={`roll-glyph rg-${l.mode}${l.mode === 'enter' ? '' : down}`}
-          style={l.mode === 'enter' && enterDelay ? { animationDelay: `${enterDelay}s` } : undefined}
-        >
-          {l.ch}
-        </span>
-      ))}
+      <span
+        className={`reel${anim ? '' : ' no-anim'}`}
+        style={{ transform: `translateY(${-(k * CELL)}em)`, transitionDelay: `${delay}s` }}
+      >
+        {Array.from({ length: 20 }, (_, i) => (
+          <span key={i} className="reel-cell">{i % 10}</span>
+        ))}
+      </span>
     </span>
   )
 }
 
 export default function RollingNumber({ value }) {
   const str = formatCurrency(Math.round(value || 0))
-  const prevVal = useRef(value)
-  const dir = (value || 0) >= (prevVal.current || 0) ? 1 : -1
-  useEffect(() => { prevVal.current = value }, [value])
-
   let digitIdx = 0
   return (
     <span className="roll-num">
       <span className="sr-only">{str}</span>
       {str.split('').map((c, i) => {
         if (c >= '0' && c <= '9') {
-          const delay = digitIdx * 0.04
+          const delay = digitIdx * 0.05
           digitIdx++
-          return <Digit key={i} ch={c} dir={dir} enterDelay={delay} />
+          return <Digit key={i} value={Number(c)} enterDelay={delay} />
         }
         return <span key={i} className="roll-sep" aria-hidden="true">{c}</span>
       })}

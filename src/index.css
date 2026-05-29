@@ -820,52 +820,36 @@ a { text-decoration: none; color: inherit; }
 /* ── Rolling number (net worth ticker) ── */
 .roll-num {
   display: inline-flex;
-  align-items: baseline;
-  line-height: 1;
+  align-items: center;
   font-variant-numeric: tabular-nums;
 }
 .roll-digit {
   position: relative;
   display: inline-block;
+  width: 1ch;
+  height: 1.35em;            /* one cell tall — the reel window */
+  overflow: hidden;
+  /* Soft-fade the reel at top/bottom instead of a hard crop, so digits fade
+     to/from zero opacity as they roll in and out. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 80%, transparent 100%);
+          mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 80%, transparent 100%);
 }
-.roll-glyph,
+.reel {
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reel.no-anim { transition: none; }
+.reel-cell {
+  height: 1.35em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .roll-sep {
-  display: inline-block;
-}
-/* Outgoing glyph is taken out of flow so it overlays the incoming one. */
-.rg-leave {
-  position: absolute;
-  left: 0; top: 0;
-  width: 100%;
-  text-align: center;
-}
-.rg-enter,
-.rg-in { animation: rollInUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
-.rg-in.down { animation-name: rollInDown; }
-.rg-leave { animation: rollOutUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
-.rg-leave.down { animation-name: rollOutDown; }
-
-/* Travel reaches 0.75em, but opacity hits 0 by 0.3em so the visible portion
-   stays inside the line — never overlapping the eyebrow or delta text. */
-@keyframes rollInUp {
-  0%   { transform: translateY(0.75em);  opacity: 0; filter: blur(6px); }
-  50%  { transform: translateY(0.3em);   opacity: 0; filter: blur(4px); }
-  100% { transform: translateY(0);        opacity: 1; filter: blur(0); }
-}
-@keyframes rollOutUp {
-  0%   { transform: translateY(0);        opacity: 1; filter: blur(0); }
-  50%  { transform: translateY(-0.3em);   opacity: 0; filter: blur(4px); }
-  100% { transform: translateY(-0.75em);  opacity: 0; filter: blur(6px); }
-}
-@keyframes rollInDown {
-  0%   { transform: translateY(-0.75em); opacity: 0; filter: blur(6px); }
-  50%  { transform: translateY(-0.3em);  opacity: 0; filter: blur(4px); }
-  100% { transform: translateY(0);        opacity: 1; filter: blur(0); }
-}
-@keyframes rollOutDown {
-  0%   { transform: translateY(0);       opacity: 1; filter: blur(0); }
-  50%  { transform: translateY(0.3em);   opacity: 0; filter: blur(4px); }
-  100% { transform: translateY(0.75em);  opacity: 0; filter: blur(6px); }
+  display: inline-flex;
+  align-items: center;
+  height: 1.35em;
 }
 .sr-only {
   position: absolute;
@@ -877,8 +861,7 @@ a { text-decoration: none; color: inherit; }
   border: 0;
 }
 @media (prefers-reduced-motion: reduce) {
-  .rg-enter, .rg-in, .rg-leave { animation: none; }
-  .rg-leave { display: none; }
+  .reel { transition: none; }
 }
 
 /* Chart dots fade in once the line has finished drawing */
