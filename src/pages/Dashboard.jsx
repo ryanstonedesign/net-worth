@@ -2,6 +2,7 @@ import { useState } from 'react'
 import MonthSelector from '../components/MonthSelector'
 import CategoryCard from '../components/CategoryCard'
 import NetWorthChart from '../components/NetWorthChart'
+import RollingNumber from '../components/RollingNumber'
 import EditCategorySheet from '../components/EditCategorySheet'
 import Modal from '../components/Modal'
 import { formatCurrency, formatCompact, getAdjacentMonth, getCurrentMonth, parseAmount } from '../utils'
@@ -152,7 +153,7 @@ export default function Dashboard({
       <div className="hero">
         <div className="hero-eyebrow">Net Worth</div>
         <div className={`hero-amount${isEstimated ? ' estimated' : ''}`}>
-          {formatCurrency(displayNetWorth)}
+          <RollingNumber value={displayNetWorth} replayKey={timeRange} />
         </div>
         <div className={`hero-delta-line${!isEstimated && delta != null && delta > 0 ? ' positive' : !isEstimated && delta != null && delta < 0 ? ' negative' : ''}`}>
           {isEstimated ? 'Estimated' : delta == null ? '—' : `${delta >= 0 ? '+' : ''}${formatCurrency(delta)} this month`}
@@ -177,7 +178,7 @@ export default function Dashboard({
       {/* Trend line + forecast */}
       {filteredHistory.length >= 2 && (
         <div style={{ padding: '20px 20px 0' }}>
-          <NetWorthChart data={filteredHistory} forecastData={forecastData} selectedMonth={selectedMonth} height={180} goal={goal} />
+          <NetWorthChart key={timeRange} data={filteredHistory} forecastData={forecastData} selectedMonth={selectedMonth} height={180} goal={goal} />
         </div>
       )}
 

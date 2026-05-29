@@ -817,6 +817,49 @@ a { text-decoration: none; color: inherit; }
 .mt8 { margin-top: 8px; }
 .mt16 { margin-top: 16px; }
 
+/* ── Rolling number (net worth ticker) ── */
+.roll-num {
+  display: inline-flex;
+  align-items: flex-end;
+  line-height: 1;
+}
+.roll-digit {
+  display: inline-block;
+  height: 1em;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+.roll-col {
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.roll-col.no-anim { transition: none; }
+.roll-cell {
+  height: 1em;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.roll-sep {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .roll-col { transition: none; }
+}
+
 /* ── Settings FAB ── */
 .settings-fab {
   position: fixed;

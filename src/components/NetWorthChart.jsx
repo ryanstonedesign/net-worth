@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { AreaChart, Area, Tooltip, ResponsiveContainer, ReferenceLine, YAxis } from 'recharts'
 import { formatMonthDisplay, formatCurrency, formatCompact } from '../utils'
 
@@ -64,12 +65,21 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
   const gradId = isUp ? 'nwGradUp' : 'nwGradDown'
   const fGradId = isUp ? 'nwForecastUp' : 'nwForecastDown'
 
-  // Build combined dataset with separate dataKeys for each segment
-  const combined = data.map(d => ({ ...d, historical: d.netWorth, forecast: null }))
-  if (hasForecast) {
-    combined[combined.length - 1] = { ...combined[combined.length - 1], forecast: lastHistorical.netWorth }
-    forecastData.forEach(d => combined.push({ ...d, historical: null, forecast: d.netWorth }))
-  }
+  // Build combined dataset with separate dataKeys for each segment.
+  // Memoised on the data's content so hover / selected-month re-renders keep a
+  // stable reference — that prevents recharts from replaying its draw animation
+  // on every interaction (it only replays on mount, i.e. on time-range change).
+  const dataSig = data.map(d => `${d.month}:${d.netWorth}`).join('|')
+  const forecastSig = forecastData.map(d => `${d.month}:${d.netWorth}`).join('|')
+  const combined = useMemo(() => {
+    const c = data.map(d => ({ ...d, historical: d.netWorth, forecast: null }))
+    if (hasForecast) {
+      c[c.length - 1] = { ...c[c.length - 1], forecast: lastHistorical.netWorth }
+      forecastData.forEach(d => c.push({ ...d, historical: null, forecast: d.netWorth }))
+    }
+    return c
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataSig, forecastSig, hasForecast])
 
   // Y-axis domain — expand to include goal line if above data range
   const allValues = combined.map(d => d.historical ?? d.forecast).filter(v => v != null)
@@ -141,7 +151,10 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
           fill={`url(#${gradId})`}
           dot={historicalDot}
           activeDot={{ r: 6, fill: color, stroke: 'white', strokeWidth: 2 }}
-          isAnimationActive={false}
+          isAnimationActive={true}
+          animationBegin={0}
+          animationDuration={1100}
+          animationEasing="ease-out"
           connectNulls={false}
         />
         {hasForecast && (
@@ -155,7 +168,10 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
             fill={`url(#${fGradId})`}
             dot={forecastDot}
             activeDot={{ r: 5, fill: color, fillOpacity: 0.7, stroke: 'white', strokeWidth: 2 }}
-            isAnimationActive={false}
+            isAnimationActive={true}
+            animationBegin={1000}
+            animationDuration={700}
+            animationEasing="ease-out"
             connectNulls={false}
           />
         )}
