@@ -832,8 +832,11 @@ a { text-decoration: none; color: inherit; }
 .roll-col {
   display: flex;
   flex-direction: column;
-  transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform;
+  transition:
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.7s ease-out;
+  will-change: transform, filter, opacity;
 }
 .roll-col.no-anim { transition: none; }
 .roll-cell {
@@ -859,6 +862,10 @@ a { text-decoration: none; color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .roll-col { transition: none; }
 }
+
+/* Chart dots fade in once the line has finished drawing */
+.nw-dot-appear { animation: nwDotIn 0.4s ease-out both; }
+@keyframes nwDotIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* ── Settings FAB ── */
 .settings-fab {

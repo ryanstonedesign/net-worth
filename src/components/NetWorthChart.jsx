@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { AreaChart, Area, Tooltip, ResponsiveContainer, ReferenceLine, YAxis } from 'recharts'
 import { formatMonthDisplay, formatCurrency, formatCompact } from '../utils'
 
@@ -55,6 +55,31 @@ function GoalLabel({ viewBox, goal }) {
 }
 
 export default function NetWorthChart({ data, forecastData = [], selectedMonth, height = 160, goal = null }) {
+  // ── Hooks (must run before any early return) ──
+  // Build combined dataset with separate dataKeys for each segment.
+  // Memoised on the data's content so hover / selected-month re-renders keep a
+  // stable reference — that prevents recharts from replaying its draw animation
+  // on every interaction (it only replays on mount, i.e. on time-range change).
+  const dataSig = (data || []).map(d => `${d.month}:${d.netWorth}`).join('|')
+  const forecastSig = forecastData.map(d => `${d.month}:${d.netWorth}`).join('|')
+  const combined = useMemo(() => {
+    if (!data || data.length === 0) return []
+    const c = data.map(d => ({ ...d, historical: d.netWorth, forecast: null }))
+    if (forecastData.length > 0) {
+      c[c.length - 1] = { ...c[c.length - 1], forecast: data[data.length - 1].netWorth }
+      forecastData.forEach(d => c.push({ ...d, historical: null, forecast: d.netWorth }))
+    }
+    return c
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataSig, forecastSig])
+
+  // Dots stay hidden until the line has finished drawing, then fade in.
+  const [dotsVisible, setDotsVisible] = useState(false)
+  useEffect(() => {
+    const t = setTimeout(() => setDotsVisible(true), 1200)
+    return () => clearTimeout(t)
+  }, [])
+
   if (!data || data.length < 2) return null
 
   const hasForecast = forecastData.length > 0
@@ -64,22 +89,6 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
   const color = isUp ? '#4F9289' : '#EF4444'
   const gradId = isUp ? 'nwGradUp' : 'nwGradDown'
   const fGradId = isUp ? 'nwForecastUp' : 'nwForecastDown'
-
-  // Build combined dataset with separate dataKeys for each segment.
-  // Memoised on the data's content so hover / selected-month re-renders keep a
-  // stable reference — that prevents recharts from replaying its draw animation
-  // on every interaction (it only replays on mount, i.e. on time-range change).
-  const dataSig = data.map(d => `${d.month}:${d.netWorth}`).join('|')
-  const forecastSig = forecastData.map(d => `${d.month}:${d.netWorth}`).join('|')
-  const combined = useMemo(() => {
-    const c = data.map(d => ({ ...d, historical: d.netWorth, forecast: null }))
-    if (hasForecast) {
-      c[c.length - 1] = { ...c[c.length - 1], forecast: lastHistorical.netWorth }
-      forecastData.forEach(d => c.push({ ...d, historical: null, forecast: d.netWorth }))
-    }
-    return c
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataSig, forecastSig, hasForecast])
 
   // Y-axis domain — expand to include goal line if above data range
   const allValues = combined.map(d => d.historical ?? d.forecast).filter(v => v != null)
@@ -92,28 +101,30 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
 
   // Dot renderer for the historical area
   const historicalDot = ({ cx, cy, payload }) => {
+    if (!dotsVisible) return null
     if (payload.historical == null || !isFinite(cx) || !isFinite(cy)) return null
     const isSelected = payload.month === selectedMonth
     if (isSelected) return (
-      <g>
+      <g className="nw-dot-appear">
         <circle cx={cx} cy={cy} r={9} fill={color} opacity={0.22} className="dot-pulse-ring" />
         <circle cx={cx} cy={cy} r={5} fill={color} />
       </g>
     )
-    return <circle cx={cx} cy={cy} r={3.5} fill={color} />
+    return <circle className="nw-dot-appear" cx={cx} cy={cy} r={3.5} fill={color} />
   }
 
   // Dot renderer for the forecast area (skip junction point — historical area owns it)
   const forecastDot = ({ cx, cy, payload }) => {
+    if (!dotsVisible) return null
     if (payload.forecast == null || payload.historical != null || !isFinite(cx) || !isFinite(cy)) return null
     const isSelected = payload.month === selectedMonth
     if (isSelected) return (
-      <g>
+      <g className="nw-dot-appear">
         <circle cx={cx} cy={cy} r={8} fill={color} opacity={0.18} className="dot-pulse-ring" />
         <circle cx={cx} cy={cy} r={4.5} fill={color} opacity={0.65} />
       </g>
     )
-    return <circle cx={cx} cy={cy} r={3} fill={color} opacity={0.45} />
+    return <circle className="nw-dot-appear" cx={cx} cy={cy} r={3} fill={color} opacity={0.45} />
   }
 
   return (
@@ -169,8 +180,8 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
             dot={forecastDot}
             activeDot={{ r: 5, fill: color, fillOpacity: 0.7, stroke: 'white', strokeWidth: 2 }}
             isAnimationActive={true}
-            animationBegin={1000}
-            animationDuration={700}
+            animationBegin={0}
+            animationDuration={1100}
             animationEasing="ease-out"
             connectNulls={false}
           />

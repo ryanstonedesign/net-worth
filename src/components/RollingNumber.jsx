@@ -36,6 +36,8 @@ export default function RollingNumber({ value, replayKey }) {
                 className={`roll-col${running ? '' : ' no-anim'}`}
                 style={{
                   transform: `translateY(${-(running ? d : 0) * 10}%)`,
+                  filter: running ? 'blur(0px)' : 'blur(8px)',
+                  opacity: running ? 1 : 0,
                   transitionDelay: `${delay}s`,
                 }}
               >
