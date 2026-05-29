@@ -18,7 +18,7 @@
   /* Neumorphic dual-light shadows */
   --neu-dark: rgba(174,182,192,0.48);
   --neu-light: rgba(255,255,255,1);
-  --shadow-card: 12px 12px 22px rgba(174,182,192,0.48), -12px -12px 22px rgba(255,255,255,1);
+  --shadow-card: 12px 12px 22px rgba(174,182,192,0.48), -9px -9px 18px rgba(255,255,255,1);
   --shadow-btn-primary: 6px 6px 12px rgba(174,182,192,0.48), -6px -6px 12px rgba(255,255,255,1), inset 1px 1px 0 rgba(255,255,255,0.44);
   --shadow-btn-secondary: 6px 6px 12px rgba(174,182,192,0.44), -6px -6px 12px rgba(255,255,255,1), inset 1px 1px 0 rgba(255,255,255,0.78);
   --shadow-neu-hover: 5px 5px 9px color-mix(in srgb, rgba(174,182,192,0.48) 84%, transparent), -5px -5px 9px color-mix(in srgb, rgba(255,255,255,1) 86%, transparent), inset 1px 1px 0 color-mix(in srgb, rgba(255,255,255,1) 72%, transparent);
@@ -94,11 +94,18 @@ a { text-decoration: none; color: inherit; }
 .card {
   background: #edf1f5;
   border-radius: var(--r-card);
-  backdrop-filter: blur(0px) saturate(1);
-  -webkit-backdrop-filter: blur(0px) saturate(1);
-  box-shadow: var(--shadow-card);
   position: relative;
-  overflow: hidden;
+}
+/* Shadow lives on a -1 layer so every card face paints above all the
+   shadows — a neighbouring card's light halo never lands on top of a card. */
+.card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--shadow-card);
+  z-index: -1;
+  pointer-events: none;
 }
 .card::before {
   content: '';
@@ -414,7 +421,7 @@ a { text-decoration: none; color: inherit; }
 .cat-scroll {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 20px;
   padding: 0 20px;
   margin-bottom: 28px;
 }
@@ -430,13 +437,6 @@ a { text-decoration: none; color: inherit; }
   align-items: center;
   gap: 12px;
   margin-bottom: 12px;
-}
-.cat-card-icon-wrap {
-  width: 44px; height: 44px;
-  border-radius: 13px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 20px;
-  flex-shrink: 0;
 }
 .cat-card-label {
   flex: 1;

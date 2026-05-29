@@ -33,9 +33,6 @@ export default function CategoryCard({ category, snapshot, onUpdate, onEdit }) {
     <div className="card cat-card">
 
       <div className="cat-card-header">
-        <div className="cat-card-icon-wrap" style={{ background: category.color + '22' }}>
-          {category.icon}
-        </div>
         <div className="cat-card-label">{category.name}</div>
         <button className="cat-card-edit" onClick={onEdit} title="Edit category">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
