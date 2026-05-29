@@ -74,6 +74,11 @@ function buildFakeData(specs, months) {
   const snapshots = {}
   monthList.forEach(m => { snapshots[m] = {} })
 
+  // Shared month-to-month market move so the whole portfolio rises/dips together.
+  // Slight upward drift, but ~a third of months come out negative for variety.
+  const marketMove = monthList.map((_, mi) =>
+    mi === 0 ? 0 : 0.012 + (Math.random() * 2 - 1) * 0.045) // ≈ -3.3% .. +5.7%
+
   const categories = specs.map((spec, ci) => {
     const isLiab = spec.type === 'liability'
     const accounts = spec.accounts.map((acc, ai) => {
@@ -81,9 +86,14 @@ function buildFakeData(specs, months) {
       let val = acc.base
       monthList.forEach((m, mi) => {
         if (mi > 0) {
-          val = isLiab
-            ? Math.max(0, val * (0.955 - Math.random() * 0.02)) // pay down
-            : val * (1 + 0.011 + Math.random() * 0.022)          // grow
+          if (isLiab) {
+            // Trend down (paying off), but occasional upticks (new charges).
+            val = Math.max(0, val * (1 - 0.02 + (Math.random() * 2 - 1) * 0.03))
+          } else {
+            // Shared market move plus a little per-account idiosyncratic noise.
+            const idio = (Math.random() * 2 - 1) * 0.02
+            val = Math.max(0, val * (1 + marketMove[mi] + idio))
+          }
         }
         snapshots[m][accId] = Math.round(val)
       })
