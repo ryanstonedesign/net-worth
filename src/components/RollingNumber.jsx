@@ -1,54 +1,75 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { formatCurrency } from '../utils'
 
-const DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+const OUT_MS = 260
+const IN_MS = 320
 
-// Odometer-style currency value: each digit is a vertical 0-9 reel that slides
-// to its target. Re-plays from zero on mount and whenever `replayKey` changes;
-// rolls digit-to-digit when only `value` changes.
-export default function RollingNumber({ value, replayKey }) {
-  const [phase, setPhase] = useState('reset')
+// Currency value where each digit fades out to zero opacity and back in (with a
+// soft blur) only when that digit actually changes. Digits that stay the same
+// don't animate. Single-line glyphs — nothing is cropped and nothing extends
+// above/below the line to overlap surrounding text.
+export default function RollingNumber({ value }) {
+  const target = formatCurrency(Math.round(value || 0))
+  const [display, setDisplay] = useState(target)
+  const [changed, setChanged] = useState(null) // Set of animating indices, or null
+  const [phase, setPhase] = useState('enter')   // 'enter' | 'out' | 'in' | 'idle'
+  const prevTarget = useRef(target)
+  const timers = useRef([])
 
+  const clearTimers = () => { timers.current.forEach(clearTimeout); timers.current = [] }
+
+  // Entrance — fade the whole number in from zero opacity on mount.
   useEffect(() => {
-    setPhase('reset') // snap reels to zero with no transition
-    let r2
-    const r1 = requestAnimationFrame(() => {
-      r2 = requestAnimationFrame(() => setPhase('run')) // then roll up to target
-    })
-    return () => { cancelAnimationFrame(r1); if (r2) cancelAnimationFrame(r2) }
-  }, [replayKey])
+    setChanged(new Set(target.split('').map((_, i) => i)))
+    setPhase('enter')
+    const raf = requestAnimationFrame(() => setPhase('in'))
+    const t = setTimeout(() => { setChanged(null); setPhase('idle') }, IN_MS + 60)
+    timers.current = [t]
+    return () => { cancelAnimationFrame(raf); clearTimers() }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-  const running = phase === 'run'
-  const str = formatCurrency(Math.round(value || 0))
-  let digitIdx = 0
+  // Value change — fade out only the characters that differ, swap, fade back in.
+  useEffect(() => {
+    if (target === prevTarget.current) return
+    const oldStr = prevTarget.current
+    prevTarget.current = target
+
+    const diff = new Set()
+    if (oldStr.length === target.length) {
+      for (let i = 0; i < target.length; i++) if (oldStr[i] !== target[i]) diff.add(i)
+    } else {
+      for (let i = 0; i < target.length; i++) diff.add(i)
+    }
+    if (diff.size === 0) { setDisplay(target); return }
+
+    clearTimers()
+    setDisplay(oldStr)
+    setChanged(diff)
+    setPhase('out')
+    const t1 = setTimeout(() => { setDisplay(target); setPhase('in') }, OUT_MS)
+    const t2 = setTimeout(() => { setChanged(null); setPhase('idle') }, OUT_MS + IN_MS + 40)
+    timers.current = [t1, t2]
+    return clearTimers
+  }, [target])
 
   return (
     <span className="roll-num">
-      <span className="sr-only">{str}</span>
-      {str.split('').map((ch, i) => {
-        if (ch >= '0' && ch <= '9') {
-          const d = Number(ch)
-          const delay = digitIdx * 0.035
-          digitIdx++
-          return (
-            <span key={i} className="roll-digit" aria-hidden="true">
-              <span
-                className={`roll-col${running ? '' : ' no-anim'}`}
-                style={{
-                  transform: `translateY(${-(running ? d : 0) * 10}%)`,
-                  filter: running ? 'blur(0px)' : 'blur(8px)',
-                  opacity: running ? 1 : 0,
-                  transitionDelay: `${delay}s`,
-                }}
-              >
-                {DIGITS.map(n => (
-                  <span key={n} className="roll-cell">{n}</span>
-                ))}
-              </span>
-            </span>
-          )
-        }
-        return <span key={i} className="roll-sep" aria-hidden="true">{ch}</span>
+      <span className="sr-only">{target}</span>
+      {display.split('').map((ch, i) => {
+        const animating = changed != null && changed.has(i)
+        const hidden = animating && (phase === 'enter' || phase === 'out')
+        const isSep = ch < '0' || ch > '9'
+        return (
+          <span
+            key={i}
+            aria-hidden="true"
+            className={`roll-glyph${isSep ? ' roll-sep' : ''}${phase === 'enter' ? ' no-anim' : ''}`}
+            style={{ opacity: hidden ? 0 : 1, filter: hidden ? 'blur(6px)' : 'blur(0px)' }}
+          >
+            {ch}
+          </span>
+        )
       })}
     </span>
   )

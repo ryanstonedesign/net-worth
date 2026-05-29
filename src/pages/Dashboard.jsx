@@ -153,7 +153,7 @@ export default function Dashboard({
       <div className="hero">
         <div className="hero-eyebrow">Net Worth</div>
         <div className={`hero-amount${isEstimated ? ' estimated' : ''}`}>
-          <RollingNumber value={displayNetWorth} replayKey={timeRange} />
+          <RollingNumber value={displayNetWorth} />
         </div>
         <div className={`hero-delta-line${!isEstimated && delta != null && delta > 0 ? ' positive' : !isEstimated && delta != null && delta < 0 ? ' negative' : ''}`}>
           {isEstimated ? 'Estimated' : delta == null ? '—' : `${delta >= 0 ? '+' : ''}${formatCurrency(delta)} this month`}
