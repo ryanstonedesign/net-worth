@@ -816,3 +816,49 @@ a { text-decoration: none; color: inherit; }
 .fw700 { font-weight: 700; }
 .mt8 { margin-top: 8px; }
 .mt16 { margin-top: 16px; }
+
+/* ── Settings FAB ── */
+.settings-fab {
+  position: fixed;
+  right: 20px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: #edf1f5;
+  color: var(--c-primary);
+  box-shadow: var(--shadow-btn-secondary);
+  z-index: 150;
+  transition: box-shadow 0.15s ease;
+}
+.settings-fab:hover { box-shadow: var(--shadow-neu-hover); }
+.settings-fab:active { box-shadow: var(--shadow-neu-in); }
+.settings-fab svg { width: 24px; height: 24px; }
+
+/* ── Select ── */
+.select-wrap { position: relative; }
+.select {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  background: #edf1f5;
+  border: none;
+  border-radius: var(--r-btn);
+  padding: 12px 40px 12px 16px;
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--c-ink);
+  outline: none;
+  box-shadow: var(--shadow-neu-in);
+  cursor: pointer;
+}
+.select:focus { box-shadow: var(--shadow-neu-in), 0 0 0 2px var(--c-primary); }
+.select-chevron {
+  position: absolute;
+  right: 16px; top: 50%;
+  transform: translateY(-50%);
+  width: 16px; height: 16px;
+  color: var(--c-ink-mute);
+  pointer-events: none;
+}

@@ -2,6 +2,7 @@ import { useData } from './hooks/useData'
 import { getCurrentMonth } from './utils'
 import { useState } from 'react'
 import Dashboard from './pages/Dashboard'
+import PrototypeSettings from './components/PrototypeSettings'
 
 export default function App() {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth)
@@ -19,6 +20,7 @@ export default function App() {
           />
         </div>
       </div>
+      <PrototypeSettings scenario={dataHook.scenario} onScenarioChange={dataHook.setScenario} />
     </>
   )
 }

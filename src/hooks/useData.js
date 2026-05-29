@@ -1,6 +1,15 @@
 import { useState, useEffect, useCallback } from 'react'
+import { getCurrentMonth, getAdjacentMonth } from '../utils'
 
-const STORAGE_KEY = 'networth_v1'
+// "None" holds the user's real data and is never overwritten by a scenario.
+// Each prototype scenario lives in its own slot so real data is always safe.
+const SCENARIO_KEY = 'networth_scenario'
+const SLOT_KEYS = {
+  none: 'networth_v1',
+  firsttime: 'networth_proto_firsttime',
+  '6month': 'networth_proto_6month',
+  '1year': 'networth_proto_1year',
+}
 
 export const CATEGORY_COLORS = [
   '#5987A6', '#4E4D8F', '#4F9289', '#F59E0B',
@@ -9,20 +18,142 @@ export const CATEGORY_COLORS = [
 
 export const CATEGORY_ICONS = ['🏦', '📈', '🎓', '🏠', '🚗', '💰', '💳', '📊', '💎', '🏪']
 
-function loadData() {
+// ── Prototype scenario datasets ──
+const SCENARIO_6M = [
+  { name: 'Cash', type: 'asset', icon: '🏦', accounts: [
+    { name: 'Checking', base: 5200 },
+    { name: 'Savings', base: 16000 },
+  ] },
+  { name: 'Investments', type: 'asset', icon: '📈', accounts: [
+    { name: 'Brokerage', base: 28000 },
+    { name: '401(k)', base: 47000 },
+  ] },
+  { name: 'Real Estate', type: 'asset', icon: '🏠', accounts: [
+    { name: 'Home', base: 320000 },
+  ] },
+  { name: 'Credit Cards', type: 'liability', icon: '💳', accounts: [
+    { name: 'Visa', base: 4200 },
+  ] },
+] // 4 categories, 6 accounts
+
+const SCENARIO_1Y = [
+  { name: 'Cash', type: 'asset', icon: '🏦', accounts: [
+    { name: 'Checking', base: 5200 },
+    { name: 'Savings', base: 16000 },
+  ] },
+  { name: 'Investments', type: 'asset', icon: '📈', accounts: [
+    { name: 'Brokerage', base: 28000 },
+    { name: 'Roth IRA', base: 13500 },
+  ] },
+  { name: 'Retirement', type: 'asset', icon: '💰', accounts: [
+    { name: '401(k)', base: 47000 },
+  ] },
+  { name: 'Real Estate', type: 'asset', icon: '🏠', accounts: [
+    { name: 'Home', base: 320000 },
+  ] },
+  { name: 'Crypto', type: 'asset', icon: '💎', accounts: [
+    { name: 'Bitcoin', base: 9000 },
+    { name: 'Ethereum', base: 4500 },
+  ] },
+  { name: 'Business', type: 'asset', icon: '🏪', accounts: [
+    { name: 'Business Account', base: 21000 },
+  ] },
+  { name: 'Credit Cards', type: 'liability', icon: '💳', accounts: [
+    { name: 'Visa', base: 4200 },
+    { name: 'Amex', base: 2100 },
+  ] },
+  { name: 'Loans', type: 'liability', icon: '🎓', accounts: [
+    { name: 'Student Loan', base: 26000 },
+  ] },
+] // 8 categories, 12 accounts
+
+function buildFakeData(specs, months) {
+  const now = getCurrentMonth()
+  const monthList = Array.from({ length: months }, (_, i) =>
+    getAdjacentMonth(now, -(months - 1 - i)))
+  const snapshots = {}
+  monthList.forEach(m => { snapshots[m] = {} })
+
+  const categories = specs.map((spec, ci) => {
+    const isLiab = spec.type === 'liability'
+    const accounts = spec.accounts.map((acc, ai) => {
+      const accId = `pacc_${ci}_${ai}`
+      let val = acc.base
+      monthList.forEach((m, mi) => {
+        if (mi > 0) {
+          val = isLiab
+            ? Math.max(0, val * (0.955 - Math.random() * 0.02)) // pay down
+            : val * (1 + 0.011 + Math.random() * 0.022)          // grow
+        }
+        snapshots[m][accId] = Math.round(val)
+      })
+      return { id: accId, name: acc.name }
+    })
+    return {
+      id: `pcat_${ci}`,
+      name: spec.name,
+      type: spec.type,
+      icon: spec.icon,
+      color: CATEGORY_COLORS[ci % CATEGORY_COLORS.length],
+      accounts,
+    }
+  })
+
+  const latest = monthList[monthList.length - 1]
+  const latestNet = categories.reduce((tot, c) => {
+    const s = c.accounts.reduce((sum, a) => sum + (snapshots[latest][a.id] || 0), 0)
+    return tot + (c.type === 'liability' ? -s : s)
+  }, 0)
+  const goal = Math.max(10000, Math.round(latestNet * 1.3 / 10000) * 10000)
+
+  return { categories, snapshots, goal }
+}
+
+function genScenarioData(scenario) {
+  if (scenario === '6month') return buildFakeData(SCENARIO_6M, 6)
+  if (scenario === '1year') return buildFakeData(SCENARIO_1Y, 12)
+  return { categories: [], snapshots: {}, goal: null } // firsttime
+}
+
+function loadScenario() {
   try {
-    const s = localStorage.getItem(STORAGE_KEY)
+    const s = localStorage.getItem(SCENARIO_KEY)
+    if (s && SLOT_KEYS[s]) return s
+  } catch {}
+  return 'none'
+}
+
+function readSlot(scenario) {
+  try {
+    const s = localStorage.getItem(SLOT_KEYS[scenario])
     if (s) return JSON.parse(s)
   } catch {}
-  return { categories: [], snapshots: {}, goal: null }
+  return null
+}
+
+function loadInitial(scenario) {
+  const stored = readSlot(scenario)
+  if (stored) return stored
+  if (scenario === 'none') return { categories: [], snapshots: {}, goal: null }
+  return genScenarioData(scenario)
 }
 
 export function useData() {
-  const [data, setData] = useState(loadData)
+  const [scenario, setScenarioState] = useState(loadScenario)
+  const [data, setData] = useState(() => loadInitial(loadScenario()))
 
+  // Persist edits to the active scenario's own slot — never crosses slots.
   useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)) } catch {}
-  }, [data])
+    try { localStorage.setItem(SLOT_KEYS[scenario], JSON.stringify(data)) } catch {}
+  }, [data, scenario])
+
+  const setScenario = useCallback((next) => {
+    if (!SLOT_KEYS[next]) return
+    setScenarioState(next)
+    try { localStorage.setItem(SCENARIO_KEY, next) } catch {}
+    // "None" restores the user's real data untouched; fake scenarios regenerate fresh.
+    setData(next === 'none' ? loadInitial('none') : genScenarioData(next))
+  }, [])
 
   const addCategoryWithAccounts = useCallback((cat, accounts = []) => {
     const catId = `cat_${Date.now()}`
@@ -149,6 +280,8 @@ export function useData() {
 
   return {
     data,
+    scenario,
+    setScenario,
     goal: data.goal ?? null,
     setGoal,
     addCategoryWithAccounts,
