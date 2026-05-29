@@ -743,7 +743,6 @@ a { text-decoration: none; color: inherit; }
   background: var(--c-surface-muted);
   border-radius: 999px;
   padding: 4px;
-  position: relative;
 }
 .type-toggle-btn {
   flex: 1;
@@ -763,8 +762,7 @@ a { text-decoration: none; color: inherit; }
   color: var(--c-primary);
   box-shadow: 3px 3px 7px rgba(174,182,192,0.3), -3px -3px 7px rgba(255,255,255,0.5);
 }
-/* 1px gradient border (white, fading top→bottom) on the toggle and its thumb */
-.type-toggle::before,
+/* 1px gradient border (white, fading top→bottom) on the selected thumb only */
 .type-toggle-btn.active::before {
   content: '';
   position: absolute;
