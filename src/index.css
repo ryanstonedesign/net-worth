@@ -201,18 +201,17 @@ a { text-decoration: none; color: inherit; }
 /* ── Input ── */
 .input {
   width: 100%;
-  background: #edf1f5;
-  border: none;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: var(--r-btn);
   padding: 12px 16px;
   font-family: var(--font);
   font-size: 16px;
   color: var(--c-ink);
   outline: none;
-  box-shadow: var(--shadow-neu-in);
-  transition: box-shadow 0.2s;
+  transition: border-color 0.2s;
 }
-.input:focus { box-shadow: var(--shadow-neu-in), 0 0 0 2px var(--c-primary); }
+.input:focus { border-color: var(--c-primary); }
 .input::placeholder { color: var(--c-ink-mute); }
 
 /* ── Bottom nav ── */
@@ -648,8 +647,8 @@ a { text-decoration: none; color: inherit; }
 .update-amount-input {
   width: 130px;
   text-align: right;
-  background: #edf1f5;
-  border: none;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: 12px;
   padding: 8px 12px 8px 20px;
   font-family: var(--font);
@@ -657,11 +656,10 @@ a { text-decoration: none; color: inherit; }
   font-weight: 600;
   color: var(--c-ink);
   outline: none;
-  box-shadow: var(--shadow-neu-in);
-  transition: box-shadow 0.2s;
+  transition: border-color 0.2s;
 }
 .update-amount-input:focus {
-  box-shadow: var(--shadow-neu-in), 0 0 0 2px var(--c-primary);
+  border-color: var(--c-primary);
 }
 
 /* ── Sticky bottom bar ── */
@@ -901,8 +899,8 @@ a { text-decoration: none; color: inherit; }
   width: 100%;
   appearance: none;
   -webkit-appearance: none;
-  background: #edf1f5;
-  border: none;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: var(--r-btn);
   padding: 12px 40px 12px 16px;
   font-family: var(--font);
@@ -910,10 +908,10 @@ a { text-decoration: none; color: inherit; }
   font-weight: 600;
   color: var(--c-ink);
   outline: none;
-  box-shadow: var(--shadow-neu-in);
   cursor: pointer;
+  transition: border-color 0.2s;
 }
-.select:focus { box-shadow: var(--shadow-neu-in), 0 0 0 2px var(--c-primary); }
+.select:focus { border-color: var(--c-primary); }
 .select-chevron {
   position: absolute;
   right: 16px; top: 50%;
