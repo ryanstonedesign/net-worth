@@ -219,7 +219,7 @@ export default function Dashboard({
       <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 20, paddingRight: 20, marginBottom: 12 }}>
         <span className="section-title">Categories</span>
         {data.categories.length > 0 && (
-          <button className="add-category-link" onClick={() => setEditSheet('new')}>+ Add</button>
+          <button className="add-category-link" onClick={() => setEditSheet('new')}>Add</button>
         )}
       </div>
 
