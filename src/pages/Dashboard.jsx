@@ -216,8 +216,11 @@ export default function Dashboard({
       )}
 
       {/* Categories */}
-      <div style={{ paddingLeft: 20, marginBottom: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 20, paddingRight: 20, marginBottom: 12 }}>
         <span className="section-title">Categories</span>
+        {data.categories.length > 0 && (
+          <button className="add-category-link" onClick={() => setEditSheet('new')}>+ Add</button>
+        )}
       </div>
 
       <div className="cat-scroll">
@@ -231,17 +234,19 @@ export default function Dashboard({
           />
         ))}
 
-        {/* Add category */}
-        <button className="cat-card-add" onClick={() => setEditSheet('new')}>
-          <div className="cat-card-add-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-          </div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-primary)' }}>
-            Add Category
-          </div>
-        </button>
+        {/* Add category card — only when empty */}
+        {data.categories.length === 0 && (
+          <button className="cat-card-add" onClick={() => setEditSheet('new')}>
+            <div className="cat-card-add-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-primary)' }}>
+              Add Category
+            </div>
+          </button>
+        )}
       </div>
 
       <div style={{ height: 40 }} />
