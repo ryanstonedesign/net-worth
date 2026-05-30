@@ -164,10 +164,7 @@ export default function Dashboard({
           {goal == null ? (
             <span className="hero-goal-set">Set a goal</span>
           ) : (
-            <>
-              <span className="hero-goal-target">Goal {formatCompact(goal)}</span>
-              {goalLabel && <span className="hero-goal-time"> · {goalLabel}</span>}
-            </>
+            <span className="hero-goal-time">{goalLabel ?? 'Goal set'}</span>
           )}
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 4, opacity: 0.5, flexShrink: 0 }}>
             <polyline points="9 18 15 12 9 6"/>
