@@ -8,7 +8,7 @@ const SCENARIOS = [
   { value: '1year', label: '1 year' },
 ]
 
-export default function PrototypeSettings({ scenario, onScenarioChange }) {
+export default function PrototypeSettings({ scenario, onScenarioChange, onSignOut }) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -48,6 +48,20 @@ export default function PrototypeSettings({ scenario, onScenarioChange }) {
               shows your own saved data and is never overwritten.
             </p>
           </div>
+
+          {onSignOut && (
+            <button
+              style={{
+                display: 'block', width: '100%', marginTop: 12, padding: '12px',
+                background: 'none', border: 'none', cursor: 'pointer',
+                fontSize: 13, fontWeight: 600, color: 'var(--c-danger)',
+                fontFamily: 'var(--font)',
+              }}
+              onClick={() => { onSignOut(); setOpen(false) }}
+            >
+              Sign Out
+            </button>
+          )}
         </Modal>
       )}
     </>

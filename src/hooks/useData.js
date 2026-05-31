@@ -148,14 +148,32 @@ function loadInitial(scenario) {
   return genScenarioData(scenario)
 }
 
-export function useData() {
+export function useData({ initialData = null, onChange = null } = {}) {
   const [scenario, setScenarioState] = useState(loadScenario)
-  const [data, setData] = useState(() => loadInitial(loadScenario()))
+  const [data, setData] = useState(() => {
+    const active = loadScenario()
+    if (active === 'none' && initialData) return initialData
+    return loadInitial(active)
+  })
 
   // Persist edits to the active scenario's own slot — never crosses slots.
+  // For "none" this is just an offline cache; the encrypted cloud row is authoritative.
   useEffect(() => {
     try { localStorage.setItem(SLOT_KEYS[scenario], JSON.stringify(data)) } catch {}
   }, [data, scenario])
+
+  // Debounced push of the real ("none") data to the cloud as ciphertext.
+  useEffect(() => {
+    if (!onChange || scenario !== 'none') return
+    const t = setTimeout(() => { onChange(data) }, 600)
+    return () => clearTimeout(t)
+  }, [data, scenario, onChange])
+
+  // If the vault arrives async after mount, adopt it for the "none" slot.
+  useEffect(() => {
+    if (initialData && scenario === 'none') setData(initialData)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialData])
 
   const setScenario = useCallback((next) => {
     if (!SLOT_KEYS[next]) return

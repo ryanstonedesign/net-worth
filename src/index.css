@@ -935,3 +935,69 @@ a { text-decoration: none; color: inherit; }
   color: var(--c-ink-mute);
   pointer-events: none;
 }
+
+/* ── Auth / lock screens ── */
+.auth-shell {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.auth-card {
+  width: 100%;
+  max-width: 380px;
+  padding: 28px 24px;
+}
+.auth-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--c-ink-mute);
+  margin-bottom: 8px;
+}
+.auth-title {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--c-ink);
+  margin: 0 0 8px;
+}
+.auth-sub {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--c-ink-mute);
+  margin: 0 0 24px;
+}
+.auth-warn {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--c-ink-mute);
+  margin: -4px 0 16px;
+}
+.auth-warn input { margin-top: 3px; flex-shrink: 0; }
+.auth-warn strong { color: var(--c-ink); }
+.auth-error {
+  font-size: 13px;
+  color: var(--c-danger);
+  margin: 0 0 12px;
+}
+.auth-switch {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-primary);
+}
