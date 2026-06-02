@@ -893,9 +893,9 @@ a { text-decoration: none; color: inherit; }
 /* ── Settings FAB ── */
 .settings-fab {
   position: fixed;
-  right: 20px;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
-  width: 56px; height: 56px;
+  right: 16px;
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  width: 44px; height: 44px;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   background: #edf1f5;
@@ -906,7 +906,7 @@ a { text-decoration: none; color: inherit; }
 }
 .settings-fab:hover { box-shadow: var(--shadow-neu-hover); }
 .settings-fab:active { box-shadow: var(--shadow-neu-in); }
-.settings-fab svg { width: 24px; height: 24px; }
+.settings-fab svg { width: 20px; height: 20px; }
 
 /* ── Select ── */
 .select-wrap { position: relative; }

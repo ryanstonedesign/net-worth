@@ -15,7 +15,7 @@ export default function PrototypeSettings({ scenario, onScenarioChange, onSignOu
     <>
       <button
         className="settings-fab"
-        aria-label="Prototype settings"
+        aria-label="Settings"
         onClick={() => setOpen(true)}
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -25,7 +25,7 @@ export default function PrototypeSettings({ scenario, onScenarioChange, onSignOu
       </button>
 
       {open && (
-        <Modal title="Prototype Settings" onClose={() => setOpen(false)}>
+        <Modal title="Settings" onClose={() => setOpen(false)}>
           <div className="form-group">
             <label className="form-label" htmlFor="scenario-select">Scenario</label>
             <div className="select-wrap">
