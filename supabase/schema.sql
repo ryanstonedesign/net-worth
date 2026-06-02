@@ -7,8 +7,24 @@ create table if not exists public.vaults (
   iv         text not null,
   salt       text not null,
   version    int  not null default 0,
+  -- DEK (data encryption key) wrapped by the password-derived KEK. NULL for
+  -- legacy rows; auto-migrated on next unlock.
+  wrapped_dek      text,
+  wrapped_dek_iv   text,
+  -- DEK wrapped by a recovery-phrase-derived KEK. NULL until the user
+  -- generates a recovery phrase.
+  wrapped_dek_recovery     text,
+  wrapped_dek_recovery_iv  text,
+  recovery_salt            text,
   updated_at timestamptz not null default now()
 );
+
+-- Migration for existing tables (idempotent — safe to re-run).
+alter table public.vaults add column if not exists wrapped_dek text;
+alter table public.vaults add column if not exists wrapped_dek_iv text;
+alter table public.vaults add column if not exists wrapped_dek_recovery text;
+alter table public.vaults add column if not exists wrapped_dek_recovery_iv text;
+alter table public.vaults add column if not exists recovery_salt text;
 
 alter table public.vaults enable row level security;
 

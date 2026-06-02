@@ -1,47 +1,49 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase, isConfigured } from '../lib/supabase'
-import { deriveKey, newSalt, decryptJSON } from '../lib/crypto'
-import { fetchSalt, fetchVault, pullVault, pushVault } from '../lib/sync'
+import {
+  deriveKey, newSalt, decryptJSON, encryptJSON,
+  generateDEK, wrapDEK, unwrapDEK,
+  generateRecoveryPhrase, normalizeRecoveryPhrase,
+} from '../lib/crypto'
+import { fetchSalt, fetchVault, pushVault, pushWrappingChange } from '../lib/sync'
 
 // Stages:
-//   'legacy'  – no backend configured, app runs local-only (no auth, no sync)
+//   'legacy'  – no backend configured, app runs local-only
 //   'loading' – checking session
 //   'auth'    – no session, show sign in / sign up
-//   'lock'    – session present but encryption key not in memory (after reload)
-//   'unlock'  – ready, key derived, data available
+//   'lock'    – session present but DEK not in memory (after reload)
+//   'unlock'  – ready, DEK derived, data available
 const SALT_CACHE_KEY = 'networth_salt_v1'
 
 export function useVault() {
   const [stage, setStage] = useState(isConfigured ? 'loading' : 'legacy')
   const [user, setUser] = useState(null)
   const [error, setError] = useState(null)
-  const keyRef = useRef(null)        // CryptoKey, kept in memory only
+  // The DEK is what actually encrypts the vault. KEKs (derived from passwords
+  // or recovery phrases) only wrap/unwrap it. Held in memory only.
+  const dekRef = useRef(null)
   const saltRef = useRef(null)
   const versionRef = useRef(0)
-  const [initialData, setInitialData] = useState(null) // hand to useData on unlock
+  const [initialData, setInitialData] = useState(null)
+  // After signup, hold the recovery phrase here so the UI can show it once.
+  const [pendingRecoveryPhrase, setPendingRecoveryPhrase] = useState(null)
 
-  // Session bootstrap
   useEffect(() => {
     if (!isConfigured) return
     let mounted = true
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!mounted) return
-      if (session?.user) {
-        setUser(session.user)
-        setStage('lock') // session valid, but key not derived yet
-      } else {
-        setStage('auth')
-      }
+      if (session?.user) { setUser(session.user); setStage('lock') }
+      else { setStage('auth') }
     })
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session?.user) {
-        keyRef.current = null
+        dekRef.current = null
         saltRef.current = null
         setUser(null)
         setInitialData(null)
         setStage('auth')
       } else {
-        // Avoid spurious re-renders on token refresh — only swap user if id changed.
         setUser(prev => prev?.id === session.user.id ? prev : session.user)
       }
     })
@@ -56,55 +58,103 @@ export function useVault() {
     try { localStorage.setItem(SALT_CACHE_KEY, salt) } catch {}
   }, [])
 
+  // Migrate a legacy row (encrypted directly with KEK_p) to the DEK format.
+  // Decrypts with the old KEK, generates a fresh DEK, re-encrypts with DEK,
+  // wraps DEK with KEK_p, and saves.
+  async function migrateLegacyRow(userId, kek, row) {
+    const data = await decryptJSON(kek, { ciphertext: row.ciphertext, iv: row.iv })
+    const dek = await generateDEK()
+    const { wrapped, iv: wrappedIv } = await wrapDEK(dek, kek)
+    versionRef.current = row.version + 1
+    await pushVault({
+      userId, dek, salt: row.salt, data, version: versionRef.current,
+      wrappedDek: wrapped, wrappedDekIv: wrappedIv,
+    })
+    return { dek, data }
+  }
+
   const signUp = useCallback(async (email, password) => {
     setError(null)
     const { data, error } = await supabase.auth.signUp({ email, password })
     if (error) { setError(error.message); return }
     if (!data.user) { setError('Confirm your email, then sign in.'); return }
-    // Fresh user → mint a new salt, derive key, vault stays empty until first save.
+    // Generate fresh DEK + salt, wrap DEK with the password-derived KEK,
+    // and seed the server with an empty vault.
     const salt = newSalt()
     saltRef.current = salt
     saveCachedSalt(salt)
-    keyRef.current = await deriveKey(password, salt)
-    versionRef.current = 0
-    setInitialData(null)
+    const kek = await deriveKey(password, salt)
+    const dek = await generateDEK()
+    dekRef.current = dek
+    const { wrapped, iv: wrappedIv } = await wrapDEK(dek, kek)
+    // Auto-generate a recovery phrase at signup. The phrase is shown to the
+    // user once via pendingRecoveryPhrase and never stored anywhere readable.
+    const phrase = generateRecoveryPhrase()
+    const recoverySalt = newSalt()
+    const recoveryKek = await deriveKey(phrase, recoverySalt)
+    const { wrapped: rWrapped, iv: rWrappedIv } = await wrapDEK(dek, recoveryKek)
+    versionRef.current = 1
+    const emptyData = { categories: [], snapshots: {}, goal: null }
+    try {
+      await pushVault({
+        userId: data.user.id, dek, salt, data: emptyData, version: 1,
+        wrappedDek: wrapped, wrappedDekIv: wrappedIv,
+        wrappedDekRecovery: rWrapped, wrappedDekRecoveryIv: rWrappedIv,
+        recoverySalt,
+      })
+    } catch {
+      // Network errors during initial push — first edit will retry.
+    }
+    setInitialData(emptyData)
+    setPendingRecoveryPhrase(phrase)
     setStage('unlock')
   }, [saveCachedSalt])
+
+  const unlockWithPassword = useCallback(async (password, userId) => {
+    setError(null)
+    try {
+      // Prefer the server's salt — it lives with the vault row. If the row
+      // doesn't exist yet, fall back to cached/new for first-time sign-in.
+      let salt = await fetchSalt(userId)
+      if (!salt) salt = cachedSalt() || newSalt()
+      saltRef.current = salt
+      saveCachedSalt(salt)
+      const kek = await deriveKey(password, salt)
+
+      const row = await fetchVault(userId)
+      if (!row) {
+        // No vault yet — happens if signup didn't push successfully.
+        const dek = await generateDEK()
+        dekRef.current = dek
+        versionRef.current = 0
+        setInitialData(null)
+        setStage('unlock')
+        return
+      }
+      let dek, data
+      if (row.wrapped_dek) {
+        dek = await unwrapDEK(row.wrapped_dek, row.wrapped_dek_iv, kek)
+        data = await decryptJSON(dek, { ciphertext: row.ciphertext, iv: row.iv })
+        versionRef.current = row.version
+      } else {
+        // Legacy row from pre-DEK days. Migrate transparently.
+        ;({ dek, data } = await migrateLegacyRow(userId, kek, row))
+      }
+      dekRef.current = dek
+      setInitialData(data)
+      setStage('unlock')
+    } catch {
+      dekRef.current = null
+      setError('Could not unlock. Check your password.')
+    }
+  }, [cachedSalt, saveCachedSalt])
 
   const signIn = useCallback(async (email, password) => {
     setError(null)
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) { setError(error.message); return }
     await unlockWithPassword(password, data.user.id)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const unlockWithPassword = useCallback(async (password, userId) => {
-    setError(null)
-    try {
-      // Salt lives with the vault row. Pull just the salt first (cheap, no decrypt).
-      let salt = await fetchSalt(userId)
-      if (!salt) {
-        salt = cachedSalt() || newSalt() // first-ever sign-in on a device
-      }
-      saltRef.current = salt
-      saveCachedSalt(salt)
-      keyRef.current = await deriveKey(password, salt)
-
-      const pulled = await pullVault({ userId, key: keyRef.current })
-      if (pulled) {
-        versionRef.current = pulled.version
-        setInitialData(pulled.data)
-      } else {
-        versionRef.current = 0
-        setInitialData(null)
-      }
-      setStage('unlock')
-    } catch (e) {
-      // Most likely: wrong passphrase → AES-GCM tag mismatch throws.
-      keyRef.current = null
-      setError('Could not unlock. Check your password.')
-    }
-  }, [cachedSalt, saveCachedSalt])
+  }, [unlockWithPassword])
 
   const unlock = useCallback(async (password) => {
     if (!user) return
@@ -112,107 +162,175 @@ export function useVault() {
   }, [user, unlockWithPassword])
 
   const signOut = useCallback(async () => {
-    keyRef.current = null
+    dekRef.current = null
     saltRef.current = null
     setInitialData(null)
     await supabase.auth.signOut()
   }, [])
 
-  // Change password while signed in. Re-derives the encryption key with the
-  // new password and re-encrypts the vault, then updates Supabase auth.
-  // Order matters: write the new ciphertext FIRST. If the auth password update
-  // fails after that, the user can still sign in with their old password (the
-  // server vault has the new key, the auth has the old password — they'd be
-  // stuck). So we update auth last and surface any failure clearly.
-  const changePassword = useCallback(async ({ currentPassword, newPassword }) => {
-    if (!user || !keyRef.current || !saltRef.current) {
-      return { ok: false, error: 'Not signed in.' }
-    }
-    if (!newPassword || newPassword.length < 8) {
-      return { ok: false, error: 'New password must be at least 8 characters.' }
-    }
-    // Verify the current password by re-deriving and comparing decrypt.
-    try {
-      const verifyKey = await deriveKey(currentPassword, saltRef.current)
-      const row = await fetchVault(user.id)
-      if (!row) return { ok: false, error: 'No vault to re-encrypt.' }
-      await decryptJSON(verifyKey, { ciphertext: row.ciphertext, iv: row.iv })
-    } catch {
-      return { ok: false, error: 'Current password is incorrect.' }
-    }
-    try {
-      // Re-encrypt the in-memory data with a key derived from the new password.
-      const newKey = await deriveKey(newPassword, saltRef.current)
-      // Pull the latest from server so we re-encrypt the freshest copy.
-      const row = await fetchVault(user.id)
-      const data = await decryptJSON(keyRef.current, { ciphertext: row.ciphertext, iv: row.iv })
-      versionRef.current = row.version + 1
-      await pushVault({
-        userId: user.id,
-        key: newKey,
-        salt: saltRef.current,
-        data,
-        version: versionRef.current,
-      })
-      // Vault now uses new key. Update Supabase auth password.
-      const { error } = await supabase.auth.updateUser({ password: newPassword })
-      if (error) {
-        // Vault is re-encrypted with new key but auth still uses old password.
-        // Roll back: re-encrypt with old key so user can sign in with old pw.
-        try {
-          await pushVault({
-            userId: user.id,
-            key: keyRef.current,
-            salt: saltRef.current,
-            data,
-            version: ++versionRef.current,
-          })
-        } catch {}
-        return { ok: false, error: error.message }
-      }
-      keyRef.current = newKey
-      return { ok: true }
-    } catch (e) {
-      return { ok: false, error: 'Could not change password. Try again.' }
-    }
-  }, [user])
-
-  // Destructive escape hatch when the user has forgotten their password (or
-  // had it reset through Supabase) and can't decrypt the vault. Deletes the
-  // ciphertext row on the server, clears the cached salt locally, then signs
-  // out. The user can sign back in (their auth still works) and start fresh.
+  // Forgot-password escape hatch on the lock screen.
   const resetVault = useCallback(async () => {
     if (!user) return
-    try {
-      await supabase.from('vaults').delete().eq('user_id', user.id)
-    } catch {}
+    try { await supabase.from('vaults').delete().eq('user_id', user.id) } catch {}
     try { localStorage.removeItem(SALT_CACHE_KEY) } catch {}
     try { localStorage.removeItem('networth_v1') } catch {}
-    keyRef.current = null
+    dekRef.current = null
     saltRef.current = null
     setInitialData(null)
     await supabase.auth.signOut()
   }, [user])
 
-  // Called by useData after a debounced change. Pushes ciphertext, never plaintext.
+  // Debounced push of the real ("none") data — encrypted with the DEK.
   const pushData = useCallback(async (data) => {
-    if (!user || !keyRef.current || !saltRef.current) return
+    if (!user || !dekRef.current || !saltRef.current) return
     versionRef.current += 1
     try {
+      const row = await fetchVault(user.id)
       await pushVault({
         userId: user.id,
-        key: keyRef.current,
+        dek: dekRef.current,
         salt: saltRef.current,
         data,
         version: versionRef.current,
+        // Preserve existing wrapping fields. Without this, an upsert would
+        // null them out and we'd lose the recovery wrap.
+        wrappedDek: row?.wrapped_dek,
+        wrappedDekIv: row?.wrapped_dek_iv,
+        wrappedDekRecovery: row?.wrapped_dek_recovery,
+        wrappedDekRecoveryIv: row?.wrapped_dek_recovery_iv,
+        recoverySalt: row?.recovery_salt,
       })
     } catch {
-      // Offline / transient error — local cache still holds the data; retry on next change.
+      // Offline / transient — local cache still holds the data; retry next change.
     }
   }, [user])
 
+  // Change password while signed in: re-wrap the existing DEK with a key
+  // derived from the new password. Ciphertext is unchanged.
+  const changePassword = useCallback(async ({ currentPassword, newPassword }) => {
+    if (!user || !dekRef.current || !saltRef.current) {
+      return { ok: false, error: 'Not signed in.' }
+    }
+    if (!newPassword || newPassword.length < 8) {
+      return { ok: false, error: 'New password must be at least 8 characters.' }
+    }
+    try {
+      // Verify the current password by re-deriving and unwrapping.
+      const oldKek = await deriveKey(currentPassword, saltRef.current)
+      const row = await fetchVault(user.id)
+      if (!row?.wrapped_dek) return { ok: false, error: 'Vault not ready.' }
+      try {
+        await unwrapDEK(row.wrapped_dek, row.wrapped_dek_iv, oldKek)
+      } catch {
+        return { ok: false, error: 'Current password is incorrect.' }
+      }
+      // Wrap the existing DEK with a key derived from the new password.
+      const newKek = await deriveKey(newPassword, saltRef.current)
+      const { wrapped, iv: wrappedIv } = await wrapDEK(dekRef.current, newKek)
+      versionRef.current = row.version + 1
+      await pushWrappingChange({
+        userId: user.id, version: versionRef.current, salt: saltRef.current,
+        wrappedDek: wrapped, wrappedDekIv: wrappedIv,
+        ciphertext: row.ciphertext, iv: row.iv,
+      })
+      const { error } = await supabase.auth.updateUser({ password: newPassword })
+      if (error) {
+        // Rollback to old wrap so user can still sign in with old password.
+        const { wrapped: oldWrapped, iv: oldWrappedIv } = await wrapDEK(dekRef.current, oldKek)
+        try {
+          await pushWrappingChange({
+            userId: user.id, version: ++versionRef.current, salt: saltRef.current,
+            wrappedDek: oldWrapped, wrappedDekIv: oldWrappedIv,
+            ciphertext: row.ciphertext, iv: row.iv,
+          })
+        } catch {}
+        return { ok: false, error: error.message }
+      }
+      return { ok: true }
+    } catch {
+      return { ok: false, error: 'Could not change password. Try again.' }
+    }
+  }, [user])
+
+  // Generate (or regenerate) a recovery phrase. Wraps the existing DEK with
+  // a key derived from a freshly random phrase and saves wrapped_dek_recovery.
+  // Returns the phrase ONCE — caller must show it to the user immediately.
+  const generateRecovery = useCallback(async () => {
+    if (!user || !dekRef.current || !saltRef.current) {
+      return { ok: false, error: 'Not signed in.' }
+    }
+    try {
+      const phrase = generateRecoveryPhrase()
+      const recoverySalt = newSalt()
+      const recoveryKek = await deriveKey(phrase, recoverySalt)
+      const { wrapped, iv: wrappedIv } = await wrapDEK(dekRef.current, recoveryKek)
+      const row = await fetchVault(user.id)
+      versionRef.current = (row?.version ?? 0) + 1
+      await pushWrappingChange({
+        userId: user.id, version: versionRef.current, salt: saltRef.current,
+        wrappedDek: row.wrapped_dek, wrappedDekIv: row.wrapped_dek_iv,
+        wrappedDekRecovery: wrapped, wrappedDekRecoveryIv: wrappedIv,
+        recoverySalt,
+        ciphertext: row.ciphertext, iv: row.iv,
+      })
+      return { ok: true, phrase }
+    } catch (e) {
+      return { ok: false, error: 'Could not generate recovery phrase.' }
+    }
+  }, [user])
+
+  // Recovery unlock from the lock screen: user is signed in (their auth
+  // password works) but can't decrypt the vault — typically because they
+  // reset their password via Supabase's email flow. They provide their
+  // recovery phrase + the current auth password. We unwrap the DEK with the
+  // phrase, then re-wrap it with the password's KEK so future unlocks work.
+  const unlockWithRecovery = useCallback(async ({ recoveryPhrase, currentPassword }) => {
+    if (!user) return { ok: false, error: 'Sign in first.' }
+    if (!recoveryPhrase || !currentPassword) {
+      return { ok: false, error: 'Recovery phrase and password are required.' }
+    }
+    try {
+      const row = await fetchVault(user.id)
+      if (!row?.wrapped_dek_recovery || !row.recovery_salt) {
+        return { ok: false, error: 'No recovery phrase has been set on this account.' }
+      }
+      const normalized = normalizeRecoveryPhrase(recoveryPhrase)
+      if (normalized.length < 32) {
+        return { ok: false, error: 'Recovery phrase looks incomplete.' }
+      }
+      const recoveryKek = await deriveKey(normalized, row.recovery_salt)
+      let dek
+      try {
+        dek = await unwrapDEK(row.wrapped_dek_recovery, row.wrapped_dek_recovery_iv, recoveryKek)
+      } catch {
+        return { ok: false, error: 'Recovery phrase is incorrect.' }
+      }
+      saltRef.current = row.salt
+      const newKek = await deriveKey(currentPassword, row.salt)
+      const { wrapped, iv: wrappedIv } = await wrapDEK(dek, newKek)
+      versionRef.current = row.version + 1
+      await pushWrappingChange({
+        userId: user.id, version: versionRef.current, salt: row.salt,
+        wrappedDek: wrapped, wrappedDekIv: wrappedIv,
+        ciphertext: row.ciphertext, iv: row.iv,
+      })
+      dekRef.current = dek
+      const data = await decryptJSON(dek, { ciphertext: row.ciphertext, iv: row.iv })
+      setInitialData(data)
+      setStage('unlock')
+      return { ok: true }
+    } catch {
+      return { ok: false, error: 'Recovery failed. Try again.' }
+    }
+  }, [user])
+
+  const clearPendingRecoveryPhrase = useCallback(() => setPendingRecoveryPhrase(null), [])
+
   return {
     stage, user, error, initialData,
-    signUp, signIn, unlock, signOut, resetVault, changePassword, pushData,
+    pendingRecoveryPhrase, clearPendingRecoveryPhrase,
+    signUp, signIn, unlock, signOut, resetVault, changePassword,
+    generateRecovery, unlockWithRecovery,
+    pushData,
   }
 }

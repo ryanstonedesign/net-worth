@@ -1,9 +1,66 @@
 import { useState } from 'react'
 
-export default function LockScreen({ email, onUnlock, onSignOut, onResetVault, error }) {
+function RecoveryForm({ onSubmit, onCancel }) {
+  const [phrase, setPhrase] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
-  const [confirmReset, setConfirmReset] = useState(false)
+  const [error, setError] = useState(null)
+
+  const submit = async (e) => {
+    e.preventDefault()
+    if (!phrase || !password) return
+    setBusy(true); setError(null)
+    const result = await onSubmit({ recoveryPhrase: phrase, currentPassword: password })
+    setBusy(false)
+    if (!result.ok) setError(result.error)
+  }
+
+  return (
+    <div className="auth-shell">
+      <div className="auth-card card">
+        <div className="auth-eyebrow">Recovery</div>
+        <h1 className="auth-title">Recover with your phrase</h1>
+        <p className="auth-sub">
+          Enter the recovery phrase you saved at signup, plus your current
+          password. We'll relink your vault to this password.
+        </p>
+        <form onSubmit={submit}>
+          <div className="form-group">
+            <label className="form-label">Recovery phrase</label>
+            <input
+              className="input"
+              style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace', letterSpacing: '0.04em' }}
+              type="text" autoCapitalize="none" autoCorrect="off" spellCheck={false}
+              placeholder="XXXX-XXXX-XXXX-XXXX-…"
+              value={phrase} onChange={e => setPhrase(e.target.value)}
+              required autoFocus
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Current password</label>
+            <input
+              className="input" type="password" autoComplete="current-password"
+              value={password} onChange={e => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          {error && <div className="auth-error">{error}</div>}
+          <button type="submit" className="btn btn-primary btn-full" disabled={busy || !phrase || !password}>
+            {busy ? 'Recovering…' : 'Recover'}
+          </button>
+        </form>
+        <button className="auth-switch" onClick={onCancel}>Back</button>
+      </div>
+    </div>
+  )
+}
+
+export default function LockScreen({
+  email, onUnlock, onSignOut, onResetVault, onRecoveryUnlock, error,
+}) {
+  const [password, setPassword] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [view, setView] = useState('main') // 'main' | 'recovery' | 'confirmReset'
 
   const submit = async (e) => {
     e.preventDefault()
@@ -12,7 +69,11 @@ export default function LockScreen({ email, onUnlock, onSignOut, onResetVault, e
     try { await onUnlock(password) } finally { setBusy(false) }
   }
 
-  if (confirmReset) {
+  if (view === 'recovery') {
+    return <RecoveryForm onSubmit={onRecoveryUnlock} onCancel={() => setView('main')} />
+  }
+
+  if (view === 'confirmReset') {
     return (
       <div className="auth-shell">
         <div className="auth-card card">
@@ -20,19 +81,17 @@ export default function LockScreen({ email, onUnlock, onSignOut, onResetVault, e
           <h1 className="auth-title">Reset your vault?</h1>
           <p className="auth-sub">
             This <strong>permanently deletes</strong> your encrypted data from the
-            server. There is no recovery. Use this only if you've truly forgotten
-            your password and accept that you're starting over from scratch.
+            server. There is no recovery. Use this only if you've lost both your
+            password and your recovery phrase.
           </p>
           <button
             className="btn btn-full"
             style={{ background: 'var(--c-danger)', color: '#fff', marginBottom: 8 }}
-            onClick={() => { onResetVault() }}
+            onClick={() => onResetVault()}
           >
             Yes, delete everything and start over
           </button>
-          <button className="auth-switch" onClick={() => setConfirmReset(false)}>
-            Cancel
-          </button>
+          <button className="auth-switch" onClick={() => setView('main')}>Cancel</button>
         </div>
       </div>
     )
@@ -69,14 +128,19 @@ export default function LockScreen({ email, onUnlock, onSignOut, onResetVault, e
           </button>
         </form>
 
+        {onRecoveryUnlock && (
+          <button className="auth-switch" onClick={() => setView('recovery')}>
+            I have a recovery phrase
+          </button>
+        )}
         <button className="auth-switch" onClick={onSignOut}>Sign out</button>
         {onResetVault && (
           <button
             className="auth-switch"
             style={{ color: 'var(--c-danger)' }}
-            onClick={() => setConfirmReset(true)}
+            onClick={() => setView('confirmReset')}
           >
-            Forgot your password?
+            Forgot password and recovery phrase
           </button>
         )}
       </div>

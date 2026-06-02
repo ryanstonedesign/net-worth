@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Modal from './Modal'
+import { formatRecoveryPhrase } from '../lib/crypto'
 
 const SCENARIOS = [
   { value: 'none', label: 'None' },
@@ -73,12 +74,26 @@ function ChangePasswordForm({ onSubmit, onCancel }) {
 }
 
 export default function PrototypeSettings({
-  scenario, onScenarioChange, onSignOut, onChangePassword,
+  scenario, onScenarioChange, onSignOut, onChangePassword, onGenerateRecovery,
 }) {
   const [open, setOpen] = useState(false)
-  const [view, setView] = useState('main') // 'main' | 'change-password' | 'changed'
+  const [view, setView] = useState('main')
+  const [recoveryPhrase, setRecoveryPhrase] = useState(null)
+  const [recoveryError, setRecoveryError] = useState(null)
+  const [busy, setBusy] = useState(false)
 
-  const close = () => { setOpen(false); setView('main') }
+  const close = () => {
+    setOpen(false); setView('main')
+    setRecoveryPhrase(null); setRecoveryError(null)
+  }
+
+  const regenerateRecovery = async () => {
+    setBusy(true); setRecoveryError(null)
+    const result = await onGenerateRecovery()
+    setBusy(false)
+    if (result.ok) { setRecoveryPhrase(result.phrase); setView('recovery-shown') }
+    else { setRecoveryError(result.error) }
+  }
 
   return (
     <>
@@ -137,6 +152,16 @@ export default function PrototypeSettings({
                 </button>
               )}
 
+              {onGenerateRecovery && (
+                <button
+                  className="btn btn-secondary btn-full"
+                  style={{ marginTop: 8 }}
+                  onClick={() => setView('recovery-confirm')}
+                >
+                  Show Recovery Phrase
+                </button>
+              )}
+
               {onSignOut && (
                 <button
                   style={{
@@ -171,6 +196,44 @@ export default function PrototypeSettings({
               </p>
               <button className="btn btn-primary btn-full" style={{ marginTop: 16 }} onClick={close}>
                 Done
+              </button>
+            </>
+          )}
+
+          {view === 'recovery-confirm' && (
+            <>
+              <p style={{ fontSize: 13, color: 'var(--c-ink-mute)', lineHeight: 1.5 }}>
+                Generating a new recovery phrase replaces the old one. Any
+                previously saved copy will stop working. Continue?
+              </p>
+              {recoveryError && <div className="auth-error" style={{ marginTop: 10 }}>{recoveryError}</div>}
+              <button
+                className="btn btn-primary btn-full" style={{ marginTop: 16 }}
+                disabled={busy} onClick={regenerateRecovery}
+              >
+                {busy ? 'Working…' : 'Generate New Phrase'}
+              </button>
+              <button className="auth-switch" onClick={() => setView('main')}>Cancel</button>
+            </>
+          )}
+
+          {view === 'recovery-shown' && recoveryPhrase && (
+            <>
+              <p style={{ fontSize: 13, color: 'var(--c-ink-mute)', lineHeight: 1.5, marginBottom: 12 }}>
+                Save this somewhere safe. We can't show it to you again.
+              </p>
+              <div className="recovery-phrase">{formatRecoveryPhrase(recoveryPhrase)}</div>
+              <button
+                className="btn btn-secondary btn-full" style={{ marginTop: 12 }}
+                onClick={() => navigator.clipboard?.writeText(formatRecoveryPhrase(recoveryPhrase))}
+              >
+                Copy
+              </button>
+              <button
+                className="btn btn-primary btn-full" style={{ marginTop: 8 }}
+                onClick={close}
+              >
+                I've Saved It
               </button>
             </>
           )}

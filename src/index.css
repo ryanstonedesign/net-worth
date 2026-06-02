@@ -1001,3 +1001,17 @@ a { text-decoration: none; color: inherit; }
   font-weight: 600;
   color: var(--c-primary);
 }
+.recovery-phrase {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  word-break: break-all;
+  background: #edf1f5;
+  border-radius: 12px;
+  padding: 16px 18px;
+  text-align: center;
+  line-height: 1.6;
+  color: var(--c-ink);
+  box-shadow: var(--shadow-neu-in);
+}

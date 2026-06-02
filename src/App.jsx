@@ -6,8 +6,9 @@ import Dashboard from './pages/Dashboard'
 import PrototypeSettings from './components/PrototypeSettings'
 import AuthScreen from './components/AuthScreen'
 import LockScreen from './components/LockScreen'
+import RecoveryPhraseSetup from './components/RecoveryPhraseSetup'
 
-function VaultedApp({ initialData, onChange, onSignOut, onChangePassword }) {
+function VaultedApp({ initialData, onChange, onSignOut, onChangePassword, onGenerateRecovery }) {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth)
   const dataHook = useData({ initialData, onChange })
 
@@ -28,6 +29,7 @@ function VaultedApp({ initialData, onChange, onSignOut, onChangePassword }) {
         onScenarioChange={dataHook.setScenario}
         onSignOut={onSignOut}
         onChangePassword={onChangePassword}
+        onGenerateRecovery={onGenerateRecovery}
       />
     </>
   )
@@ -76,7 +78,20 @@ export default function App() {
           onUnlock={vault.unlock}
           onSignOut={vault.signOut}
           onResetVault={vault.resetVault}
+          onRecoveryUnlock={vault.unlockWithRecovery}
           error={vault.error}
+        />
+      </>
+    )
+  }
+  // Right after signup we have a one-shot recovery phrase to show.
+  if (vault.pendingRecoveryPhrase) {
+    return (
+      <>
+        <div className="app-bg" />
+        <RecoveryPhraseSetup
+          phrase={vault.pendingRecoveryPhrase}
+          onDone={vault.clearPendingRecoveryPhrase}
         />
       </>
     )
@@ -87,6 +102,7 @@ export default function App() {
       onChange={vault.pushData}
       onSignOut={vault.signOut}
       onChangePassword={vault.changePassword}
+      onGenerateRecovery={vault.generateRecovery}
     />
   )
 }
