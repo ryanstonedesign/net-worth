@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useData } from './hooks/useData'
 import { useVault } from './hooks/useVault'
 import { getCurrentMonth } from './utils'
@@ -55,7 +55,6 @@ function LegacyApp() {
 
 export default function App() {
   const vault = useVault()
-  const handleChange = useCallback((data) => vault.pushData(data), [vault])
 
   if (vault.stage === 'legacy') return <LegacyApp />
   if (vault.stage === 'loading') return <div className="app-bg" />
@@ -83,7 +82,7 @@ export default function App() {
   return (
     <VaultedApp
       initialData={vault.initialData}
-      onChange={handleChange}
+      onChange={vault.pushData}
       onSignOut={vault.signOut}
     />
   )

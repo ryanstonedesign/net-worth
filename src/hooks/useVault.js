@@ -41,7 +41,8 @@ export function useVault() {
         setInitialData(null)
         setStage('auth')
       } else {
-        setUser(session.user)
+        // Avoid spurious re-renders on token refresh — only swap user if id changed.
+        setUser(prev => prev?.id === session.user.id ? prev : session.user)
       }
     })
     return () => { mounted = false; sub.subscription.unsubscribe() }

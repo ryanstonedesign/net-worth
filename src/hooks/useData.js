@@ -152,8 +152,12 @@ export function useData({ initialData = null, onChange = null } = {}) {
   const [scenario, setScenarioState] = useState(loadScenario)
   const [data, setData] = useState(() => {
     const active = loadScenario()
-    if (active === 'none' && initialData) return initialData
-    return loadInitial(active)
+    if (active !== 'none') return loadInitial(active)
+    // Vault mode: the server is the only source of truth. Never let stale
+    // localStorage from a previous session leak in here — that's what caused
+    // OLD values to get pushed back over NEW after a refresh.
+    if (onChange) return initialData || { categories: [], snapshots: {}, goal: null }
+    return loadInitial('none') // legacy local-only mode
   })
 
   // Persist edits to the active scenario's own slot — never crosses slots.
@@ -162,13 +166,20 @@ export function useData({ initialData = null, onChange = null } = {}) {
     try { localStorage.setItem(SLOT_KEYS[scenario], JSON.stringify(data)) } catch {}
   }, [data, scenario])
 
+  // Hold onChange in a ref so its identity changing (which happens on every
+  // parent re-render) doesn't re-run the push effect and spuriously push.
+  const onChangeRef = useRef(onChange)
+  useEffect(() => { onChangeRef.current = onChange }, [onChange])
+
   // Skip pushing on mount and on scenario switches — only push real user edits.
   const skipPushRef = useRef(true)
   const scenarioRef = useRef(scenario)
 
   // Debounced push of the real ("none") data to the cloud as ciphertext.
+  // Deps deliberately exclude onChange — we read it via ref to keep this effect
+  // tied only to actual data/scenario changes.
   useEffect(() => {
-    if (!onChange || scenario !== 'none') {
+    if (!onChangeRef.current || scenario !== 'none') {
       skipPushRef.current = true
       return
     }
@@ -181,9 +192,9 @@ export function useData({ initialData = null, onChange = null } = {}) {
       skipPushRef.current = false
       return
     }
-    const t = setTimeout(() => { onChange(data) }, 600)
+    const t = setTimeout(() => { onChangeRef.current(data) }, 600)
     return () => clearTimeout(t)
-  }, [data, scenario, onChange])
+  }, [data, scenario])
 
   const setScenario = useCallback((next) => {
     if (!SLOT_KEYS[next]) return
