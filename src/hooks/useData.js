@@ -162,71 +162,28 @@ export function useData({ initialData = null, onChange = null } = {}) {
     try { localStorage.setItem(SLOT_KEYS[scenario], JSON.stringify(data)) } catch {}
   }, [data, scenario])
 
-  // Push-skip flags. The push effect runs on every data change, but we only
-  // want it to push on real user edits — not on mount, not on scenario switch,
-  // not when adopting a remote pull (otherwise the realtime echo loops forever).
-  const skipPushRef = useRef(true)               // skip first render
+  // Skip pushing on mount and on scenario switches — only push real user edits.
+  const skipPushRef = useRef(true)
   const scenarioRef = useRef(scenario)
-  // pendingPushRef stays true from the first local edit until the resulting
-  // push completes with no newer edits queued. While true, we DEFER remote
-  // adopts into deferredAdoptRef so they can't clobber in-progress edits.
-  const pendingPushRef = useRef(false)
-  const deferredAdoptRef = useRef(null)
-  const editGenRef = useRef(0)
 
   // Debounced push of the real ("none") data to the cloud as ciphertext.
   useEffect(() => {
     if (!onChange || scenario !== 'none') {
       skipPushRef.current = true
-      pendingPushRef.current = false
       return
     }
     if (scenarioRef.current !== scenario) {
       scenarioRef.current = scenario
       skipPushRef.current = true
-      pendingPushRef.current = false
       return
     }
     if (skipPushRef.current) {
       skipPushRef.current = false
       return
     }
-    // Real local edit. Mark pending so concurrent remote updates don't clobber.
-    editGenRef.current += 1
-    const myGen = editGenRef.current
-    pendingPushRef.current = true
-    const t = setTimeout(async () => {
-      try { await onChange(data) } finally {
-        // Another edit may have happened during the await; only clear pending
-        // if this push was the latest. Otherwise leave it true for the next one.
-        if (editGenRef.current === myGen) {
-          pendingPushRef.current = false
-          if (deferredAdoptRef.current) {
-            const remote = deferredAdoptRef.current
-            deferredAdoptRef.current = null
-            skipPushRef.current = true
-            setData(remote)
-          }
-        }
-      }
-    }, 600)
+    const t = setTimeout(() => { onChange(data) }, 600)
     return () => clearTimeout(t)
   }, [data, scenario, onChange])
-
-  // If the vault arrives async (initial pull, realtime update, visibility refetch),
-  // adopt it for the "none" slot. While a local edit is mid-flight, stash it as
-  // deferred and apply only after our push completes — that way the user's
-  // in-progress edit never gets clobbered by a stale remote view.
-  useEffect(() => {
-    if (!initialData || scenario !== 'none') return
-    if (pendingPushRef.current) {
-      deferredAdoptRef.current = initialData
-      return
-    }
-    skipPushRef.current = true
-    setData(initialData)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialData])
 
   const setScenario = useCallback((next) => {
     if (!SLOT_KEYS[next]) return
