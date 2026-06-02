@@ -7,7 +7,7 @@ import PrototypeSettings from './components/PrototypeSettings'
 import AuthScreen from './components/AuthScreen'
 import LockScreen from './components/LockScreen'
 
-function VaultedApp({ initialData, onChange, onSignOut }) {
+function VaultedApp({ initialData, onChange, onSignOut, onChangePassword }) {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth)
   const dataHook = useData({ initialData, onChange })
 
@@ -27,6 +27,7 @@ function VaultedApp({ initialData, onChange, onSignOut }) {
         scenario={dataHook.scenario}
         onScenarioChange={dataHook.setScenario}
         onSignOut={onSignOut}
+        onChangePassword={onChangePassword}
       />
     </>
   )
@@ -74,6 +75,7 @@ export default function App() {
           email={vault.user?.email}
           onUnlock={vault.unlock}
           onSignOut={vault.signOut}
+          onResetVault={vault.resetVault}
           error={vault.error}
         />
       </>
@@ -84,6 +86,7 @@ export default function App() {
       initialData={vault.initialData}
       onChange={vault.pushData}
       onSignOut={vault.signOut}
+      onChangePassword={vault.changePassword}
     />
   )
 }

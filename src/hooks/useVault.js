@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase, isConfigured } from '../lib/supabase'
-import { deriveKey, newSalt } from '../lib/crypto'
-import { fetchSalt, pullVault, pushVault } from '../lib/sync'
+import { deriveKey, newSalt, decryptJSON } from '../lib/crypto'
+import { fetchSalt, fetchVault, pullVault, pushVault } from '../lib/sync'
 
 // Stages:
 //   'legacy'  – no backend configured, app runs local-only (no auth, no sync)
@@ -118,6 +118,82 @@ export function useVault() {
     await supabase.auth.signOut()
   }, [])
 
+  // Change password while signed in. Re-derives the encryption key with the
+  // new password and re-encrypts the vault, then updates Supabase auth.
+  // Order matters: write the new ciphertext FIRST. If the auth password update
+  // fails after that, the user can still sign in with their old password (the
+  // server vault has the new key, the auth has the old password — they'd be
+  // stuck). So we update auth last and surface any failure clearly.
+  const changePassword = useCallback(async ({ currentPassword, newPassword }) => {
+    if (!user || !keyRef.current || !saltRef.current) {
+      return { ok: false, error: 'Not signed in.' }
+    }
+    if (!newPassword || newPassword.length < 8) {
+      return { ok: false, error: 'New password must be at least 8 characters.' }
+    }
+    // Verify the current password by re-deriving and comparing decrypt.
+    try {
+      const verifyKey = await deriveKey(currentPassword, saltRef.current)
+      const row = await fetchVault(user.id)
+      if (!row) return { ok: false, error: 'No vault to re-encrypt.' }
+      await decryptJSON(verifyKey, { ciphertext: row.ciphertext, iv: row.iv })
+    } catch {
+      return { ok: false, error: 'Current password is incorrect.' }
+    }
+    try {
+      // Re-encrypt the in-memory data with a key derived from the new password.
+      const newKey = await deriveKey(newPassword, saltRef.current)
+      // Pull the latest from server so we re-encrypt the freshest copy.
+      const row = await fetchVault(user.id)
+      const data = await decryptJSON(keyRef.current, { ciphertext: row.ciphertext, iv: row.iv })
+      versionRef.current = row.version + 1
+      await pushVault({
+        userId: user.id,
+        key: newKey,
+        salt: saltRef.current,
+        data,
+        version: versionRef.current,
+      })
+      // Vault now uses new key. Update Supabase auth password.
+      const { error } = await supabase.auth.updateUser({ password: newPassword })
+      if (error) {
+        // Vault is re-encrypted with new key but auth still uses old password.
+        // Roll back: re-encrypt with old key so user can sign in with old pw.
+        try {
+          await pushVault({
+            userId: user.id,
+            key: keyRef.current,
+            salt: saltRef.current,
+            data,
+            version: ++versionRef.current,
+          })
+        } catch {}
+        return { ok: false, error: error.message }
+      }
+      keyRef.current = newKey
+      return { ok: true }
+    } catch (e) {
+      return { ok: false, error: 'Could not change password. Try again.' }
+    }
+  }, [user])
+
+  // Destructive escape hatch when the user has forgotten their password (or
+  // had it reset through Supabase) and can't decrypt the vault. Deletes the
+  // ciphertext row on the server, clears the cached salt locally, then signs
+  // out. The user can sign back in (their auth still works) and start fresh.
+  const resetVault = useCallback(async () => {
+    if (!user) return
+    try {
+      await supabase.from('vaults').delete().eq('user_id', user.id)
+    } catch {}
+    try { localStorage.removeItem(SALT_CACHE_KEY) } catch {}
+    try { localStorage.removeItem('networth_v1') } catch {}
+    keyRef.current = null
+    saltRef.current = null
+    setInitialData(null)
+    await supabase.auth.signOut()
+  }, [user])
+
   // Called by useData after a debounced change. Pushes ciphertext, never plaintext.
   const pushData = useCallback(async (data) => {
     if (!user || !keyRef.current || !saltRef.current) return
@@ -137,6 +213,6 @@ export function useVault() {
 
   return {
     stage, user, error, initialData,
-    signUp, signIn, unlock, signOut, pushData,
+    signUp, signIn, unlock, signOut, resetVault, changePassword, pushData,
   }
 }
