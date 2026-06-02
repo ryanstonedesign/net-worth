@@ -65,7 +65,12 @@ export default function App() {
     return (
       <>
         <div className="app-bg" />
-        <AuthScreen onSignIn={vault.signIn} onSignUp={vault.signUp} error={vault.error} />
+        <AuthScreen
+          onSignIn={vault.signIn}
+          onSignUp={vault.signUp}
+          onForgotPassword={vault.requestPasswordReset}
+          error={vault.error}
+        />
       </>
     )
   }

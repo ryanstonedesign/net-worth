@@ -168,6 +168,20 @@ export function useVault() {
     await supabase.auth.signOut()
   }, [])
 
+  // Triggers Supabase's hosted email reset. The user clicks the link in the
+  // email, sets a new auth password on Supabase's page, then comes back here
+  // and signs in. They'll land on the lock screen because the new password
+  // doesn't derive the original encryption key — they then use either their
+  // recovery phrase or the destructive reset.
+  const requestPasswordReset = useCallback(async (email) => {
+    if (!email) return { ok: false, error: 'Email is required.' }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + window.location.pathname,
+    })
+    if (error) return { ok: false, error: error.message }
+    return { ok: true }
+  }, [])
+
   // Forgot-password escape hatch on the lock screen.
   const resetVault = useCallback(async () => {
     if (!user) return
@@ -330,7 +344,7 @@ export function useVault() {
     stage, user, error, initialData,
     pendingRecoveryPhrase, clearPendingRecoveryPhrase,
     signUp, signIn, unlock, signOut, resetVault, changePassword,
-    generateRecovery, unlockWithRecovery,
+    generateRecovery, unlockWithRecovery, requestPasswordReset,
     pushData,
   }
 }
