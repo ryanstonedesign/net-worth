@@ -39,3 +39,6 @@ drop trigger if exists vaults_updated_at on public.vaults;
 create trigger vaults_updated_at
   before update on public.vaults
   for each row execute function public.set_updated_at();
+
+-- Broadcast row changes over Supabase Realtime so other devices live-update.
+alter publication supabase_realtime add table public.vaults;

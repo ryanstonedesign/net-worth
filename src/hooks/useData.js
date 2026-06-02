@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { getCurrentMonth, getAdjacentMonth } from '../utils'
 
 // "None" holds the user's real data and is never overwritten by a scenario.
@@ -162,16 +162,38 @@ export function useData({ initialData = null, onChange = null } = {}) {
     try { localStorage.setItem(SLOT_KEYS[scenario], JSON.stringify(data)) } catch {}
   }, [data, scenario])
 
+  // Push-skip flags. The push effect runs on every data change, but we only
+  // want it to push on real user edits — not on mount, not on scenario switch,
+  // not when adopting a remote pull (otherwise the realtime echo loops forever).
+  const skipPushRef = useRef(true)               // skip first render
+  const scenarioRef = useRef(scenario)
+
   // Debounced push of the real ("none") data to the cloud as ciphertext.
   useEffect(() => {
-    if (!onChange || scenario !== 'none') return
+    if (!onChange || scenario !== 'none') {
+      skipPushRef.current = true // reset so re-entering "none" doesn't push immediately
+      return
+    }
+    if (scenarioRef.current !== scenario) {
+      scenarioRef.current = scenario
+      skipPushRef.current = true
+      return
+    }
+    if (skipPushRef.current) {
+      skipPushRef.current = false
+      return
+    }
     const t = setTimeout(() => { onChange(data) }, 600)
     return () => clearTimeout(t)
   }, [data, scenario, onChange])
 
-  // If the vault arrives async after mount, adopt it for the "none" slot.
+  // If the vault arrives async (initial pull, realtime update, visibility refetch),
+  // adopt it for the "none" slot and skip the next push so we don't echo back.
   useEffect(() => {
-    if (initialData && scenario === 'none') setData(initialData)
+    if (initialData && scenario === 'none') {
+      skipPushRef.current = true
+      setData(initialData)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData])
 

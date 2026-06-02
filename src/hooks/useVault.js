@@ -110,6 +110,53 @@ export function useVault() {
     await unlockWithPassword(password, user.id)
   }, [user, unlockWithPassword])
 
+  // Pull the latest vault and adopt it if the server has a newer version.
+  // Used by both Realtime updates and visibility/pageshow refetches.
+  const refresh = useCallback(async () => {
+    if (!user || !keyRef.current) return
+    try {
+      const pulled = await pullVault({ userId: user.id, key: keyRef.current })
+      if (!pulled) return
+      // Always adopt the server's view — it's authoritative. The push-skip flag
+      // in useData prevents an adopt-then-push echo loop.
+      versionRef.current = pulled.version
+      setInitialData(pulled.data)
+    } catch {
+      // Offline / transient — try again on next event.
+    }
+  }, [user])
+
+  // Realtime: subscribe to row updates for this user. When another device pushes,
+  // the websocket wakes us up and we re-pull + decrypt.
+  useEffect(() => {
+    if (stage !== 'unlock' || !user) return
+    const channel = supabase
+      .channel(`vault:${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'vaults', filter: `user_id=eq.${user.id}` },
+        () => { refresh() },
+      )
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [stage, user, refresh])
+
+  // iOS Safari restores pages from bfcache instead of doing a real reload, so
+  // visibilitychange/pageshow are the only reliable "user just opened the app"
+  // signals on mobile. Refetch then to avoid stale data after backgrounding.
+  useEffect(() => {
+    if (stage !== 'unlock' || !user) return
+    const onWake = () => {
+      if (document.visibilityState === 'visible') refresh()
+    }
+    document.addEventListener('visibilitychange', onWake)
+    window.addEventListener('pageshow', onWake)
+    return () => {
+      document.removeEventListener('visibilitychange', onWake)
+      window.removeEventListener('pageshow', onWake)
+    }
+  }, [stage, user, refresh])
+
   const signOut = useCallback(async () => {
     keyRef.current = null
     saltRef.current = null
