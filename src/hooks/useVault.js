@@ -15,6 +15,20 @@ import { fetchSalt, fetchVault, pushVault, pushWrappingChange } from '../lib/syn
 //   'lock'           – session present but DEK not in memory (after reload)
 //   'unlock'         – ready, DEK derived, data available
 const SALT_CACHE_KEY = 'networth_salt_v1'
+// Survives refresh (cleared on tab close). Keeps the user on the Restore
+// Access screen if they reload mid-reset — the recovery token in the URL is
+// single-use and is gone by then, so we can't rely on it after the first load.
+const RECOVERY_MODE_KEY = 'networth_recovery_mode'
+
+function recoveryModeActive() {
+  try { return sessionStorage.getItem(RECOVERY_MODE_KEY) === '1' } catch { return false }
+}
+function setRecoveryMode(on) {
+  try {
+    if (on) sessionStorage.setItem(RECOVERY_MODE_KEY, '1')
+    else sessionStorage.removeItem(RECOVERY_MODE_KEY)
+  } catch {}
+}
 
 export function useVault() {
   const [stage, setStage] = useState(isConfigured ? 'loading' : 'legacy')
@@ -32,15 +46,19 @@ export function useVault() {
   useEffect(() => {
     if (!isConfigured) return
     let mounted = true
+    // Once recovery mode is set we keep showing Restore Access across refreshes
+    // until the user finishes (or abandons) the reset.
+    if (arrivedFromPasswordReset) setRecoveryMode(true)
+    const inRecovery = arrivedFromPasswordReset || recoveryModeActive()
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!mounted) return
       if (session?.user) {
         setUser(session.user)
-        setStage(arrivedFromPasswordReset ? 'recovery-reset' : 'lock')
-      } else if (arrivedFromPasswordReset) {
-        // URL contains a recovery token but the session hasn't been
-        // established yet. PASSWORD_RECOVERY in onAuthStateChange will route
-        // us to 'recovery-reset' the moment it fires.
+        setStage(inRecovery ? 'recovery-reset' : 'lock')
+      } else if (inRecovery) {
+        // Recovery session not established yet. PASSWORD_RECOVERY (or SIGNED_IN)
+        // in onAuthStateChange will route us the moment it fires.
         setStage('loading')
       } else {
         setStage('auth')
@@ -49,8 +67,9 @@ export function useVault() {
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       // PASSWORD_RECOVERY fires when the user lands on the page from a reset
       // email link. The session is established but only valid for changing
-      // the password — divert to the set-new-password screen.
+      // the password — divert to the Restore Access screen.
       if (event === 'PASSWORD_RECOVERY' && session?.user) {
+        setRecoveryMode(true)
         setUser(session.user)
         setStage('recovery-reset')
         return
@@ -63,9 +82,9 @@ export function useVault() {
         setStage('auth')
       } else {
         setUser(prev => prev?.id === session.user.id ? prev : session.user)
-        // If we arrived from a reset link, the SIGNED_IN event for that
-        // recovery session also fires here. Stay on the new-password screen.
-        if (arrivedFromPasswordReset) {
+        // If we're mid-reset, the SIGNED_IN event for that session also fires
+        // here. Stay on the Restore Access screen.
+        if (arrivedFromPasswordReset || recoveryModeActive()) {
           setStage(prev => prev === 'recovery-reset' || prev === 'loading' ? 'recovery-reset' : prev)
         }
       }
@@ -188,6 +207,7 @@ export function useVault() {
     dekRef.current = null
     saltRef.current = null
     setInitialData(null)
+    setRecoveryMode(false)
     await supabase.auth.signOut()
   }, [])
 
@@ -264,6 +284,7 @@ export function useVault() {
       const data = await decryptJSON(dek, { ciphertext: row.ciphertext, iv: row.iv })
       setInitialData(data)
       try { window.history.replaceState(null, '', window.location.pathname) } catch {}
+      setRecoveryMode(false)
       setStage('unlock')
       return { ok: true }
     } catch {
@@ -280,6 +301,7 @@ export function useVault() {
     dekRef.current = null
     saltRef.current = null
     setInitialData(null)
+    setRecoveryMode(false)
     await supabase.auth.signOut()
   }, [user])
 
