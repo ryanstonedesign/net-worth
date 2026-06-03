@@ -205,23 +205,71 @@ export function useVault() {
     return { ok: true }
   }, [])
 
-  // After PASSWORD_RECOVERY: the user types a new password. We update their
-  // Supabase auth credentials and drop them into the normal lock screen so
-  // they can use their recovery phrase (or reset the vault).
-  const completePasswordReset = useCallback(async (newPassword) => {
+  // After PASSWORD_RECOVERY: unwrap the DEK with the user's old password OR
+  // recovery phrase, set the new auth password, and re-wrap the DEK so the
+  // new password becomes the unlock password. This converges auth and vault
+  // back to a single password instead of leaving them split.
+  const restoreAccess = useCallback(async (
+    { oldPassword, recoveryPhrase, newPassword },
+  ) => {
+    if (!user) return { ok: false, error: 'No active session.' }
     if (!newPassword || newPassword.length < 8) {
-      return { ok: false, error: 'Password must be at least 8 characters.' }
+      return { ok: false, error: 'New password must be at least 8 characters.' }
     }
-    const { error } = await supabase.auth.updateUser({ password: newPassword })
-    if (error) return { ok: false, error: error.message }
-    // Strip the recovery token from the URL so a future refresh doesn't
-    // re-trigger PASSWORD_RECOVERY.
+    if (!oldPassword && !recoveryPhrase) {
+      return { ok: false, error: 'Enter your old password or recovery phrase.' }
+    }
     try {
-      window.history.replaceState(null, '', window.location.pathname)
-    } catch {}
-    setStage('lock')
-    return { ok: true }
-  }, [])
+      const row = await fetchVault(user.id)
+      if (!row?.wrapped_dek) {
+        return { ok: false, error: 'No vault found for this account.' }
+      }
+      let dek
+      if (oldPassword) {
+        const oldKek = await deriveKey(oldPassword, row.salt)
+        try {
+          dek = await unwrapDEK(row.wrapped_dek, row.wrapped_dek_iv, oldKek)
+        } catch {
+          return { ok: false, error: 'Old password is incorrect.' }
+        }
+      } else {
+        if (!row.wrapped_dek_recovery || !row.recovery_salt) {
+          return { ok: false, error: 'No recovery phrase has been set on this account.' }
+        }
+        const normalized = normalizeRecoveryPhrase(recoveryPhrase)
+        if (normalized.length < 32) {
+          return { ok: false, error: 'Recovery phrase looks incomplete.' }
+        }
+        const recoveryKek = await deriveKey(normalized, row.recovery_salt)
+        try {
+          dek = await unwrapDEK(row.wrapped_dek_recovery, row.wrapped_dek_recovery_iv, recoveryKek)
+        } catch {
+          return { ok: false, error: 'Recovery phrase is incorrect.' }
+        }
+      }
+      // Now set the new auth password — we're still in the recovery session.
+      const { error: updateErr } = await supabase.auth.updateUser({ password: newPassword })
+      if (updateErr) return { ok: false, error: updateErr.message }
+      // Re-wrap the DEK with the new password's KEK.
+      saltRef.current = row.salt
+      const newKek = await deriveKey(newPassword, row.salt)
+      const { wrapped, iv: wrappedIv } = await wrapDEK(dek, newKek)
+      versionRef.current = row.version + 1
+      await pushWrappingChange({
+        userId: user.id, version: versionRef.current, salt: row.salt,
+        wrappedDek: wrapped, wrappedDekIv: wrappedIv,
+        ciphertext: row.ciphertext, iv: row.iv,
+      })
+      dekRef.current = dek
+      const data = await decryptJSON(dek, { ciphertext: row.ciphertext, iv: row.iv })
+      setInitialData(data)
+      try { window.history.replaceState(null, '', window.location.pathname) } catch {}
+      setStage('unlock')
+      return { ok: true }
+    } catch {
+      return { ok: false, error: 'Could not restore access. Try again.' }
+    }
+  }, [user])
 
   // Forgot-password escape hatch on the lock screen.
   const resetVault = useCallback(async () => {
@@ -386,7 +434,7 @@ export function useVault() {
     pendingRecoveryPhrase, clearPendingRecoveryPhrase,
     signUp, signIn, unlock, signOut, resetVault, changePassword,
     generateRecovery, unlockWithRecovery,
-    requestPasswordReset, completePasswordReset,
+    requestPasswordReset, restoreAccess,
     pushData,
   }
 }
