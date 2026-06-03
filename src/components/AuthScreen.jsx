@@ -23,9 +23,8 @@ function ForgotPasswordView({ defaultEmail, onSubmit, onBack }) {
           <div className="auth-eyebrow">Check your email</div>
           <h1 className="auth-title">Reset link sent</h1>
           <p className="auth-sub">
-            We sent a password reset link to <strong>{email}</strong>. Click it,
-            set a new password, then come back here.
-          </p>
+          We sent a password reset link to <strong>{email}</strong>.
+        </p>
           <p style={{ marginTop: 20, fontSize: 14, fontWeight: 600, color: 'var(--c-ink)' }}>
             What happens next
           </p>
@@ -34,8 +33,8 @@ function ForgotPasswordView({ defaultEmail, onSubmit, onBack }) {
             fontSize: 13, lineHeight: 1.7, color: 'var(--c-ink-mute)',
           }}>
             <li>Click the link in your email.</li>
-            <li>Set a new password.</li>
             <li>Unlock with your old password or recovery phrase.</li>
+            <li>Set a new password.</li>
           </ol>
           <button className="btn btn-primary btn-full" style={{ marginTop: 16 }} onClick={onBack}>
             Back to Sign In
