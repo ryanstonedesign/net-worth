@@ -50,11 +50,11 @@ function RecoveryForm({ onSubmit, onCancel }) {
 }
 
 export default function LockScreen({
-  email, onUnlock, onSignOut, onResetVault, onRecoveryUnlock, error,
+  email, onUnlock, onSignOut, onRecoveryUnlock, error,
 }) {
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
-  const [view, setView] = useState('main') // 'main' | 'recovery' | 'confirmReset'
+  const [view, setView] = useState('main') // 'main' | 'recovery'
 
   const submit = async (e) => {
     e.preventDefault()
@@ -65,30 +65,6 @@ export default function LockScreen({
 
   if (view === 'recovery') {
     return <RecoveryForm onSubmit={onRecoveryUnlock} onCancel={() => setView('main')} />
-  }
-
-  if (view === 'confirmReset') {
-    return (
-      <div className="auth-shell">
-        <div className="auth-card card">
-          <div className="auth-eyebrow" style={{ color: 'var(--c-danger)' }}>Destructive</div>
-          <h1 className="auth-title">Reset your vault?</h1>
-          <p className="auth-sub">
-            This <strong>permanently deletes</strong> your encrypted data from the
-            server. There is no recovery. Use this only if you've lost both your
-            password and your recovery phrase.
-          </p>
-          <button
-            className="btn btn-full"
-            style={{ background: 'var(--c-danger)', color: '#fff', marginBottom: 8 }}
-            onClick={() => onResetVault()}
-          >
-            Yes, delete everything and start over
-          </button>
-          <button className="auth-switch" onClick={() => setView('main')}>Cancel</button>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -128,15 +104,6 @@ export default function LockScreen({
           </button>
         )}
         <button className="auth-switch" onClick={onSignOut}>Sign out</button>
-        {onResetVault && (
-          <button
-            className="auth-switch"
-            style={{ color: 'var(--c-danger)' }}
-            onClick={() => setView('confirmReset')}
-          >
-            Forgot password and recovery phrase
-          </button>
-        )}
       </div>
     </div>
   )

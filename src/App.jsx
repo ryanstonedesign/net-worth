@@ -82,7 +82,7 @@ export default function App() {
         <RestoreAccessScreen
           email={vault.user?.email}
           onRestore={vault.restoreAccess}
-          onAbandon={vault.resetVault}
+          onSignOut={vault.signOut}
         />
       </>
     )
@@ -95,7 +95,6 @@ export default function App() {
           email={vault.user?.email}
           onUnlock={vault.unlock}
           onSignOut={vault.signOut}
-          onResetVault={vault.resetVault}
           onRecoveryUnlock={vault.unlockWithRecovery}
           error={vault.error}
         />

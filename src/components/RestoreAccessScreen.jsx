@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import RecoveryPhraseInput from './RecoveryPhraseInput'
 
-export default function RestoreAccessScreen({ email, onRestore, onAbandon }) {
+export default function RestoreAccessScreen({ email, onRestore, onSignOut }) {
   const [mode, setMode] = useState('password') // 'password' | 'recovery'
   const [oldPassword, setOldPassword] = useState('')
   const [phrase, setPhrase] = useState('')
@@ -9,7 +9,6 @@ export default function RestoreAccessScreen({ email, onRestore, onAbandon }) {
   const [confirm, setConfirm] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
-  const [confirmAbandon, setConfirmAbandon] = useState(false)
 
   const submit = async (e) => {
     e.preventDefault()
@@ -22,30 +21,6 @@ export default function RestoreAccessScreen({ email, onRestore, onAbandon }) {
     const result = await onRestore(args)
     setBusy(false)
     if (!result.ok) setError(result.error)
-  }
-
-  if (confirmAbandon) {
-    return (
-      <div className="auth-shell">
-        <div className="auth-card card">
-          <div className="auth-eyebrow" style={{ color: 'var(--c-danger)' }}>Destructive</div>
-          <h1 className="auth-title">Start over?</h1>
-          <p className="auth-sub">
-            Without your old password or recovery phrase, your existing data
-            can't be decrypted. This will <strong>permanently delete</strong> it
-            so you can start with an empty vault.
-          </p>
-          <button
-            className="btn btn-full"
-            style={{ background: 'var(--c-danger)', color: '#fff', marginBottom: 8 }}
-            onClick={() => onAbandon()}
-          >
-            Delete data and start over
-          </button>
-          <button className="auth-switch" onClick={() => setConfirmAbandon(false)}>Back</button>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -121,14 +96,19 @@ export default function RestoreAccessScreen({ email, onRestore, onAbandon }) {
           </button>
         </form>
 
-        <button
-          className="auth-switch"
-          style={{ color: 'var(--c-danger)' }}
-          onClick={() => setConfirmAbandon(true)}
-        >
-          I don't have either — start fresh
-        </button>
+        <div style={{
+          marginTop: 20, padding: '12px 14px', background: '#edf1f5',
+          borderRadius: 12, fontSize: 12, lineHeight: 1.5, color: 'var(--c-ink-mute)',
+          boxShadow: 'var(--shadow-neu-in)',
+        }}>
+          If you've lost both your password and recovery phrase, your encrypted
+          data cannot be recovered or deleted from here — that's by design, so a
+          compromised email account can't be used to wipe your data.
+        </div>
+
+        <button className="auth-switch" onClick={onSignOut}>Sign out</button>
       </div>
     </div>
   )
 }
+
