@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import RecoveryPhraseInput from './RecoveryPhraseInput'
 
 function RecoveryForm({ onSubmit, onCancel }) {
   const [phrase, setPhrase] = useState('')
@@ -27,14 +28,7 @@ function RecoveryForm({ onSubmit, onCancel }) {
         <form onSubmit={submit}>
           <div className="form-group">
             <label className="form-label">Recovery phrase</label>
-            <input
-              className="input"
-              style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace', letterSpacing: '0.04em' }}
-              type="text" autoCapitalize="none" autoCorrect="off" spellCheck={false}
-              placeholder="XXXX-XXXX-XXXX-XXXX-…"
-              value={phrase} onChange={e => setPhrase(e.target.value)}
-              required autoFocus
-            />
+            <RecoveryPhraseInput value={phrase} onChange={setPhrase} required autoFocus />
           </div>
           <div className="form-group">
             <label className="form-label">Current password</label>

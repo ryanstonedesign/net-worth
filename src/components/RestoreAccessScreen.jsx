@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import RecoveryPhraseInput from './RecoveryPhraseInput'
 
 export default function RestoreAccessScreen({ email, onRestore, onAbandon }) {
   const [mode, setMode] = useState('password') // 'password' | 'recovery'
@@ -90,14 +91,7 @@ export default function RestoreAccessScreen({ email, onRestore, onAbandon }) {
           ) : (
             <div className="form-group">
               <label className="form-label">Recovery phrase</label>
-              <input
-                className="input"
-                style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace', letterSpacing: '0.04em' }}
-                type="text" autoCapitalize="none" autoCorrect="off" spellCheck={false}
-                placeholder="XXXX-XXXX-XXXX-XXXX-…"
-                value={phrase} onChange={e => setPhrase(e.target.value)}
-                required autoFocus
-              />
+              <RecoveryPhraseInput value={phrase} onChange={setPhrase} required autoFocus />
             </div>
           )}
 
