@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Modal from './Modal'
+import ImportSheet from './ImportSheet'
 import { formatRecoveryPhrase } from '../lib/crypto'
 
 const SCENARIOS = [
@@ -129,6 +130,7 @@ function DeleteAccountForm({ onSubmit, onCancel }) {
 export default function PrototypeSettings({
   scenario, onScenarioChange, onSignOut, onChangePassword,
   onGenerateRecovery, onDeleteAccount,
+  categories, selectedMonth, onImport,
 }) {
   const [open, setOpen] = useState(false)
   const [view, setView] = useState('main')
@@ -162,7 +164,16 @@ export default function PrototypeSettings({
         </svg>
       </button>
 
-      {open && (
+      {open && view === 'import' && (
+        <ImportSheet
+          categories={categories || []}
+          selectedMonth={selectedMonth}
+          onImport={onImport}
+          onClose={close}
+        />
+      )}
+
+      {open && view !== 'import' && (
         <Modal
           title={
             view === 'change-password' ? 'Change Password'
@@ -196,6 +207,25 @@ export default function PrototypeSettings({
                   shows your own saved data and is never overwritten.
                 </p>
               </div>
+
+              {onImport && (
+                <>
+                  <button
+                    className="btn btn-secondary btn-full"
+                    style={{ marginTop: 16 }}
+                    disabled={scenario !== 'none'}
+                    onClick={() => setView('import')}
+                  >
+                    Import data
+                  </button>
+                  {scenario !== 'none' && (
+                    <p style={{ fontSize: 13, color: 'var(--c-ink-mute)', marginTop: 8, lineHeight: 1.5 }}>
+                      Switch the scenario to <strong style={{ color: 'var(--c-ink)' }}>None</strong> to
+                      import into your own data.
+                    </p>
+                  )}
+                </>
+              )}
 
               {onChangePassword && (
                 <button

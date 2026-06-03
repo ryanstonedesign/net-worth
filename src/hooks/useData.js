@@ -275,6 +275,54 @@ export function useData({ initialData = null, onChange = null } = {}) {
     setData(d => ({ ...d, goal: amount }))
   }, [])
 
+  // Bulk import of reviewed rows. Each row:
+  //   { categoryName, type, accountName, month, value }
+  // Categories and accounts are matched by name (case-insensitive) and reused
+  // when they already exist, otherwise created. Snapshot values are written
+  // for the row's month. Runs as a single state transaction so one push syncs.
+  const bulkImport = useCallback((rows) => {
+    setData(d => {
+      const categories = d.categories.map(c => ({ ...c, accounts: [...c.accounts] }))
+      const snapshots = { ...d.snapshots }
+      let seq = 0
+      const newId = (prefix) => `${prefix}_${Date.now()}_${seq++}`
+      const findCat = (name) =>
+        categories.find(c => c.name.trim().toLowerCase() === name.trim().toLowerCase())
+
+      for (const row of rows) {
+        const name = (row.categoryName || 'Uncategorized').trim()
+        const accName = (row.accountName || '').trim()
+        if (!accName) continue
+
+        let cat = findCat(name)
+        if (!cat) {
+          cat = {
+            id: newId('cat'),
+            name,
+            type: row.type === 'liability' ? 'liability' : 'asset',
+            icon: row.icon || CATEGORY_ICONS[0],
+            color: CATEGORY_COLORS[categories.length % CATEGORY_COLORS.length],
+            accounts: [],
+          }
+          categories.push(cat)
+        }
+
+        let acc = cat.accounts.find(a => a.name.trim().toLowerCase() === accName.toLowerCase())
+        if (!acc) {
+          acc = { id: newId('acc'), name: accName }
+          cat.accounts.push(acc)
+        }
+
+        const month = row.month
+        if (month && Number.isFinite(row.value)) {
+          snapshots[month] = { ...(snapshots[month] || {}), [acc.id]: row.value }
+        }
+      }
+
+      return { ...d, categories, snapshots }
+    })
+  }, [])
+
   const updateCategorySnapshot = useCallback((month, entries) => {
     setData(d => ({
       ...d,
@@ -340,6 +388,7 @@ export function useData({ initialData = null, onChange = null } = {}) {
     deleteAccount,
     renameAccount,
     updateCategorySnapshot,
+    bulkImport,
     getSnapshot,
     getCategoryTotal,
     getNetWorth,

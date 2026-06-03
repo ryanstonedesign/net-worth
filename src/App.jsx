@@ -30,6 +30,9 @@ function VaultedApp({
       <PrototypeSettings
         scenario={dataHook.scenario}
         onScenarioChange={dataHook.setScenario}
+        categories={dataHook.data.categories}
+        selectedMonth={selectedMonth}
+        onImport={dataHook.bulkImport}
         onSignOut={onSignOut}
         onChangePassword={onChangePassword}
         onGenerateRecovery={onGenerateRecovery}
@@ -55,7 +58,13 @@ function LegacyApp() {
           />
         </div>
       </div>
-      <PrototypeSettings scenario={dataHook.scenario} onScenarioChange={dataHook.setScenario} />
+      <PrototypeSettings
+        scenario={dataHook.scenario}
+        onScenarioChange={dataHook.setScenario}
+        categories={dataHook.data.categories}
+        selectedMonth={selectedMonth}
+        onImport={dataHook.bulkImport}
+      />
     </>
   )
 }
