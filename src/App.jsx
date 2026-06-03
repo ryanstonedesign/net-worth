@@ -7,6 +7,7 @@ import PrototypeSettings from './components/PrototypeSettings'
 import AuthScreen from './components/AuthScreen'
 import LockScreen from './components/LockScreen'
 import RecoveryPhraseSetup from './components/RecoveryPhraseSetup'
+import SetNewPasswordScreen from './components/SetNewPasswordScreen'
 
 function VaultedApp({ initialData, onChange, onSignOut, onChangePassword, onGenerateRecovery }) {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth)
@@ -70,6 +71,17 @@ export default function App() {
           onSignUp={vault.signUp}
           onForgotPassword={vault.requestPasswordReset}
           error={vault.error}
+        />
+      </>
+    )
+  }
+  if (vault.stage === 'recovery-reset') {
+    return (
+      <>
+        <div className="app-bg" />
+        <SetNewPasswordScreen
+          email={vault.user?.email}
+          onSubmit={vault.completePasswordReset}
         />
       </>
     )

@@ -8,11 +8,12 @@ import {
 import { fetchSalt, fetchVault, pushVault, pushWrappingChange } from '../lib/sync'
 
 // Stages:
-//   'legacy'  – no backend configured, app runs local-only
-//   'loading' – checking session
-//   'auth'    – no session, show sign in / sign up
-//   'lock'    – session present but DEK not in memory (after reload)
-//   'unlock'  – ready, DEK derived, data available
+//   'legacy'         – no backend configured, app runs local-only
+//   'loading'        – checking session
+//   'auth'           – no session, show sign in / sign up
+//   'recovery-reset' – arriving from a password reset email; set a new password
+//   'lock'           – session present but DEK not in memory (after reload)
+//   'unlock'         – ready, DEK derived, data available
 const SALT_CACHE_KEY = 'networth_salt_v1'
 
 export function useVault() {
@@ -36,7 +37,15 @@ export function useVault() {
       if (session?.user) { setUser(session.user); setStage('lock') }
       else { setStage('auth') }
     })
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      // PASSWORD_RECOVERY fires when the user lands on the page from a reset
+      // email link. The session is established but only valid for changing
+      // the password — divert to the set-new-password screen.
+      if (event === 'PASSWORD_RECOVERY' && session?.user) {
+        setUser(session.user)
+        setStage('recovery-reset')
+        return
+      }
       if (!session?.user) {
         dekRef.current = null
         saltRef.current = null
@@ -169,16 +178,34 @@ export function useVault() {
   }, [])
 
   // Triggers Supabase's hosted email reset. The user clicks the link in the
-  // email, sets a new auth password on Supabase's page, then comes back here
-  // and signs in. They'll land on the lock screen because the new password
-  // doesn't derive the original encryption key — they then use either their
-  // recovery phrase or the destructive reset.
+  // email, comes back to this page in the 'recovery-reset' stage where they
+  // pick a new password. After that they're signed in but the vault is still
+  // encrypted with their OLD key — they then use the recovery phrase to
+  // relink, or destroy the vault and start over.
   const requestPasswordReset = useCallback(async (email) => {
     if (!email) return { ok: false, error: 'Email is required.' }
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: window.location.origin + window.location.pathname,
     })
     if (error) return { ok: false, error: error.message }
+    return { ok: true }
+  }, [])
+
+  // After PASSWORD_RECOVERY: the user types a new password. We update their
+  // Supabase auth credentials and drop them into the normal lock screen so
+  // they can use their recovery phrase (or reset the vault).
+  const completePasswordReset = useCallback(async (newPassword) => {
+    if (!newPassword || newPassword.length < 8) {
+      return { ok: false, error: 'Password must be at least 8 characters.' }
+    }
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    if (error) return { ok: false, error: error.message }
+    // Strip the recovery token from the URL so a future refresh doesn't
+    // re-trigger PASSWORD_RECOVERY.
+    try {
+      window.history.replaceState(null, '', window.location.pathname)
+    } catch {}
+    setStage('lock')
     return { ok: true }
   }, [])
 
@@ -344,7 +371,8 @@ export function useVault() {
     stage, user, error, initialData,
     pendingRecoveryPhrase, clearPendingRecoveryPhrase,
     signUp, signIn, unlock, signOut, resetVault, changePassword,
-    generateRecovery, unlockWithRecovery, requestPasswordReset,
+    generateRecovery, unlockWithRecovery,
+    requestPasswordReset, completePasswordReset,
     pushData,
   }
 }
