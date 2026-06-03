@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { supabase, isConfigured } from '../lib/supabase'
+import { supabase, isConfigured, arrivedFromPasswordReset } from '../lib/supabase'
 import {
   deriveKey, newSalt, decryptJSON, encryptJSON,
   generateDEK, wrapDEK, unwrapDEK,
@@ -34,8 +34,17 @@ export function useVault() {
     let mounted = true
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!mounted) return
-      if (session?.user) { setUser(session.user); setStage('lock') }
-      else { setStage('auth') }
+      if (session?.user) {
+        setUser(session.user)
+        setStage(arrivedFromPasswordReset ? 'recovery-reset' : 'lock')
+      } else if (arrivedFromPasswordReset) {
+        // URL contains a recovery token but the session hasn't been
+        // established yet. PASSWORD_RECOVERY in onAuthStateChange will route
+        // us to 'recovery-reset' the moment it fires.
+        setStage('loading')
+      } else {
+        setStage('auth')
+      }
     })
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       // PASSWORD_RECOVERY fires when the user lands on the page from a reset
@@ -54,6 +63,11 @@ export function useVault() {
         setStage('auth')
       } else {
         setUser(prev => prev?.id === session.user.id ? prev : session.user)
+        // If we arrived from a reset link, the SIGNED_IN event for that
+        // recovery session also fires here. Stay on the new-password screen.
+        if (arrivedFromPasswordReset) {
+          setStage(prev => prev === 'recovery-reset' || prev === 'loading' ? 'recovery-reset' : prev)
+        }
       }
     })
     return () => { mounted = false; sub.subscription.unsubscribe() }
