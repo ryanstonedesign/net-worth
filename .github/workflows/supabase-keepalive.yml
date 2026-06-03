@@ -1,0 +1,32 @@
+name: Supabase keepalive
+
+# Free-tier Supabase projects auto-pause after 7 days of API inactivity.
+# A daily hit to a REST endpoint counts as activity and keeps the project warm
+# even if no one signs in to the app for a stretch.
+
+on:
+  schedule:
+    - cron: '0 12 * * *' # daily, 12:00 UTC
+  workflow_dispatch:     # manual trigger from the Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hit the Supabase REST endpoint
+        env:
+          SUPABASE_URL:  ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_ANON: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON" ]; then
+            echo "VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY not set as repo secrets."
+            exit 1
+          fi
+          # An anonymous select on vaults; RLS returns [] but the request still
+          # hits the database, which is what counts as "activity".
+          curl -fsS \
+            -H "apikey: $SUPABASE_ANON" \
+            -H "Authorization: Bearer $SUPABASE_ANON" \
+            "$SUPABASE_URL/rest/v1/vaults?select=user_id&limit=1" \
+            > /dev/null
+          echo "Pinged Supabase ok."
