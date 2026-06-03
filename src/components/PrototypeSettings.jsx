@@ -95,9 +95,8 @@ function DeleteAccountForm({ onSubmit, onCancel }) {
         fontSize: 13, color: 'var(--c-ink)', lineHeight: 1.5, marginBottom: 14,
       }}>
         This <strong style={{ color: 'var(--c-danger)' }}>permanently deletes</strong>{' '}
-        all your encrypted data from the server. Your sign-in account stays so
-        you can return later to start fresh — but your existing categories,
-        balances, and history will be gone.
+        your account: email, password, encrypted data — everything. The email
+        becomes available to sign up again as a fresh account. There is no undo.
       </p>
       <div className="form-group">
         <label className="form-label">Confirm with your password</label>
@@ -120,7 +119,7 @@ function DeleteAccountForm({ onSubmit, onCancel }) {
         style={{ background: 'var(--c-danger)', color: '#fff' }}
         disabled={busy || !canSubmit}
       >
-        {busy ? 'Deleting…' : 'Delete My Data'}
+        {busy ? 'Deleting…' : 'Delete Account'}
       </button>
       <button type="button" className="auth-switch" onClick={onCancel}>Cancel</button>
     </form>
@@ -168,7 +167,7 @@ export default function PrototypeSettings({
           title={
             view === 'change-password' ? 'Change Password'
             : view === 'changed' ? 'Password Changed'
-            : view === 'delete' ? 'Delete My Data'
+            : view === 'delete' ? 'Delete Account'
             : 'Settings'
           }
           onClose={close}
@@ -242,7 +241,7 @@ export default function PrototypeSettings({
                   }}
                   onClick={() => setView('delete')}
                 >
-                  Delete My Data
+                  Delete Account
                 </button>
               )}
             </>

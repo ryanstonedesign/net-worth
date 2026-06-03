@@ -305,15 +305,17 @@ export function useVault() {
     await supabase.auth.signOut()
   }, [user])
 
-  // In-app account deletion. Requires the current password right now — proving
-  // it's the legitimate user and not someone who only has email access. After
-  // delete, the encrypted row is gone and the user is signed out. The auth
-  // account itself stays (we can't admin-delete from the client), so signing
-  // back in with the same email lands on an empty fresh vault.
+  // In-app full account deletion. Requires the current password right now —
+  // proving it's the legitimate user and not someone who only has email
+  // access. Calls a Supabase Edge Function that uses the service-role key
+  // to delete the auth user; the ON DELETE CASCADE on vaults removes the
+  // encrypted row in the same transaction. After this, the email is freed
+  // up to sign up again from scratch.
   const deleteAccount = useCallback(async (currentPassword) => {
     if (!user || !saltRef.current) return { ok: false, error: 'Not signed in.' }
     if (!currentPassword) return { ok: false, error: 'Password required to confirm.' }
     try {
+      // Verify password locally before invoking the edge function.
       const kek = await deriveKey(currentPassword, saltRef.current)
       const row = await fetchVault(user.id)
       if (!row?.wrapped_dek) return { ok: false, error: 'Vault not found.' }
@@ -322,17 +324,23 @@ export function useVault() {
       } catch {
         return { ok: false, error: 'Password is incorrect.' }
       }
-      await supabase.from('vaults').delete().eq('user_id', user.id)
+      // Invoke the edge function — it verifies the JWT server-side and uses
+      // the service-role key to delete the auth user (cascading the vault row).
+      const { error } = await supabase.functions.invoke('delete-account', { method: 'POST' })
+      if (error) {
+        return { ok: false, error: 'Could not delete account: ' + (error.message || 'edge function not deployed?') }
+      }
       try { localStorage.removeItem(SALT_CACHE_KEY) } catch {}
       try { localStorage.removeItem('networth_v1') } catch {}
       dekRef.current = null
       saltRef.current = null
       setInitialData(null)
       setRecoveryMode(false)
-      await supabase.auth.signOut()
+      // Local sign-out — the server session is already invalid since the user is gone.
+      try { await supabase.auth.signOut() } catch {}
       return { ok: true }
     } catch {
-      return { ok: false, error: 'Could not delete. Try again.' }
+      return { ok: false, error: 'Could not delete account. Try again.' }
     }
   }, [user])
 
