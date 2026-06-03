@@ -96,16 +96,6 @@ export default function RestoreAccessScreen({ email, onRestore, onSignOut }) {
           </button>
         </form>
 
-        <div style={{
-          marginTop: 20, padding: '12px 14px', background: '#edf1f5',
-          borderRadius: 12, fontSize: 12, lineHeight: 1.5, color: 'var(--c-ink-mute)',
-          boxShadow: 'var(--shadow-neu-in)',
-        }}>
-          If you've lost both your password and recovery phrase, your encrypted
-          data cannot be recovered or deleted from here — that's by design, so a
-          compromised email account can't be used to wipe your data.
-        </div>
-
         <button className="auth-switch" onClick={onSignOut}>Sign out</button>
       </div>
     </div>

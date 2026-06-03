@@ -26,24 +26,17 @@ function ForgotPasswordView({ defaultEmail, onSubmit, onBack }) {
             We sent a password reset link to <strong>{email}</strong>. Click it,
             set a new password, then come back here.
           </p>
-          <div style={{
-            background: '#edf1f5', borderRadius: 12, padding: '14px 16px',
-            fontSize: 13, lineHeight: 1.6, color: 'var(--c-ink)',
-            boxShadow: 'var(--shadow-neu-in)', marginTop: 12,
+          <p style={{ marginTop: 20, fontSize: 14, fontWeight: 600, color: 'var(--c-ink)' }}>
+            What happens next
+          </p>
+          <ol style={{
+            paddingLeft: 20, marginTop: 8, marginBottom: 0,
+            fontSize: 13, lineHeight: 1.7, color: 'var(--c-ink-mute)',
           }}>
-            <strong>What happens next:</strong>
-            <ol style={{ paddingLeft: 18, marginTop: 8, marginBottom: 0 }}>
-              <li>Click the link in your email.</li>
-              <li>Set a new password.</li>
-              <li>Sign back in here. You'll see the lock screen.</li>
-              <li>Tap <strong>"I have a recovery phrase"</strong> and enter your
-                  recovery phrase + new password to unlock your vault.</li>
-            </ol>
-            <p style={{ marginTop: 10, marginBottom: 0, color: 'var(--c-ink-mute)' }}>
-              No recovery phrase? You'll be able to start fresh with a new vault,
-              but old data can't be decrypted.
-            </p>
-          </div>
+            <li>Click the link in your email.</li>
+            <li>Set a new password.</li>
+            <li>Unlock with your old password or recovery phrase.</li>
+          </ol>
           <button className="btn btn-primary btn-full" style={{ marginTop: 16 }} onClick={onBack}>
             Back to Sign In
           </button>
