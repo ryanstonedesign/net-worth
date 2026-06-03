@@ -292,7 +292,7 @@ export function useVault() {
     }
   }, [user])
 
-  // Forgot-password escape hatch on the lock screen.
+  // Forgot-password escape hatch (no UI caller currently — kept for completeness).
   const resetVault = useCallback(async () => {
     if (!user) return
     try { await supabase.from('vaults').delete().eq('user_id', user.id) } catch {}
@@ -303,6 +303,37 @@ export function useVault() {
     setInitialData(null)
     setRecoveryMode(false)
     await supabase.auth.signOut()
+  }, [user])
+
+  // In-app account deletion. Requires the current password right now — proving
+  // it's the legitimate user and not someone who only has email access. After
+  // delete, the encrypted row is gone and the user is signed out. The auth
+  // account itself stays (we can't admin-delete from the client), so signing
+  // back in with the same email lands on an empty fresh vault.
+  const deleteAccount = useCallback(async (currentPassword) => {
+    if (!user || !saltRef.current) return { ok: false, error: 'Not signed in.' }
+    if (!currentPassword) return { ok: false, error: 'Password required to confirm.' }
+    try {
+      const kek = await deriveKey(currentPassword, saltRef.current)
+      const row = await fetchVault(user.id)
+      if (!row?.wrapped_dek) return { ok: false, error: 'Vault not found.' }
+      try {
+        await unwrapDEK(row.wrapped_dek, row.wrapped_dek_iv, kek)
+      } catch {
+        return { ok: false, error: 'Password is incorrect.' }
+      }
+      await supabase.from('vaults').delete().eq('user_id', user.id)
+      try { localStorage.removeItem(SALT_CACHE_KEY) } catch {}
+      try { localStorage.removeItem('networth_v1') } catch {}
+      dekRef.current = null
+      saltRef.current = null
+      setInitialData(null)
+      setRecoveryMode(false)
+      await supabase.auth.signOut()
+      return { ok: true }
+    } catch {
+      return { ok: false, error: 'Could not delete. Try again.' }
+    }
   }, [user])
 
   // Debounced push of the real ("none") data — encrypted with the DEK.
@@ -454,7 +485,7 @@ export function useVault() {
   return {
     stage, user, error, initialData,
     pendingRecoveryPhrase, clearPendingRecoveryPhrase,
-    signUp, signIn, unlock, signOut, resetVault, changePassword,
+    signUp, signIn, unlock, signOut, resetVault, deleteAccount, changePassword,
     generateRecovery, unlockWithRecovery,
     requestPasswordReset, restoreAccess,
     pushData,

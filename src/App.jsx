@@ -9,7 +9,9 @@ import LockScreen from './components/LockScreen'
 import RecoveryPhraseSetup from './components/RecoveryPhraseSetup'
 import RestoreAccessScreen from './components/RestoreAccessScreen'
 
-function VaultedApp({ initialData, onChange, onSignOut, onChangePassword, onGenerateRecovery }) {
+function VaultedApp({
+  initialData, onChange, onSignOut, onChangePassword, onGenerateRecovery, onDeleteAccount,
+}) {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth)
   const dataHook = useData({ initialData, onChange })
 
@@ -31,6 +33,7 @@ function VaultedApp({ initialData, onChange, onSignOut, onChangePassword, onGene
         onSignOut={onSignOut}
         onChangePassword={onChangePassword}
         onGenerateRecovery={onGenerateRecovery}
+        onDeleteAccount={onDeleteAccount}
       />
     </>
   )
@@ -120,6 +123,7 @@ export default function App() {
       onSignOut={vault.signOut}
       onChangePassword={vault.changePassword}
       onGenerateRecovery={vault.generateRecovery}
+      onDeleteAccount={vault.deleteAccount}
     />
   )
 }

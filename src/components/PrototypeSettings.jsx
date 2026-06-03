@@ -73,8 +73,63 @@ function ChangePasswordForm({ onSubmit, onCancel }) {
   )
 }
 
+function DeleteAccountForm({ onSubmit, onCancel }) {
+  const [password, setPassword] = useState('')
+  const [confirmText, setConfirmText] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+  const canSubmit = password && confirmText === 'DELETE'
+
+  const submit = async (e) => {
+    e.preventDefault()
+    if (!canSubmit) return
+    setBusy(true); setError(null)
+    const result = await onSubmit(password)
+    setBusy(false)
+    if (!result.ok) setError(result.error)
+  }
+
+  return (
+    <form onSubmit={submit}>
+      <p style={{
+        fontSize: 13, color: 'var(--c-ink)', lineHeight: 1.5, marginBottom: 14,
+      }}>
+        This <strong style={{ color: 'var(--c-danger)' }}>permanently deletes</strong>{' '}
+        all your encrypted data from the server. Your sign-in account stays so
+        you can return later to start fresh — but your existing categories,
+        balances, and history will be gone.
+      </p>
+      <div className="form-group">
+        <label className="form-label">Confirm with your password</label>
+        <input
+          className="input" type="password" autoComplete="current-password"
+          value={password} onChange={e => setPassword(e.target.value)} required
+        />
+      </div>
+      <div className="form-group">
+        <label className="form-label">Type DELETE to confirm</label>
+        <input
+          className="input" type="text" autoCapitalize="characters" autoCorrect="off"
+          spellCheck={false} value={confirmText}
+          onChange={e => setConfirmText(e.target.value.toUpperCase())} required
+        />
+      </div>
+      {error && <div className="auth-error">{error}</div>}
+      <button
+        type="submit" className="btn btn-full"
+        style={{ background: 'var(--c-danger)', color: '#fff' }}
+        disabled={busy || !canSubmit}
+      >
+        {busy ? 'Deleting…' : 'Delete My Data'}
+      </button>
+      <button type="button" className="auth-switch" onClick={onCancel}>Cancel</button>
+    </form>
+  )
+}
+
 export default function PrototypeSettings({
-  scenario, onScenarioChange, onSignOut, onChangePassword, onGenerateRecovery,
+  scenario, onScenarioChange, onSignOut, onChangePassword,
+  onGenerateRecovery, onDeleteAccount,
 }) {
   const [open, setOpen] = useState(false)
   const [view, setView] = useState('main')
@@ -113,6 +168,7 @@ export default function PrototypeSettings({
           title={
             view === 'change-password' ? 'Change Password'
             : view === 'changed' ? 'Password Changed'
+            : view === 'delete' ? 'Delete My Data'
             : 'Settings'
           }
           onClose={close}
@@ -167,7 +223,7 @@ export default function PrototypeSettings({
                   style={{
                     display: 'block', width: '100%', marginTop: 12, padding: '12px',
                     background: 'none', border: 'none', cursor: 'pointer',
-                    fontSize: 13, fontWeight: 600, color: 'var(--c-danger)',
+                    fontSize: 13, fontWeight: 600, color: 'var(--c-primary)',
                     fontFamily: 'var(--font)',
                   }}
                   onClick={() => { onSignOut(); close() }}
@@ -175,7 +231,28 @@ export default function PrototypeSettings({
                   Sign Out
                 </button>
               )}
+
+              {onDeleteAccount && (
+                <button
+                  style={{
+                    display: 'block', width: '100%', marginTop: 4, padding: '12px',
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    fontSize: 13, fontWeight: 600, color: 'var(--c-danger)',
+                    fontFamily: 'var(--font)',
+                  }}
+                  onClick={() => setView('delete')}
+                >
+                  Delete My Data
+                </button>
+              )}
             </>
+          )}
+
+          {view === 'delete' && (
+            <DeleteAccountForm
+              onSubmit={onDeleteAccount}
+              onCancel={() => setView('main')}
+            />
           )}
 
           {view === 'change-password' && (
