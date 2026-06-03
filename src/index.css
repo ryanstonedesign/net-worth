@@ -89,6 +89,14 @@ a { text-decoration: none; color: inherit; }
   padding-bottom: calc(var(--safe-bottom) + 48px);
   -webkit-overflow-scrolling: touch;
 }
+/* Cap the content width on larger screens and center it. */
+@media (min-width: 900px) {
+  .page-content > * {
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
 
 /* ── Neumorphic card ── */
 .card {
