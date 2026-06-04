@@ -1070,3 +1070,23 @@ a { text-decoration: none; color: inherit; }
 .import-type { flex-shrink: 0; width: 116px; padding: 3px; }
 .import-type .type-toggle-btn { padding: 6px 4px; font-size: 12px; }
 .import-row-month { margin-top: 6px; font-size: 12px; color: var(--c-ink-mute); }
+.import-summary {
+  flex-shrink: 0;
+  width: 96px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-ink-mute);
+  white-space: nowrap;
+}
+.import-note {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--c-ink-mute);
+  background: var(--c-surface-muted);
+  border-radius: 6px;
+  padding: 2px 7px;
+}

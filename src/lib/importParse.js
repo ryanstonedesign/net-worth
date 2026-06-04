@@ -102,6 +102,151 @@ export function normalizeMonth(str, fallback = getCurrentMonth()) {
   return fallback
 }
 
+// ── Wide / matrix format ──────────────────────────────────────────────
+// Many personal-finance sheets put MONTHS across the top as columns and
+// ACCOUNTS down the side as rows, grouped by section-header rows. The helpers
+// below detect and unpivot that layout into per-account rows, each carrying a
+// full {month, value} history.
+
+// A bare month label → 1..12, accepting full or abbreviated names.
+export function monthNameToNum(str) {
+  const s = String(str).trim().toLowerCase().replace(/[.,]/g, '')
+  if (!s) return null
+  return MONTHS[s.slice(0, 3)] || null
+}
+
+// True when a header cell denotes a month/period: "MARCH", "Mar", "Jun 2026",
+// "2026-06", "06/01/2026".
+export function isMonthHeader(str) {
+  const s = String(str).trim()
+  if (!s) return false
+  if (isDateCell(s)) return true
+  return monthNameToNum(s) != null
+}
+
+// Find the row that holds the month headers: the one (scanning the top of the
+// grid) with the most month-like cells. Returns its index, or -1.
+export function detectMonthHeaderRow(grid) {
+  let bestRow = -1, bestCount = 1 // require at least 2 month cells
+  const scan = Math.min(grid.length, 8)
+  for (let r = 0; r < scan; r++) {
+    const count = grid[r].filter(isMonthHeader).length
+    if (count > bestCount) { bestCount = count; bestRow = r }
+  }
+  return bestRow
+}
+
+// Which columns in the header row are months.
+function monthColumns(headerRow) {
+  const cols = []
+  headerRow.forEach((cell, c) => { if (isMonthHeader(cell)) cols.push(c) })
+  return cols
+}
+
+// The label column: the non-month column with the most non-empty text below
+// the header row. Usually the leftmost column.
+export function detectLabelCol(grid, headerRowIdx, monthCols) {
+  const monthSet = new Set(monthCols)
+  const colCount = Math.max(...grid.map(r => r.length))
+  let best = 0, bestScore = -1
+  for (let c = 0; c < colCount; c++) {
+    if (monthSet.has(c)) continue
+    let score = 0
+    for (let r = headerRowIdx + 1; r < grid.length; r++) {
+      const cell = (grid[r][c] ?? '').trim()
+      if (cell && !isNumericCell(cell)) score++
+    }
+    if (score > bestScore) { bestScore = score; best = c }
+  }
+  return best
+}
+
+// Resolve month-header cells into "YYYY-MM" keys. Cells that already carry a
+// year are used as-is; bare month names ("MARCH") are assigned `baseYear`,
+// rolling the year forward whenever the month number wraps (Dec → Jan).
+export function resolveMonthHeaders(headerRow, monthCols, baseYear) {
+  const out = []
+  let year = baseYear
+  let prevNum = null
+  for (const c of monthCols) {
+    const raw = String(headerRow[c]).trim()
+    let monthKey = null
+    if (isDateCell(raw)) {
+      monthKey = normalizeMonth(raw)
+      const [y, m] = monthKey.split('-').map(Number)
+      year = y; prevNum = m
+    } else {
+      const num = monthNameToNum(raw)
+      if (num != null) {
+        if (prevNum != null && num <= prevNum) year++
+        monthKey = `${year}-${String(num).padStart(2, '0')}`
+        prevNum = num
+      }
+    }
+    if (monthKey) out.push({ col: c, month: monthKey })
+  }
+  return out
+}
+
+function matrixNumber(str) {
+  if (!isNumericCell(str)) return null
+  const n = parseFloat(String(str).replace(/[$,()]/g, ''))
+  return isNaN(n) ? null : n
+}
+
+// Rows whose label is a generic total/derived line — excluded by default but
+// still shown so nothing is silently dropped.
+const DERIVED_RE = /^(total\s*\$*|net\s*worth|subtotal|grand\s*total)$/i
+// Rows that represent flows (contributions/spending) rather than balances.
+const FLOW_RE = /(contribution|monthly\s+sav|monthly\s+giv|^giving$|large\s+expense)/i
+
+/**
+ * Unpivot a months-as-columns sheet into per-account rows.
+ * @returns {{ months: {col,month}[], rows: Array<{
+ *   section: string|null, accountName: string,
+ *   values: {month:string,value:number}[], skipDefault: boolean, skipReason: string|null
+ * }> }}
+ */
+export function parseMatrix(grid, { headerRowIdx, labelCol, baseYear } = {}) {
+  const hdr = headerRowIdx ?? detectMonthHeaderRow(grid)
+  if (hdr < 0) return { months: [], rows: [] }
+  const mCols = monthColumns(grid[hdr])
+  const lCol = labelCol ?? detectLabelCol(grid, hdr, mCols)
+  const months = resolveMonthHeaders(grid[hdr], mCols, baseYear ?? new Date().getFullYear())
+
+  const rows = []
+  let section = null
+  for (let r = hdr + 1; r < grid.length; r++) {
+    const label = (grid[r][lCol] ?? '').trim()
+    const values = []
+    for (const { col, month } of months) {
+      const n = matrixNumber(grid[r][col])
+      if (n != null) values.push({ month, value: n })
+    }
+
+    if (values.length === 0) {
+      // No numbers: a section header (sets the current category) or a spacer.
+      if (label) section = label
+      continue
+    }
+
+    let skipDefault = false, skipReason = null
+    if (DERIVED_RE.test(label)) { skipDefault = true; skipReason = 'total' }
+    else if (FLOW_RE.test(label)) { skipDefault = true; skipReason = 'flow' }
+
+    rows.push({ section, accountName: label || '(unnamed)', values, skipDefault, skipReason })
+  }
+  return { months, rows }
+}
+
+// Decide whether a pasted grid is wide (months across columns) or long
+// (one row per entry). Wide wins when a header row carries several months.
+export function detectOrientation(grid) {
+  const hdr = detectMonthHeaderRow(grid)
+  if (hdr < 0) return 'long'
+  return monthColumns(grid[hdr]).length >= 2 ? 'wide' : 'long'
+}
+
 const HEADER_HINTS = {
   account: ['account', 'name', 'description', 'institution', 'holding', 'item', 'label'],
   value: ['value', 'balance', 'amount', 'total', 'worth', 'market value', 'current'],
