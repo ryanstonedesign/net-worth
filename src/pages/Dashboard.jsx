@@ -145,7 +145,11 @@ export default function Dashboard({
   const assets      = getTotalAssets(selectedMonth)
   const liabilities = getTotalLiabilities(selectedMonth)
   const hasLiabilities = data.categories.some(c => c.type === 'liability')
-  const editCat     = editSheet && editSheet !== 'new' ? editSheet : null
+  // Derive the live category from current data so account add/delete/rename
+  // inside the sheet reflect instantly — editSheet only holds the id reference.
+  const editCat     = editSheet && editSheet !== 'new'
+    ? (data.categories.find(c => c.id === editSheet.id) ?? editSheet)
+    : null
 
   return (
     <div>
