@@ -272,8 +272,18 @@ export default function Dashboard({
   const contribAverages = Object.fromEntries(
     Object.entries(accountModels).map(([id, m]) => [id, Math.round(m.contribution)])
   )
-  const assets      = getTotalAssets(selectedMonth)
-  const liabilities = getTotalLiabilities(selectedMonth)
+  // getTotalAssets/getTotalLiabilities only know about recorded snapshot values,
+  // so on estimated months (which may have no — or only partial — overrides)
+  // they'd show $0 for anything not explicitly entered. monthEstimates already
+  // resolves each account to its override-or-projection, so use that instead.
+  const assets      = isEstimated
+    ? data.categories.filter(c => c.type !== 'liability')
+        .reduce((t, c) => t + c.accounts.reduce((s, a) => s + (monthEstimates?.[a.id] || 0), 0), 0)
+    : getTotalAssets(selectedMonth)
+  const liabilities = isEstimated
+    ? data.categories.filter(c => c.type === 'liability')
+        .reduce((t, c) => t + c.accounts.reduce((s, a) => s + (monthEstimates?.[a.id] || 0), 0), 0)
+    : getTotalLiabilities(selectedMonth)
   const hasLiabilities = data.categories.some(c => c.type === 'liability')
   // Derive the live category from current data so account add/delete/rename
   // inside the sheet reflect instantly — editSheet only holds the id reference.
