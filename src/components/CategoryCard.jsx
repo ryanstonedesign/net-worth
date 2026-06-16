@@ -8,7 +8,7 @@ function formatDisplay(raw) {
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 }
 
-export default function CategoryCard({ category, snapshot, contributions = {}, onUpdate, onContributionChange, onEdit, estimated = false, estimates = {} }) {
+export default function CategoryCard({ category, snapshot, contributions = {}, contribEstimates = {}, onUpdate, onContributionChange, onEdit, estimated = false, estimates = {} }) {
   const [values, setValues] = useState(() => {
     const v = {}
     category.accounts.forEach(acc => {
@@ -106,28 +106,38 @@ export default function CategoryCard({ category, snapshot, contributions = {}, o
               {category.contributing && (
                 <div className="cat-contrib-row">
                   <span className="cat-contrib-label">Contribution</span>
-                  {estimated ? (
-                    <span className="cat-contrib-value cat-account-est">
-                      {formatCurrency(contributions[acc.id] || 0)}/mo avg
-                    </span>
-                  ) : (
-                    <div className="cat-contrib-field">
-                      <input
-                        className="cat-contrib-input"
-                        type="text"
-                        inputMode="decimal"
-                        placeholder="$0"
-                        value={focused === `c_${acc.id}` ? contribs[acc.id] : formatDisplay(contribs[acc.id])}
-                        onFocus={e => { setFocused(`c_${acc.id}`); e.target.select() }}
-                        onChange={e => {
-                          const raw = e.target.value.replace(/[^0-9.]/g, '')
-                          setContribs(v => ({ ...v, [acc.id]: raw }))
-                        }}
-                        onBlur={handleContribBlur}
-                      />
-                      <span className="cat-contrib-suffix">/mo</span>
-                    </div>
-                  )}
+                  {(() => {
+                    const override = contribs[acc.id]
+                    const hasOverride = override != null && override !== ''
+                    // On future months, show the average until the user types a
+                    // value, which overrides the contribution for that month only.
+                    const showingEst = estimated && !hasOverride
+                    const display = focused === `c_${acc.id}`
+                      ? override
+                      : hasOverride
+                        ? formatDisplay(override)
+                        : estimated
+                          ? formatCurrency(contribEstimates?.[acc.id] || 0)
+                          : ''
+                    return (
+                      <div className="cat-contrib-field">
+                        <input
+                          className={`cat-contrib-input${showingEst ? ' cat-account-est' : ''}`}
+                          type="text"
+                          inputMode="decimal"
+                          placeholder="$0"
+                          value={display}
+                          onFocus={e => { setFocused(`c_${acc.id}`); e.target.select() }}
+                          onChange={e => {
+                            const raw = e.target.value.replace(/[^0-9.]/g, '')
+                            setContribs(v => ({ ...v, [acc.id]: raw }))
+                          }}
+                          onBlur={handleContribBlur}
+                        />
+                        <span className="cat-contrib-suffix">{showingEst ? '/mo avg' : '/mo'}</span>
+                      </div>
+                    )
+                  })()}
                 </div>
               )}
             </div>

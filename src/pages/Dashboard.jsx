@@ -7,12 +7,26 @@ import EditCategorySheet from '../components/EditCategorySheet'
 import Modal from '../components/Modal'
 import { formatCurrency, formatCompact, getAdjacentMonth, getCurrentMonth, parseAmount } from '../utils'
 
-const RANGE_OPTIONS = ['1M', '3M', '6M', '1Y', 'ALL']
+const RANGE_OPTIONS = ['1M', '3M', '6M', '1Y', 'custom']
 const RANGE_COUNTS   = { '1M': 2,  '3M': 3,  '6M': 6,  '1Y': 12 }
 const FORECAST_MONTHS = { '1M': 1, '3M': 3,  '6M': 6,  '1Y': 12 }
+const MAX_FORECAST_MONTHS = 600 // 50 years — guard against absurd custom years
+
+function monthIndex(month) {
+  const [y, m] = month.split('-').map(Number)
+  return y * 12 + (m - 1)
+}
+
+// Custom range forecasts every month from the last actual month through the end
+// (December) of the year the user typed in.
+function customForecastCount(lastMonth, year) {
+  if (!lastMonth || !year) return 0
+  const count = monthIndex(`${year}-12`) - monthIndex(lastMonth)
+  return Math.max(0, Math.min(count, MAX_FORECAST_MONTHS))
+}
 
 function getFilteredHistory(history, range) {
-  if (range === 'ALL') return history
+  if (range === 'custom') return history // show all past; the forecast extends ahead
   const n = RANGE_COUNTS[range] ?? history.length
   return history.length <= n ? history : history.slice(-n)
 }
@@ -24,8 +38,10 @@ function getFilteredHistory(history, range) {
 //   annual       — user's estimated annual growth rate (interest), as a fraction
 // Growth and contribution are independent levers, so market return is never
 // double-counted into the contribution.
-function buildAccountModels(categories, snapshots, contributions, historyMonths) {
-  const contribMonths = Object.keys(contributions || {})
+function buildAccountModels(categories, snapshots, contributions, historyMonths, currentMonth) {
+  // Only contributions up to the current month form the baseline average;
+  // future months hold hypothetical overrides that shouldn't skew it.
+  const contribMonths = Object.keys(contributions || {}).filter(m => m <= currentMonth)
   const models = {}
   categories.forEach(cat => cat.accounts.forEach(acc => {
     const series = historyMonths
@@ -51,14 +67,15 @@ function buildAccountModels(categories, snapshots, contributions, historyMonths)
 // which replaces the projection and becomes the base the next month builds on.
 // Overrides live in `overrides` (a month → {accountId: value} map) so editing a
 // future month never corrupts real history.
-function generateForecast(categories, models, overrides, lastMonth, count) {
+function generateForecast(categories, models, overrides, contribOverrides, lastMonth, count) {
   if (!lastMonth || count < 1) return []
   const running = {}
   Object.entries(models).forEach(([id, m]) => { running[id] = m.base })
   const out = []
   for (let i = 1; i <= count; i++) {
     const month = getAdjacentMonth(lastMonth, i)
-    const ov = overrides[month] || {}
+    const ov  = overrides[month] || {}
+    const cov = contribOverrides[month] || {}
     const accounts = {}
     const netWorth = categories.reduce((total, cat) => {
       const catTotal = cat.accounts.reduce((sum, acc) => {
@@ -68,7 +85,10 @@ function generateForecast(categories, models, overrides, lastMonth, count) {
           v = ov[acc.id]
         } else {
           const monthlyRate = Math.pow(1 + m.annual, 1 / 12) - 1
-          v = Math.max(0, Math.round(running[acc.id] * (1 + monthlyRate) + m.contribution))
+          const contribution = cat.contributing
+            ? (cov[acc.id] != null ? cov[acc.id] : m.contribution)
+            : 0
+          v = Math.max(0, Math.round(running[acc.id] * (1 + monthlyRate) + contribution))
         }
         running[acc.id] = v
         accounts[acc.id] = v
@@ -160,9 +180,11 @@ export default function Dashboard({
 }) {
   const [editSheet, setEditSheet] = useState(null) // category obj | 'new' | null
   const [goalOpen, setGoalOpen]   = useState(false)
-  const [timeRange, setTimeRange] = useState('ALL')
+  const [timeRange, setTimeRange] = useState('1Y')
 
   const currentMonth = getCurrentMonth()
+  const [customYear, setCustomYear] = useState(String(Number(currentMonth.slice(0, 4)) + 5))
+
   // Only months up to the current calendar month are real history; later months
   // are projections, even when the user has typed override values into them.
   const history         = getHistory().filter(h => h.month <= currentMonth)
@@ -170,10 +192,12 @@ export default function Dashboard({
 
   const lastDataMonth = history.length > 0 ? history[history.length - 1].month : null
   const forecastCount = lastDataMonth
-    ? (timeRange === 'ALL' ? Math.max(history.length - 1, 1) : FORECAST_MONTHS[timeRange] ?? 1)
+    ? (timeRange === 'custom'
+        ? customForecastCount(lastDataMonth, parseInt(customYear, 10))
+        : FORECAST_MONTHS[timeRange] ?? 1)
     : 0
-  const accountModels = buildAccountModels(data.categories, data.snapshots, data.contributions || {}, history.map(h => h.month))
-  const forecastData  = generateForecast(data.categories, accountModels, data.snapshots, lastDataMonth, forecastCount)
+  const accountModels = buildAccountModels(data.categories, data.snapshots, data.contributions || {}, history.map(h => h.month), currentMonth)
+  const forecastData  = generateForecast(data.categories, accountModels, data.snapshots, data.contributions || {}, lastDataMonth, forecastCount)
   const forecastMap   = Object.fromEntries(forecastData.map(d => [d.month, d.netWorth]))
   const forecastByMonth = Object.fromEntries(forecastData.map(d => [d.month, d]))
 
@@ -210,11 +234,12 @@ export default function Dashboard({
       : null
 
   const snapshot    = getSnapshot(selectedMonth)
-  // Contributions: editable per-month values for real months, average for future.
+  // Each month's own contributions are editable; future months fall back to the
+  // average (shown as a hint) until overridden.
+  const contribSnapshot = getContribution(selectedMonth)
   const contribAverages = Object.fromEntries(
     Object.entries(accountModels).map(([id, m]) => [id, Math.round(m.contribution)])
   )
-  const contribSnapshot = isEstimated ? contribAverages : getContribution(selectedMonth)
   const assets      = getTotalAssets(selectedMonth)
   const liabilities = getTotalLiabilities(selectedMonth)
   const hasLiabilities = data.categories.some(c => c.type === 'liability')
@@ -260,17 +285,32 @@ export default function Dashboard({
 
       {/* Time range filter */}
       {history.length >= 2 && (
-        <div className="range-pills">
-          {RANGE_OPTIONS.map(r => (
-            <button
-              key={r}
-              className={`range-pill${timeRange === r ? ' active' : ''}`}
-              onClick={() => setTimeRange(r)}
-            >
-              {r}
-            </button>
-          ))}
-        </div>
+        <>
+          <div className="range-pills">
+            {RANGE_OPTIONS.map(r => (
+              <button
+                key={r}
+                className={`range-pill${timeRange === r ? ' active' : ''}`}
+                onClick={() => setTimeRange(r)}
+              >
+                {r === 'custom' ? 'Custom' : r}
+              </button>
+            ))}
+          </div>
+          {timeRange === 'custom' && (
+            <div className="custom-range-row">
+              <span className="custom-range-label">Estimate through end of</span>
+              <input
+                className="custom-range-input"
+                inputMode="numeric"
+                maxLength={4}
+                placeholder="2035"
+                value={customYear}
+                onChange={e => setCustomYear(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
+              />
+            </div>
+          )}
+        </>
       )}
 
       {/* Month selector */}
@@ -311,6 +351,7 @@ export default function Dashboard({
             estimated={isEstimated}
             estimates={monthEstimates}
             contributions={contribSnapshot}
+            contribEstimates={contribAverages}
             onUpdate={entries => updateCategorySnapshot(selectedMonth, entries)}
             onContributionChange={entries => updateContributions(selectedMonth, entries)}
             onEdit={() => setEditSheet(cat)}
