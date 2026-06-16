@@ -263,12 +263,12 @@ export default function Dashboard({
       : null
 
   const snapshot    = getSnapshot(selectedMonth)
-  // A month is "edited" once it has manually-entered balances — those can be
-  // reset back to the projected estimate.
-  const hasEdits    = Object.keys(snapshot).length > 0
   // Each month's own contributions are editable; future months fall back to the
   // average (shown as a hint) until overridden.
   const contribSnapshot = getContribution(selectedMonth)
+  // A month is "edited" once it has manually-entered balances or contributions —
+  // both can be reset back to the projected estimate.
+  const hasEdits    = Object.keys(snapshot).length > 0 || Object.keys(contribSnapshot).length > 0
   const contribAverages = Object.fromEntries(
     Object.entries(accountModels).map(([id, m]) => [id, Math.round(m.contribution)])
   )
@@ -443,7 +443,7 @@ export default function Dashboard({
       {resetConfirm && (
         <Modal title="Reset to estimates?" onClose={() => setResetConfirm(false)}>
           <p style={{ fontSize: 14, color: 'var(--c-ink-mute)', lineHeight: 1.5, marginBottom: 24 }}>
-            This clears the values you entered for {formatMonthDisplay(selectedMonth)} and
+            This clears the balances and contributions you entered for {formatMonthDisplay(selectedMonth)} and
             returns every category to its estimated projection. This can't be undone.
           </p>
           <button

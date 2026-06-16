@@ -304,12 +304,15 @@ export function useData({ initialData = null, onChange = null } = {}) {
 
   const getContribution = useCallback((month) => data.contributions?.[month] || {}, [data.contributions])
 
-  // Discard a month's manually-entered balances so it reverts to its estimate.
+  // Discard a month's manually-entered balances AND contributions so it reverts
+  // entirely to its estimate.
   const clearMonthSnapshot = useCallback((month) => {
     setData(d => {
       const snapshots = { ...d.snapshots }
       delete snapshots[month]
-      return { ...d, snapshots }
+      const contributions = { ...(d.contributions || {}) }
+      delete contributions[month]
+      return { ...d, snapshots, contributions }
     })
   }, [])
 
