@@ -99,8 +99,14 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
     ? [minDataVal, Math.round(goal * 1.12)]
     : ['auto', 'auto']
 
+  // Thin the dots on long ranges so they don't crowd the line. The line itself
+  // stays continuous — only the markers are sampled. The selected month and the
+  // final point always show regardless of the stride.
+  const dotStride = Math.max(1, Math.ceil(combined.length / 28))
+  const showDotAt = (index) => index % dotStride === 0 || index === combined.length - 1
+
   // Dot renderer for the historical area
-  const historicalDot = ({ cx, cy, payload }) => {
+  const historicalDot = ({ cx, cy, payload, index }) => {
     if (!dotsVisible) return null
     if (payload.historical == null || !isFinite(cx) || !isFinite(cy)) return null
     const isSelected = payload.month === selectedMonth
@@ -110,11 +116,12 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
         <circle cx={cx} cy={cy} r={5} fill={color} />
       </g>
     )
+    if (!showDotAt(index)) return null
     return <circle className="nw-dot-appear" cx={cx} cy={cy} r={3.5} fill={color} />
   }
 
   // Dot renderer for the forecast area (skip junction point — historical area owns it)
-  const forecastDot = ({ cx, cy, payload }) => {
+  const forecastDot = ({ cx, cy, payload, index }) => {
     if (!dotsVisible) return null
     if (payload.forecast == null || payload.historical != null || !isFinite(cx) || !isFinite(cy)) return null
     const isSelected = payload.month === selectedMonth
@@ -124,6 +131,7 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
         <circle cx={cx} cy={cy} r={4.5} fill={color} opacity={0.65} />
       </g>
     )
+    if (!showDotAt(index)) return null
     return <circle className="nw-dot-appear" cx={cx} cy={cy} r={3} fill={color} opacity={0.45} />
   }
 
