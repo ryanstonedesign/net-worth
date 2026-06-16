@@ -675,6 +675,7 @@ a { text-decoration: none; color: inherit; }
   display: flex;
   gap: 12px;
   padding: 0 20px;
+  margin-top: 28px;
   margin-bottom: 28px;
 }
 .summary-cell {
@@ -695,8 +696,8 @@ a { text-decoration: none; color: inherit; }
   gap: 8px;
   padding: 8px 12px;
   border-radius: 999px;
-  background: #edf1f5;
-  box-shadow: var(--shadow-btn-secondary);
+  background: var(--c-ink);
+  box-shadow: 0 10px 24px rgba(15,25,30,0.32), inset 0 1px 0 rgba(255,255,255,0.08);
 }
 /* Floating month selector pinned 24px above the bottom edge */
 .month-float {
@@ -718,9 +719,9 @@ a { text-decoration: none; color: inherit; }
   font-family: var(--font);
   font-size: 13px;
   font-weight: 700;
-  color: var(--c-primary);
-  background: #edf1f5;
-  box-shadow: var(--shadow-btn-secondary);
+  color: #fff;
+  background: var(--c-ink);
+  box-shadow: 0 10px 24px rgba(15,25,30,0.32), inset 0 1px 0 rgba(255,255,255,0.08);
   padding: 8px 16px;
   border-radius: 999px;
   letter-spacing: -0.01em;
@@ -736,12 +737,13 @@ a { text-decoration: none; color: inherit; }
   letter-spacing: -0.01em;
   min-width: 110px;
   text-align: center;
+  color: #fff;
 }
 .month-nav-btn {
   width: 28px; height: 28px;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  color: var(--c-ink);
+  color: rgba(255,255,255,0.92);
   transition: background 0.18s, color 0.18s;
   border: none;
   cursor: pointer;
@@ -751,8 +753,8 @@ a { text-decoration: none; color: inherit; }
   -webkit-user-select: none;
   -webkit-touch-callout: none;
 }
-.month-nav-btn:hover { background: rgba(89,135,166,0.12); color: var(--c-primary); }
-.month-nav-btn:disabled { opacity: 0.3; cursor: default; }
+.month-nav-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+.month-nav-btn:disabled { opacity: 0.32; cursor: default; }
 
 /* ── Chart ── */
 .chart-card { margin: 0 20px 28px; padding: 20px 12px 16px; }
