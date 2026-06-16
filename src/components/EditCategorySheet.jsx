@@ -105,40 +105,56 @@ export default function EditCategorySheet({
                     }}
                   />
                 )}
-                <div className="growth-field" title="Estimated annual growth — used for future estimates">
-                  <input
-                    className="growth-input"
-                    inputMode="decimal"
-                    value={isNew ? String(acc.growth ?? 0) : (growthEdits[acc.id] ?? String(acc.growth ?? 0))}
-                    onChange={e => {
-                      const v = e.target.value.replace(/[^0-9.\-]/g, '')
-                      if (isNew) {
-                        setLocalAccounts(list =>
-                          list.map(a => a.id === acc.id ? { ...a, growth: v } : a)
-                        )
-                      } else {
-                        setGrowthEdits(g => ({ ...g, [acc.id]: v }))
-                      }
-                    }}
-                    onBlur={() => {
-                      if (isNew) {
-                        setLocalAccounts(list =>
-                          list.map(a => {
-                            if (a.id !== acc.id) return a
-                            const num = parseFloat(a.growth)
-                            return { ...a, growth: isNaN(num) ? 0 : num }
-                          })
-                        )
-                      } else {
-                        const num = parseFloat(growthEdits[acc.id])
-                        const clean = isNaN(num) ? 0 : num
-                        setGrowthEdits(g => ({ ...g, [acc.id]: String(clean) }))
-                        if (clean !== (acc.growth ?? 0)) setAccountGrowth(category.id, acc.id, clean)
-                      }
-                    }}
-                  />
-                  <span className="growth-suffix">%/yr</span>
-                </div>
+                {(() => {
+                  const raw   = isNew ? String(acc.growth ?? 0) : (growthEdits[acc.id] ?? String(acc.growth ?? 0))
+                  const isNeg = raw.trim().startsWith('-')
+                  const mag   = raw.replace('-', '')
+                  const commit = (next) => {
+                    if (isNew) setLocalAccounts(list => list.map(a => a.id === acc.id ? { ...a, growth: next } : a))
+                    else setGrowthEdits(g => ({ ...g, [acc.id]: next }))
+                  }
+                  return (
+                    <div className="growth-field" title="Estimated annual growth — negative for depreciating assets. Used for future estimates.">
+                      <button
+                        type="button"
+                        className="growth-sign"
+                        aria-label={isNeg ? 'Make growth positive' : 'Make growth negative'}
+                        onClick={() => {
+                          const next = isNeg ? mag : '-' + mag
+                          commit(next)
+                          if (!isNew) {
+                            const num = parseFloat(next)
+                            setAccountGrowth(category.id, acc.id, isNaN(num) ? 0 : num)
+                          }
+                        }}
+                      >{isNeg ? '−' : '+'}</button>
+                      <input
+                        className="growth-input"
+                        inputMode="decimal"
+                        value={mag}
+                        onChange={e => {
+                          const m = e.target.value.replace(/[^0-9.]/g, '')
+                          commit((isNeg ? '-' : '') + m)
+                        }}
+                        onBlur={() => {
+                          if (isNew) {
+                            setLocalAccounts(list => list.map(a => {
+                              if (a.id !== acc.id) return a
+                              const num = parseFloat(a.growth)
+                              return { ...a, growth: isNaN(num) ? 0 : num }
+                            }))
+                          } else {
+                            const num = parseFloat(growthEdits[acc.id])
+                            const clean = isNaN(num) ? 0 : num
+                            setGrowthEdits(g => ({ ...g, [acc.id]: String(clean) }))
+                            if (clean !== (acc.growth ?? 0)) setAccountGrowth(category.id, acc.id, clean)
+                          }
+                        }}
+                      />
+                      <span className="growth-suffix">%/yr</span>
+                    </div>
+                  )
+                })()}
                 <button
                   className="del-btn"
                   onClick={() => {

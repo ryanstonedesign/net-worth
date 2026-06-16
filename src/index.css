@@ -738,6 +738,22 @@ a { text-decoration: none; color: inherit; }
   transition: border-bottom-color 0.2s;
 }
 .growth-field:focus-within { border-bottom-color: var(--c-primary); }
+.growth-sign {
+  width: 22px; height: 22px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(89,135,166,0.12);
+  color: var(--c-primary);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: background 0.18s;
+}
+.growth-sign:hover { background: rgba(89,135,166,0.22); }
 .growth-input {
   width: 42px;
   text-align: right;
