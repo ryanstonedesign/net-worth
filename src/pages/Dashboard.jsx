@@ -313,11 +313,6 @@ export default function Dashboard({
         </>
       )}
 
-      {/* Month selector */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32, marginBottom: 28 }}>
-        <MonthSelector month={selectedMonth} onChange={onMonthChange} maxMonth={maxForecastMonth} />
-      </div>
-
       {/* Asset / Liability summary */}
       {data.categories.length > 0 && (
         <div className="summary-row">
@@ -406,6 +401,16 @@ export default function Dashboard({
           />
         </Modal>
       )}
+
+      {/* Floating month selector — hold a chevron to fast-scroll */}
+      <div className="month-float">
+        {selectedMonth !== currentMonth && (
+          <button className="back-to-month" onClick={() => onMonthChange(currentMonth)}>
+            Back to this month
+          </button>
+        )}
+        <MonthSelector month={selectedMonth} onChange={onMonthChange} maxMonth={maxForecastMonth} />
+      </div>
     </div>
   )
 }

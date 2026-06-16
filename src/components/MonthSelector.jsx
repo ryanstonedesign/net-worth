@@ -1,13 +1,50 @@
+import { useRef, useEffect } from 'react'
 import { formatMonthDisplay, getAdjacentMonth, getCurrentMonth } from '../utils'
 
 export default function MonthSelector({ month, onChange, maxMonth }) {
-  const isMax = month >= (maxMonth ?? getCurrentMonth())
+  const max = maxMonth ?? getCurrentMonth()
+  const isMax = month >= max
+
+  // Long-press to fast-scroll through months. We track the stepping month in a
+  // ref so each tick advances from the last committed value (not a stale prop),
+  // and accelerate the repeat the longer the button is held.
+  const holdRef = useRef(null)
+  const stepMonthRef = useRef(month)
+
+  const clearHold = () => {
+    if (holdRef.current) { clearTimeout(holdRef.current); holdRef.current = null }
+  }
+  useEffect(() => clearHold, [])
+
+  const step = (delta) => {
+    const next = getAdjacentMonth(stepMonthRef.current, delta)
+    if (delta > 0 && next > max) return false // don't run past the forecast horizon
+    stepMonthRef.current = next
+    onChange(next)
+    return true
+  }
+
+  const startHold = (delta) => {
+    clearHold()
+    stepMonthRef.current = month
+    if (!step(delta)) return // immediate first step (also handles a plain tap)
+    let speed = 240
+    const tick = () => {
+      if (!step(delta)) { clearHold(); return }
+      speed = Math.max(55, speed - 18) // accelerate
+      holdRef.current = setTimeout(tick, speed)
+    }
+    holdRef.current = setTimeout(tick, 380) // delay before fast-repeat kicks in
+  }
 
   return (
     <div className="month-selector">
       <button
         className="month-nav-btn"
-        onClick={() => onChange(getAdjacentMonth(month, -1))}
+        onPointerDown={e => { e.preventDefault(); startHold(-1) }}
+        onPointerUp={clearHold}
+        onPointerLeave={clearHold}
+        onPointerCancel={clearHold}
         aria-label="Previous month"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -19,7 +56,10 @@ export default function MonthSelector({ month, onChange, maxMonth }) {
 
       <button
         className="month-nav-btn"
-        onClick={() => onChange(getAdjacentMonth(month, 1))}
+        onPointerDown={e => { if (isMax) return; e.preventDefault(); startHold(1) }}
+        onPointerUp={clearHold}
+        onPointerLeave={clearHold}
+        onPointerCancel={clearHold}
         disabled={isMax}
         aria-label="Next month"
       >

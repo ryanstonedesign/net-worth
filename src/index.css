@@ -86,7 +86,9 @@ a { text-decoration: none; color: inherit; }
   overflow-x: hidden;
   overscroll-behavior-y: contain;
   padding-top: var(--safe-top);
-  padding-bottom: calc(var(--safe-bottom) + 48px);
+  /* Leave room for the floating month selector (and its "Back to this month"
+     button) pinned near the bottom. */
+  padding-bottom: calc(var(--safe-bottom) + 132px);
   -webkit-overflow-scrolling: touch;
 }
 /* Cap the content width on larger screens and center it. */
@@ -696,6 +698,38 @@ a { text-decoration: none; color: inherit; }
   background: #edf1f5;
   box-shadow: var(--shadow-btn-secondary);
 }
+/* Floating month selector pinned 24px above the bottom edge */
+.month-float {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--safe-bottom) + 24px);
+  transform: translateX(-50%);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+.month-float > * { pointer-events: auto; }
+.back-to-month {
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--c-primary);
+  background: #edf1f5;
+  box-shadow: var(--shadow-btn-secondary);
+  padding: 8px 16px;
+  border-radius: 999px;
+  letter-spacing: -0.01em;
+  animation: backToMonthIn 0.22s ease-out;
+}
+@keyframes backToMonthIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 .month-selector-label {
   font-size: 15px;
   font-weight: 700;
@@ -712,6 +746,10 @@ a { text-decoration: none; color: inherit; }
   border: none;
   cursor: pointer;
   background: none;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 .month-nav-btn:hover { background: rgba(89,135,166,0.12); color: var(--c-primary); }
 .month-nav-btn:disabled { opacity: 0.3; cursor: default; }
