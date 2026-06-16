@@ -229,6 +229,19 @@ export default function Dashboard({
   // Per-account projected balances for the selected month (estimated months only).
   const monthEstimates  = isEstimated ? (forecastByMonth[selectedMonth]?.accounts ?? {}) : null
 
+  // Writing a balance to an estimated month that's at/before the current month
+  // turns it into real history — which would drop every other (still-empty)
+  // account to zero. Materialise the whole projection into that month first so
+  // only the edited value changes and the rest keep their estimates.
+  const handleSnapshotUpdate = (entries) => {
+    if (isEstimated && selectedMonth <= currentMonth) {
+      const projected = forecastByMonth[selectedMonth]?.accounts ?? {}
+      updateCategorySnapshot(selectedMonth, { ...projected, ...getSnapshot(selectedMonth), ...entries })
+    } else {
+      updateCategorySnapshot(selectedMonth, entries)
+    }
+  }
+
   // Months-to-goal: use full history slope for stability across range changes
   const goalSlope = history.length >= 2
     ? (history[history.length - 1].netWorth - history[0].netWorth) / (history.length - 1)
@@ -353,14 +366,14 @@ export default function Dashboard({
       <div className="cat-scroll">
         {data.categories.map(cat => (
           <CategoryCard
-            key={cat.id + selectedMonth}
+            key={cat.id + selectedMonth + isEstimated}
             category={cat}
             snapshot={snapshot}
             estimated={isEstimated}
             estimates={monthEstimates}
             contributions={contribSnapshot}
             contribEstimates={contribAverages}
-            onUpdate={entries => updateCategorySnapshot(selectedMonth, entries)}
+            onUpdate={handleSnapshotUpdate}
             onContributionChange={entries => updateContributions(selectedMonth, entries)}
             onEdit={() => setEditSheet(cat)}
           />
