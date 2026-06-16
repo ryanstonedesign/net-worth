@@ -102,7 +102,7 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
   // Thin the dots on long ranges so they don't crowd the line. The line itself
   // stays continuous — only the markers are sampled. The selected month and the
   // final point always show regardless of the stride.
-  const dotStride = Math.max(1, Math.ceil(combined.length / 28))
+  const dotStride = Math.max(1, Math.ceil(combined.length / 12))
   const showDotAt = (index) => index % dotStride === 0 || index === combined.length - 1
 
   // Dot renderer for the historical area

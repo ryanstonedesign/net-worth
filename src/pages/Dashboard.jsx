@@ -183,7 +183,7 @@ export default function Dashboard({
   const [timeRange, setTimeRange] = useState('1Y')
 
   const currentMonth = getCurrentMonth()
-  const [customYear, setCustomYear] = useState(String(Number(currentMonth.slice(0, 4)) + 5))
+  const [customYear, setCustomYear] = useState(currentMonth.slice(0, 4))
 
   // Only months up to the current calendar month are real history; later months
   // are projections, even when the user has typed override values into them.
