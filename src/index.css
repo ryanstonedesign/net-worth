@@ -521,6 +521,63 @@ a { text-decoration: none; color: inherit; }
   font-style: italic;
   opacity: 0.75;
 }
+/* Account block groups the balance row with its optional contribution row */
+.cat-account-block { border-bottom: 1px solid rgba(200,215,220,0.28); }
+.cat-account-row { border-bottom: none; }
+/* Monthly contribution sub-row — excluded from the category total */
+.cat-contrib-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 8px 12px;
+  margin-top: -2px;
+}
+.cat-contrib-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--c-ink-mute);
+}
+.cat-contrib-field { display: flex; align-items: baseline; gap: 2px; flex-shrink: 0; }
+.cat-contrib-input {
+  width: 90px;
+  text-align: right;
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid transparent;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-ink);
+  padding: 2px 0;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.cat-contrib-input:focus { border-bottom-color: var(--c-primary); }
+.cat-contrib-input::placeholder { color: rgba(85,99,109,0.4); }
+.cat-contrib-suffix, .cat-contrib-value {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--c-ink-mute);
+}
+/* Checkbox row (e.g. "Contributing monthly" in the category sheet) */
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+.checkbox-input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--c-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.checkbox-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--c-ink);
+}
 /* Total row */
 .cat-account-total {
   display: flex;

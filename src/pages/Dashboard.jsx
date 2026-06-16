@@ -17,10 +17,13 @@ function getFilteredHistory(history, range) {
   return history.length <= n ? history : history.slice(-n)
 }
 
-// Build a forecasting model for every account from its history:
+// Build a forecasting model for every account:
 //   base         — most recent known balance
-//   contribution — average actual $ change per month (recurring deposits/draws)
+//   contribution — explicit monthly contribution ($), only when the category
+//                  is flagged as contributing (otherwise 0)
 //   annual       — user's estimated annual growth rate (interest), as a fraction
+// Growth and contribution are independent levers, so market return is never
+// double-counted into the contribution.
 function buildAccountModels(categories, snapshots, historyMonths) {
   const models = {}
   categories.forEach(cat => cat.accounts.forEach(acc => {
@@ -28,9 +31,7 @@ function buildAccountModels(categories, snapshots, historyMonths) {
       .map(m => snapshots[m]?.[acc.id])
       .filter(v => v != null)
     const base = series.length ? series[series.length - 1] : 0
-    const contribution = series.length >= 2
-      ? (series[series.length - 1] - series[0]) / (series.length - 1)
-      : 0
+    const contribution = cat.contributing ? (Number(acc.contribution) || 0) : 0
     models[acc.id] = { base, contribution, annual: (Number(acc.growth) || 0) / 100 }
   }))
   return models
@@ -130,6 +131,7 @@ export default function Dashboard({
   deleteAccount,
   renameAccount,
   setAccountGrowth,
+  setAccountContribution,
   updateCategorySnapshot,
   getSnapshot,
   getCategoryTotal,
@@ -284,6 +286,7 @@ export default function Dashboard({
             estimated={isEstimated}
             estimates={monthEstimates}
             onUpdate={entries => updateCategorySnapshot(selectedMonth, entries)}
+            onContributionChange={(accId, val) => setAccountContribution(cat.id, accId, val)}
             onEdit={() => setEditSheet(cat)}
           />
         ))}
@@ -313,7 +316,7 @@ export default function Dashboard({
             if (editSheet === 'new') {
               addCategoryWithAccounts(cat, localAccounts)
             } else {
-              updateCategory(editCat.id, { name: cat.name, type: cat.type, color: cat.color, icon: cat.icon })
+              updateCategory(editCat.id, { name: cat.name, type: cat.type, color: cat.color, icon: cat.icon, contributing: cat.contributing })
             }
             setEditSheet(null)
           }}

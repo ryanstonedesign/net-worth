@@ -283,6 +283,18 @@ export function useData({ initialData = null, onChange = null } = {}) {
     }))
   }, [])
 
+  // Estimated monthly contribution ($) added to an account each future month.
+  const setAccountContribution = useCallback((categoryId, accountId, contribution) => {
+    setData(d => ({
+      ...d,
+      categories: d.categories.map(c =>
+        c.id === categoryId
+          ? { ...c, accounts: c.accounts.map(a => a.id === accountId ? { ...a, contribution } : a) }
+          : c
+      ),
+    }))
+  }, [])
+
   const setGoal = useCallback((amount) => {
     setData(d => ({ ...d, goal: amount }))
   }, [])
@@ -400,6 +412,7 @@ export function useData({ initialData = null, onChange = null } = {}) {
     deleteAccount,
     renameAccount,
     setAccountGrowth,
+    setAccountContribution,
     updateCategorySnapshot,
     bulkImport,
     getSnapshot,

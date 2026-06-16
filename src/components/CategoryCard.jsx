@@ -8,7 +8,7 @@ function formatDisplay(raw) {
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 }
 
-export default function CategoryCard({ category, snapshot, onUpdate, onEdit, estimated = false, estimates = {} }) {
+export default function CategoryCard({ category, snapshot, onUpdate, onContributionChange, onEdit, estimated = false, estimates = {} }) {
   const [values, setValues] = useState(() => {
     const v = {}
     category.accounts.forEach(acc => {
@@ -16,8 +16,18 @@ export default function CategoryCard({ category, snapshot, onUpdate, onEdit, est
     })
     return v
   })
+  // Monthly contribution edits (account-level, not month-specific).
+  const [contribs, setContribs] = useState(() => {
+    const v = {}
+    category.accounts.forEach(acc => {
+      v[acc.id] = acc.contribution != null ? String(acc.contribution) : ''
+    })
+    return v
+  })
   const [focused, setFocused] = useState(null)
 
+  // Contributions are deliberately excluded from the category total — they only
+  // feed future estimates, not the current balance.
   const total = estimated
     ? category.accounts.reduce((s, a) => s + (estimates?.[a.id] || 0), 0)
     : category.accounts.reduce((s, a) => s + parseAmount(values[a.id] || '0'), 0)
@@ -47,26 +57,58 @@ export default function CategoryCard({ category, snapshot, onUpdate, onEdit, est
       {category.accounts.length > 0 ? (
         <div className="cat-accounts">
           {category.accounts.map(acc => (
-            <div key={acc.id} className="cat-account-row">
-              <span className="cat-account-name">{acc.name}</span>
-              {estimated ? (
-                <span className="cat-account-input cat-account-est">
-                  {formatCurrency(estimates?.[acc.id] || 0)}
-                </span>
-              ) : (
-                <input
-                  className="cat-account-input"
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="$0"
-                  value={focused === acc.id ? values[acc.id] : formatDisplay(values[acc.id])}
-                  onFocus={e => { setFocused(acc.id); e.target.select() }}
-                  onChange={e => {
-                    const raw = e.target.value.replace(/[^0-9.]/g, '')
-                    setValues(v => ({ ...v, [acc.id]: raw }))
-                  }}
-                  onBlur={handleBlur}
-                />
+            <div key={acc.id} className="cat-account-block">
+              <div className="cat-account-row">
+                <span className="cat-account-name">{acc.name}</span>
+                {estimated ? (
+                  <span className="cat-account-input cat-account-est">
+                    {formatCurrency(estimates?.[acc.id] || 0)}
+                  </span>
+                ) : (
+                  <input
+                    className="cat-account-input"
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="$0"
+                    value={focused === acc.id ? values[acc.id] : formatDisplay(values[acc.id])}
+                    onFocus={e => { setFocused(acc.id); e.target.select() }}
+                    onChange={e => {
+                      const raw = e.target.value.replace(/[^0-9.]/g, '')
+                      setValues(v => ({ ...v, [acc.id]: raw }))
+                    }}
+                    onBlur={handleBlur}
+                  />
+                )}
+              </div>
+              {category.contributing && (
+                <div className="cat-contrib-row">
+                  <span className="cat-contrib-label">Contribution</span>
+                  {estimated ? (
+                    <span className="cat-contrib-value cat-account-est">
+                      {formatCurrency(Number(acc.contribution) || 0)}/mo
+                    </span>
+                  ) : (
+                    <div className="cat-contrib-field">
+                      <input
+                        className="cat-contrib-input"
+                        type="text"
+                        inputMode="decimal"
+                        placeholder="$0"
+                        value={focused === `c_${acc.id}` ? contribs[acc.id] : formatDisplay(contribs[acc.id])}
+                        onFocus={e => { setFocused(`c_${acc.id}`); e.target.select() }}
+                        onChange={e => {
+                          const raw = e.target.value.replace(/[^0-9.]/g, '')
+                          setContribs(v => ({ ...v, [acc.id]: raw }))
+                        }}
+                        onBlur={() => {
+                          setFocused(null)
+                          onContributionChange?.(acc.id, parseAmount(contribs[acc.id] || '0'))
+                        }}
+                      />
+                      <span className="cat-contrib-suffix">/mo</span>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           ))}

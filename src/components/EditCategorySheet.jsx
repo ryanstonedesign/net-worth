@@ -15,6 +15,7 @@ export default function EditCategorySheet({
   const isNew = !category
   const [name, setName] = useState(category?.name ?? '')
   const [type, setType] = useState(category?.type ?? 'asset')
+  const [contributing, setContributing] = useState(category?.contributing ?? false)
   // Color/icon are no longer user-editable, but kept in the data model.
   const color = category?.color ?? CATEGORY_COLORS[0]
   const icon = category?.icon ?? CATEGORY_ICONS[0]
@@ -52,7 +53,7 @@ export default function EditCategorySheet({
       const num = parseFloat(a.growth)
       return { ...a, growth: isNaN(num) ? 0 : num }
     })
-    onSave({ name: name.trim(), type, color, icon }, normalized)
+    onSave({ name: name.trim(), type, color, icon, contributing }, normalized)
   }
 
   const accounts = isNew ? localAccounts : (category?.accounts ?? [])
@@ -75,6 +76,15 @@ export default function EditCategorySheet({
           <button type="button" className={`type-toggle-btn${type === 'asset' ? ' active' : ''}`} onClick={() => setType('asset')}>Asset</button>
           <button type="button" className={`type-toggle-btn${type === 'liability' ? ' active' : ''}`} onClick={() => setType('liability')}>Liability</button>
         </div>
+        <label className="checkbox-row" style={{ marginTop: 14 }}>
+          <input
+            type="checkbox"
+            className="checkbox-input"
+            checked={contributing}
+            onChange={e => setContributing(e.target.checked)}
+          />
+          <span className="checkbox-label">Contributing monthly</span>
+        </label>
       </div>
 
       {/* Accounts */}
