@@ -10,6 +10,7 @@ export default function EditCategorySheet({
   addAccount,
   deleteAccount,
   renameAccount,
+  setAccountGrowth,
 }) {
   const isNew = !category
   const [name, setName] = useState(category?.name ?? '')
@@ -23,12 +24,16 @@ export default function EditCategorySheet({
   const [nameEdits, setNameEdits] = useState(() =>
     Object.fromEntries((category?.accounts ?? []).map(a => [a.id, a.name]))
   )
+  // Track edited annual-growth values (as strings) before blur-save
+  const [growthEdits, setGrowthEdits] = useState(() =>
+    Object.fromEntries((category?.accounts ?? []).map(a => [a.id, String(a.growth ?? 0)]))
+  )
   const accInputRef = useRef(null)
 
   const handleAddLocalAcc = () => {
     const n = newAccName.trim()
     if (!n) return
-    setLocalAccounts(a => [...a, { id: `tmp_${Date.now()}`, name: n }])
+    setLocalAccounts(a => [...a, { id: `tmp_${Date.now()}`, name: n, growth: 0 }])
     setNewAccName('')
     accInputRef.current?.focus()
   }
@@ -43,7 +48,11 @@ export default function EditCategorySheet({
 
   const handleSave = () => {
     if (!name.trim()) return
-    onSave({ name: name.trim(), type, color, icon }, localAccounts)
+    const normalized = localAccounts.map(a => {
+      const num = parseFloat(a.growth)
+      return { ...a, growth: isNaN(num) ? 0 : num }
+    })
+    onSave({ name: name.trim(), type, color, icon }, normalized)
   }
 
   const accounts = isNew ? localAccounts : (category?.accounts ?? [])
@@ -96,6 +105,40 @@ export default function EditCategorySheet({
                     }}
                   />
                 )}
+                <div className="growth-field" title="Estimated annual growth — used for future estimates">
+                  <input
+                    className="growth-input"
+                    inputMode="decimal"
+                    value={isNew ? String(acc.growth ?? 0) : (growthEdits[acc.id] ?? String(acc.growth ?? 0))}
+                    onChange={e => {
+                      const v = e.target.value.replace(/[^0-9.\-]/g, '')
+                      if (isNew) {
+                        setLocalAccounts(list =>
+                          list.map(a => a.id === acc.id ? { ...a, growth: v } : a)
+                        )
+                      } else {
+                        setGrowthEdits(g => ({ ...g, [acc.id]: v }))
+                      }
+                    }}
+                    onBlur={() => {
+                      if (isNew) {
+                        setLocalAccounts(list =>
+                          list.map(a => {
+                            if (a.id !== acc.id) return a
+                            const num = parseFloat(a.growth)
+                            return { ...a, growth: isNaN(num) ? 0 : num }
+                          })
+                        )
+                      } else {
+                        const num = parseFloat(growthEdits[acc.id])
+                        const clean = isNaN(num) ? 0 : num
+                        setGrowthEdits(g => ({ ...g, [acc.id]: String(clean) }))
+                        if (clean !== (acc.growth ?? 0)) setAccountGrowth(category.id, acc.id, clean)
+                      }
+                    }}
+                  />
+                  <span className="growth-suffix">%/yr</span>
+                </div>
                 <button
                   className="del-btn"
                   onClick={() => {

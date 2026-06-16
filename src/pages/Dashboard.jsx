@@ -17,19 +17,25 @@ function getFilteredHistory(history, range) {
   return history.length <= n ? history : history.slice(-n)
 }
 
-function generateForecast(filteredHistory, range) {
-  if (filteredHistory.length < 2) return []
-  const count = range === 'ALL'
-    ? filteredHistory.length - 1
-    : FORECAST_MONTHS[range] ?? 1
-  const first = filteredHistory[0]
-  const last  = filteredHistory[filteredHistory.length - 1]
-  const slope = (last.netWorth - first.netWorth) / (filteredHistory.length - 1)
-  return Array.from({ length: count }, (_, i) => ({
-    month: getAdjacentMonth(last.month, i + 1),
-    netWorth: Math.round(last.netWorth + slope * (i + 1)),
-    isForecast: true,
-  }))
+// Forecast future months by compounding each account's last known value by
+// its own estimated annual growth rate. Each account grows independently, so
+// the projected net worth reflects per-account compound growth rather than a
+// single blended slope.
+function generateForecast(categories, lastSnapshot, lastMonth, count) {
+  if (!lastMonth || count < 1) return []
+  return Array.from({ length: count }, (_, i) => {
+    const monthsAhead = i + 1
+    const netWorth = Math.round(categories.reduce((total, cat) => {
+      const catTotal = cat.accounts.reduce((sum, acc) => {
+        const base   = lastSnapshot[acc.id] || 0
+        const annual = (Number(acc.growth) || 0) / 100
+        // Annual rate interpolated monthly: base × (1+rate)^(months/12).
+        return sum + base * Math.pow(1 + annual, monthsAhead / 12)
+      }, 0)
+      return total + (cat.type === 'liability' ? -catTotal : catTotal)
+    }, 0))
+    return { month: getAdjacentMonth(lastMonth, monthsAhead), netWorth, isForecast: true }
+  })
 }
 
 function GoalEditor({ goal, onSave, onClose }) {
@@ -97,6 +103,7 @@ export default function Dashboard({
   addAccount,
   deleteAccount,
   renameAccount,
+  setAccountGrowth,
   updateCategorySnapshot,
   getSnapshot,
   getCategoryTotal,
@@ -112,17 +119,28 @@ export default function Dashboard({
 
   const history         = getHistory()
   const filteredHistory = getFilteredHistory(history, timeRange)
-  const forecastData    = generateForecast(filteredHistory, timeRange)
-  const forecastMap     = Object.fromEntries(forecastData.map(d => [d.month, d.netWorth]))
 
-  const lastDataMonth    = history.length > 0 ? history[history.length - 1].month : null
+  const lastDataMonth = history.length > 0 ? history[history.length - 1].month : null
+  const forecastCount = lastDataMonth
+    ? (timeRange === 'ALL' ? Math.max(history.length - 1, 1) : FORECAST_MONTHS[timeRange] ?? 1)
+    : 0
+  const forecastData = generateForecast(
+    data.categories, getSnapshot(lastDataMonth), lastDataMonth, forecastCount
+  )
+  const forecastMap  = Object.fromEntries(forecastData.map(d => [d.month, d.netWorth]))
+
   const maxForecastMonth = forecastData.length > 0 ? forecastData[forecastData.length - 1].month : getCurrentMonth()
   const isEstimated      = !!(lastDataMonth && selectedMonth > lastDataMonth && selectedMonth in forecastMap)
+
+  // Net worth at any month — forecast value for future months, real otherwise.
+  const valueAt = (m) => (m in forecastMap ? forecastMap[m] : getNetWorth(m))
 
   const netWorth        = getNetWorth(selectedMonth)
   const displayNetWorth = isEstimated ? forecastMap[selectedMonth] : netWorth
   const prevMonth       = getPrevMonth(selectedMonth)
   const delta           = !isEstimated && prevMonth != null ? netWorth - getNetWorth(prevMonth) : null
+  // For estimated months, show the projected month-over-month growth.
+  const estDelta        = isEstimated ? valueAt(selectedMonth) - valueAt(getAdjacentMonth(selectedMonth, -1)) : null
 
   // Months-to-goal: use full history slope for stability across range changes
   const goalSlope = history.length >= 2
@@ -159,8 +177,10 @@ export default function Dashboard({
         <div className={`hero-amount${isEstimated ? ' estimated' : ''}`}>
           <RollingNumber value={displayNetWorth} />
         </div>
-        <div className={`hero-delta-line${!isEstimated && delta != null && delta > 0 ? ' positive' : !isEstimated && delta != null && delta < 0 ? ' negative' : ''}`}>
-          {isEstimated ? 'Estimated' : delta == null ? '—' : `${delta >= 0 ? '+' : ''}${formatCurrency(delta)} this month`}
+        <div className={`hero-delta-line${(isEstimated ? estDelta : delta) > 0 ? ' positive' : (isEstimated ? estDelta : delta) < 0 ? ' negative' : ''}`}>
+          {isEstimated
+            ? `${estDelta >= 0 ? '+' : ''}${formatCurrency(estDelta)} (est)`
+            : delta == null ? '—' : `${delta >= 0 ? '+' : ''}${formatCurrency(delta)} this month`}
         </div>
 
         {/* Goal row */}
@@ -272,6 +292,7 @@ export default function Dashboard({
           addAccount={addAccount}
           deleteAccount={deleteAccount}
           renameAccount={renameAccount}
+          setAccountGrowth={setAccountGrowth}
         />
       )}
 

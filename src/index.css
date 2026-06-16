@@ -731,6 +731,31 @@ a { text-decoration: none; color: inherit; }
   transition: border-bottom-color 0.2s;
 }
 .manage-account-input:focus { border-bottom-color: var(--c-primary); }
+.growth-field {
+  display: flex; align-items: center; gap: 2px;
+  flex-shrink: 0;
+  border-bottom: 1.5px solid transparent;
+  transition: border-bottom-color 0.2s;
+}
+.growth-field:focus-within { border-bottom-color: var(--c-primary); }
+.growth-input {
+  width: 42px;
+  text-align: right;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--c-ink);
+  font-family: var(--font);
+  background: transparent;
+  border: none;
+  padding: 2px 0;
+  outline: none;
+}
+.growth-suffix {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--c-ink-mute);
+  white-space: nowrap;
+}
 .del-btn {
   width: 28px; height: 28px;
   border-radius: 50%;

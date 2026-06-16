@@ -271,6 +271,18 @@ export function useData({ initialData = null, onChange = null } = {}) {
     }))
   }, [])
 
+  // Estimated annual growth (%) used to compound future-month forecasts.
+  const setAccountGrowth = useCallback((categoryId, accountId, growth) => {
+    setData(d => ({
+      ...d,
+      categories: d.categories.map(c =>
+        c.id === categoryId
+          ? { ...c, accounts: c.accounts.map(a => a.id === accountId ? { ...a, growth } : a) }
+          : c
+      ),
+    }))
+  }, [])
+
   const setGoal = useCallback((amount) => {
     setData(d => ({ ...d, goal: amount }))
   }, [])
@@ -387,6 +399,7 @@ export function useData({ initialData = null, onChange = null } = {}) {
     addAccount,
     deleteAccount,
     renameAccount,
+    setAccountGrowth,
     updateCategorySnapshot,
     bulkImport,
     getSnapshot,
