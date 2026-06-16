@@ -19,19 +19,27 @@ function getFilteredHistory(history, range) {
 
 // Build a forecasting model for every account:
 //   base         — most recent known balance
-//   contribution — explicit monthly contribution ($), only when the category
-//                  is flagged as contributing (otherwise 0)
+//   contribution — average of the per-month contributions recorded for this
+//                  account (only when its category is contributing, else 0)
 //   annual       — user's estimated annual growth rate (interest), as a fraction
 // Growth and contribution are independent levers, so market return is never
 // double-counted into the contribution.
-function buildAccountModels(categories, snapshots, historyMonths) {
+function buildAccountModels(categories, snapshots, contributions, historyMonths) {
+  const contribMonths = Object.keys(contributions || {})
   const models = {}
   categories.forEach(cat => cat.accounts.forEach(acc => {
     const series = historyMonths
       .map(m => snapshots[m]?.[acc.id])
       .filter(v => v != null)
     const base = series.length ? series[series.length - 1] : 0
-    const contribution = cat.contributing ? (Number(acc.contribution) || 0) : 0
+
+    let contribution = 0
+    if (cat.contributing) {
+      const cseries = contribMonths
+        .map(m => contributions[m]?.[acc.id])
+        .filter(v => v != null)
+      if (cseries.length) contribution = cseries.reduce((a, b) => a + b, 0) / cseries.length
+    }
     models[acc.id] = { base, contribution, annual: (Number(acc.growth) || 0) / 100 }
   }))
   return models
@@ -131,7 +139,8 @@ export default function Dashboard({
   deleteAccount,
   renameAccount,
   setAccountGrowth,
-  setAccountContribution,
+  updateContributions,
+  getContribution,
   updateCategorySnapshot,
   getSnapshot,
   getCategoryTotal,
@@ -152,7 +161,7 @@ export default function Dashboard({
   const forecastCount = lastDataMonth
     ? (timeRange === 'ALL' ? Math.max(history.length - 1, 1) : FORECAST_MONTHS[timeRange] ?? 1)
     : 0
-  const accountModels = buildAccountModels(data.categories, data.snapshots, history.map(h => h.month))
+  const accountModels = buildAccountModels(data.categories, data.snapshots, data.contributions || {}, history.map(h => h.month))
   const forecastData  = generateForecast(data.categories, accountModels, lastDataMonth, forecastCount)
   const forecastMap   = Object.fromEntries(forecastData.map(d => [d.month, d.netWorth]))
   const forecastByMonth = Object.fromEntries(forecastData.map(d => [d.month, d]))
@@ -190,6 +199,11 @@ export default function Dashboard({
       : null
 
   const snapshot    = getSnapshot(selectedMonth)
+  // Contributions: editable per-month values for real months, average for future.
+  const contribAverages = Object.fromEntries(
+    Object.entries(accountModels).map(([id, m]) => [id, Math.round(m.contribution)])
+  )
+  const contribSnapshot = isEstimated ? contribAverages : getContribution(selectedMonth)
   const assets      = getTotalAssets(selectedMonth)
   const liabilities = getTotalLiabilities(selectedMonth)
   const hasLiabilities = data.categories.some(c => c.type === 'liability')
@@ -285,8 +299,9 @@ export default function Dashboard({
             snapshot={snapshot}
             estimated={isEstimated}
             estimates={monthEstimates}
+            contributions={contribSnapshot}
             onUpdate={entries => updateCategorySnapshot(selectedMonth, entries)}
-            onContributionChange={(accId, val) => setAccountContribution(cat.id, accId, val)}
+            onContributionChange={entries => updateContributions(selectedMonth, entries)}
             onEdit={() => setEditSheet(cat)}
           />
         ))}

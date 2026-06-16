@@ -222,13 +222,18 @@ export function useData({ initialData = null, onChange = null } = {}) {
     setData(d => {
       const cat = d.categories.find(c => c.id === id)
       const accountIds = new Set(cat ? cat.accounts.map(a => a.id) : [])
-      const snapshots = Object.fromEntries(
-        Object.entries(d.snapshots).map(([month, vals]) => [
+      const prune = (obj) => Object.fromEntries(
+        Object.entries(obj || {}).map(([month, vals]) => [
           month,
           Object.fromEntries(Object.entries(vals).filter(([k]) => !accountIds.has(k))),
         ])
       )
-      return { ...d, categories: d.categories.filter(c => c.id !== id), snapshots }
+      return {
+        ...d,
+        categories: d.categories.filter(c => c.id !== id),
+        snapshots: prune(d.snapshots),
+        contributions: prune(d.contributions),
+      }
     })
   }, [])
 
@@ -244,6 +249,12 @@ export function useData({ initialData = null, onChange = null } = {}) {
   }, [])
 
   const deleteAccount = useCallback((categoryId, accountId) => {
+    const prune = (obj) => Object.fromEntries(
+      Object.entries(obj || {}).map(([month, vals]) => [
+        month,
+        Object.fromEntries(Object.entries(vals).filter(([k]) => k !== accountId)),
+      ])
+    )
     setData(d => ({
       ...d,
       categories: d.categories.map(c =>
@@ -251,12 +262,8 @@ export function useData({ initialData = null, onChange = null } = {}) {
           ? { ...c, accounts: c.accounts.filter(a => a.id !== accountId) }
           : c
       ),
-      snapshots: Object.fromEntries(
-        Object.entries(d.snapshots).map(([month, vals]) => [
-          month,
-          Object.fromEntries(Object.entries(vals).filter(([k]) => k !== accountId)),
-        ])
-      ),
+      snapshots: prune(d.snapshots),
+      contributions: prune(d.contributions),
     }))
   }, [])
 
@@ -283,17 +290,19 @@ export function useData({ initialData = null, onChange = null } = {}) {
     }))
   }, [])
 
-  // Estimated monthly contribution ($) added to an account each future month.
-  const setAccountContribution = useCallback((categoryId, accountId, contribution) => {
+  // Estimated monthly contribution ($) per account, recorded per month — like
+  // balances, each month is independent. Future months use the average.
+  const updateContributions = useCallback((month, entries) => {
     setData(d => ({
       ...d,
-      categories: d.categories.map(c =>
-        c.id === categoryId
-          ? { ...c, accounts: c.accounts.map(a => a.id === accountId ? { ...a, contribution } : a) }
-          : c
-      ),
+      contributions: {
+        ...(d.contributions || {}),
+        [month]: { ...((d.contributions || {})[month] || {}), ...entries },
+      },
     }))
   }, [])
+
+  const getContribution = useCallback((month) => data.contributions?.[month] || {}, [data.contributions])
 
   const setGoal = useCallback((amount) => {
     setData(d => ({ ...d, goal: amount }))
@@ -412,7 +421,8 @@ export function useData({ initialData = null, onChange = null } = {}) {
     deleteAccount,
     renameAccount,
     setAccountGrowth,
-    setAccountContribution,
+    updateContributions,
+    getContribution,
     updateCategorySnapshot,
     bulkImport,
     getSnapshot,

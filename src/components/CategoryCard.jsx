@@ -8,7 +8,7 @@ function formatDisplay(raw) {
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 }
 
-export default function CategoryCard({ category, snapshot, onUpdate, onContributionChange, onEdit, estimated = false, estimates = {} }) {
+export default function CategoryCard({ category, snapshot, contributions = {}, onUpdate, onContributionChange, onEdit, estimated = false, estimates = {} }) {
   const [values, setValues] = useState(() => {
     const v = {}
     category.accounts.forEach(acc => {
@@ -16,11 +16,11 @@ export default function CategoryCard({ category, snapshot, onUpdate, onContribut
     })
     return v
   })
-  // Monthly contribution edits (account-level, not month-specific).
+  // Monthly contribution edits for the selected month (each month is independent).
   const [contribs, setContribs] = useState(() => {
     const v = {}
     category.accounts.forEach(acc => {
-      v[acc.id] = acc.contribution != null ? String(acc.contribution) : ''
+      v[acc.id] = contributions[acc.id] != null ? String(contributions[acc.id]) : ''
     })
     return v
   })
@@ -40,6 +40,15 @@ export default function CategoryCard({ category, snapshot, onUpdate, onContribut
     })
     onUpdate(entries)
   }, [values, category.accounts, onUpdate])
+
+  const handleContribBlur = useCallback(() => {
+    setFocused(null)
+    const entries = {}
+    category.accounts.forEach(acc => {
+      if (contribs[acc.id] !== '') entries[acc.id] = parseAmount(contribs[acc.id])
+    })
+    onContributionChange?.(entries)
+  }, [contribs, category.accounts, onContributionChange])
 
   return (
     <div className="card cat-card">
@@ -85,7 +94,7 @@ export default function CategoryCard({ category, snapshot, onUpdate, onContribut
                   <span className="cat-contrib-label">Contribution</span>
                   {estimated ? (
                     <span className="cat-contrib-value cat-account-est">
-                      {formatCurrency(Number(acc.contribution) || 0)}/mo
+                      {formatCurrency(contributions[acc.id] || 0)}/mo avg
                     </span>
                   ) : (
                     <div className="cat-contrib-field">
@@ -100,10 +109,7 @@ export default function CategoryCard({ category, snapshot, onUpdate, onContribut
                           const raw = e.target.value.replace(/[^0-9.]/g, '')
                           setContribs(v => ({ ...v, [acc.id]: raw }))
                         }}
-                        onBlur={() => {
-                          setFocused(null)
-                          onContributionChange?.(acc.id, parseAmount(contribs[acc.id] || '0'))
-                        }}
+                        onBlur={handleContribBlur}
                       />
                       <span className="cat-contrib-suffix">/mo</span>
                     </div>
