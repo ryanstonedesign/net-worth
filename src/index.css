@@ -515,6 +515,12 @@ a { text-decoration: none; color: inherit; }
 }
 .cat-account-input:focus { border-bottom-color: var(--c-primary); }
 .cat-account-input::placeholder { color: rgba(85,99,109,0.4); }
+/* Read-only projected value shown on future (estimated) months */
+.cat-account-est {
+  color: var(--c-ink-mute);
+  font-style: italic;
+  opacity: 0.75;
+}
 /* Total row */
 .cat-account-total {
   display: flex;

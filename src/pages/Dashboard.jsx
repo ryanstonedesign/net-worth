@@ -17,24 +17,50 @@ function getFilteredHistory(history, range) {
   return history.length <= n ? history : history.slice(-n)
 }
 
-// Forecast future months by compounding each account's last known value by
-// its own estimated annual growth rate. Each account grows independently, so
-// the projected net worth reflects per-account compound growth rather than a
-// single blended slope.
-function generateForecast(categories, lastSnapshot, lastMonth, count) {
+// Build a forecasting model for every account from its history:
+//   base         — most recent known balance
+//   contribution — average actual $ change per month (recurring deposits/draws)
+//   annual       — user's estimated annual growth rate (interest), as a fraction
+function buildAccountModels(categories, snapshots, historyMonths) {
+  const models = {}
+  categories.forEach(cat => cat.accounts.forEach(acc => {
+    const series = historyMonths
+      .map(m => snapshots[m]?.[acc.id])
+      .filter(v => v != null)
+    const base = series.length ? series[series.length - 1] : 0
+    const contribution = series.length >= 2
+      ? (series[series.length - 1] - series[0]) / (series.length - 1)
+      : 0
+    models[acc.id] = { base, contribution, annual: (Number(acc.growth) || 0) / 100 }
+  }))
+  return models
+}
+
+// Project an account forward: each month it earns its monthly-equivalent
+// interest rate AND receives its average monthly contribution.
+function projectValue({ base, contribution, annual }, monthsAhead) {
+  const monthlyRate = Math.pow(1 + annual, 1 / 12) - 1
+  let v = base
+  for (let i = 0; i < monthsAhead; i++) v = v * (1 + monthlyRate) + contribution
+  return Math.max(0, Math.round(v))
+}
+
+// Forecast future months. Each entry carries the projected per-account values
+// (so account cards can show estimates) and the resulting net worth.
+function generateForecast(categories, models, lastMonth, count) {
   if (!lastMonth || count < 1) return []
   return Array.from({ length: count }, (_, i) => {
     const monthsAhead = i + 1
-    const netWorth = Math.round(categories.reduce((total, cat) => {
+    const accounts = {}
+    const netWorth = categories.reduce((total, cat) => {
       const catTotal = cat.accounts.reduce((sum, acc) => {
-        const base   = lastSnapshot[acc.id] || 0
-        const annual = (Number(acc.growth) || 0) / 100
-        // Annual rate interpolated monthly: base × (1+rate)^(months/12).
-        return sum + base * Math.pow(1 + annual, monthsAhead / 12)
+        const v = projectValue(models[acc.id], monthsAhead)
+        accounts[acc.id] = v
+        return sum + v
       }, 0)
       return total + (cat.type === 'liability' ? -catTotal : catTotal)
-    }, 0))
-    return { month: getAdjacentMonth(lastMonth, monthsAhead), netWorth, isForecast: true }
+    }, 0)
+    return { month: getAdjacentMonth(lastMonth, monthsAhead), netWorth, accounts, isForecast: true }
   })
 }
 
@@ -124,10 +150,10 @@ export default function Dashboard({
   const forecastCount = lastDataMonth
     ? (timeRange === 'ALL' ? Math.max(history.length - 1, 1) : FORECAST_MONTHS[timeRange] ?? 1)
     : 0
-  const forecastData = generateForecast(
-    data.categories, getSnapshot(lastDataMonth), lastDataMonth, forecastCount
-  )
-  const forecastMap  = Object.fromEntries(forecastData.map(d => [d.month, d.netWorth]))
+  const accountModels = buildAccountModels(data.categories, data.snapshots, history.map(h => h.month))
+  const forecastData  = generateForecast(data.categories, accountModels, lastDataMonth, forecastCount)
+  const forecastMap   = Object.fromEntries(forecastData.map(d => [d.month, d.netWorth]))
+  const forecastByMonth = Object.fromEntries(forecastData.map(d => [d.month, d]))
 
   const maxForecastMonth = forecastData.length > 0 ? forecastData[forecastData.length - 1].month : getCurrentMonth()
   const isEstimated      = !!(lastDataMonth && selectedMonth > lastDataMonth && selectedMonth in forecastMap)
@@ -141,6 +167,8 @@ export default function Dashboard({
   const delta           = !isEstimated && prevMonth != null ? netWorth - getNetWorth(prevMonth) : null
   // For estimated months, show the projected month-over-month growth.
   const estDelta        = isEstimated ? valueAt(selectedMonth) - valueAt(getAdjacentMonth(selectedMonth, -1)) : null
+  // Per-account projected balances for the selected month (estimated months only).
+  const monthEstimates  = isEstimated ? (forecastByMonth[selectedMonth]?.accounts ?? {}) : null
 
   // Months-to-goal: use full history slope for stability across range changes
   const goalSlope = history.length >= 2
@@ -253,6 +281,8 @@ export default function Dashboard({
             key={cat.id + selectedMonth}
             category={cat}
             snapshot={snapshot}
+            estimated={isEstimated}
+            estimates={monthEstimates}
             onUpdate={entries => updateCategorySnapshot(selectedMonth, entries)}
             onEdit={() => setEditSheet(cat)}
           />

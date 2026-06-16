@@ -8,7 +8,7 @@ function formatDisplay(raw) {
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 }
 
-export default function CategoryCard({ category, snapshot, onUpdate, onEdit }) {
+export default function CategoryCard({ category, snapshot, onUpdate, onEdit, estimated = false, estimates = {} }) {
   const [values, setValues] = useState(() => {
     const v = {}
     category.accounts.forEach(acc => {
@@ -18,7 +18,9 @@ export default function CategoryCard({ category, snapshot, onUpdate, onEdit }) {
   })
   const [focused, setFocused] = useState(null)
 
-  const total = category.accounts.reduce((s, a) => s + parseAmount(values[a.id] || '0'), 0)
+  const total = estimated
+    ? category.accounts.reduce((s, a) => s + (estimates?.[a.id] || 0), 0)
+    : category.accounts.reduce((s, a) => s + parseAmount(values[a.id] || '0'), 0)
 
   const handleBlur = useCallback(() => {
     setFocused(null)
@@ -47,19 +49,25 @@ export default function CategoryCard({ category, snapshot, onUpdate, onEdit }) {
           {category.accounts.map(acc => (
             <div key={acc.id} className="cat-account-row">
               <span className="cat-account-name">{acc.name}</span>
-              <input
-                className="cat-account-input"
-                type="text"
-                inputMode="decimal"
-                placeholder="$0"
-                value={focused === acc.id ? values[acc.id] : formatDisplay(values[acc.id])}
-                onFocus={e => { setFocused(acc.id); e.target.select() }}
-                onChange={e => {
-                  const raw = e.target.value.replace(/[^0-9.]/g, '')
-                  setValues(v => ({ ...v, [acc.id]: raw }))
-                }}
-                onBlur={handleBlur}
-              />
+              {estimated ? (
+                <span className="cat-account-input cat-account-est">
+                  {formatCurrency(estimates?.[acc.id] || 0)}
+                </span>
+              ) : (
+                <input
+                  className="cat-account-input"
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="$0"
+                  value={focused === acc.id ? values[acc.id] : formatDisplay(values[acc.id])}
+                  onFocus={e => { setFocused(acc.id); e.target.select() }}
+                  onChange={e => {
+                    const raw = e.target.value.replace(/[^0-9.]/g, '')
+                    setValues(v => ({ ...v, [acc.id]: raw }))
+                  }}
+                  onBlur={handleBlur}
+                />
+              )}
             </div>
           ))}
 
@@ -68,9 +76,9 @@ export default function CategoryCard({ category, snapshot, onUpdate, onEdit }) {
             <span className="cat-total-label">Total</span>
             <span
               className="cat-total-amount"
-              style={{ color: category.type === 'liability' ? 'var(--c-danger)' : 'var(--c-ink)' }}
+              style={{ color: estimated ? 'var(--c-ink-mute)' : category.type === 'liability' ? 'var(--c-danger)' : 'var(--c-ink)' }}
             >
-              {formatCurrency(total)}
+              {formatCurrency(total)}{estimated ? ' (est)' : ''}
             </span>
           </div>
         </div>
