@@ -25,10 +25,20 @@ function customForecastCount(lastMonth, year) {
   return Math.max(0, Math.min(count, MAX_FORECAST_MONTHS))
 }
 
-function getFilteredHistory(history, range) {
-  if (range === 'custom') return history // show all past; the forecast extends ahead
-  const n = RANGE_COUNTS[range] ?? history.length
-  return history.length <= n ? history : history.slice(-n)
+function getFilteredHistory(history, range, selectedMonth) {
+  let windowed
+  if (range === 'custom') {
+    windowed = history // show all past; the forecast extends ahead
+  } else {
+    const n = RANGE_COUNTS[range] ?? history.length
+    windowed = history.length <= n ? history : history.slice(-n)
+  }
+  // Extend the window back to include a past month the user has scrolled to.
+  if (selectedMonth && windowed.length && selectedMonth < windowed[0].month) {
+    const earlier = history.filter(h => h.month >= selectedMonth && h.month < windowed[0].month)
+    windowed = [...earlier, ...windowed]
+  }
+  return windowed
 }
 
 // Build a forecasting model for every account:
@@ -188,20 +198,23 @@ export default function Dashboard({
   // Only months up to the current calendar month are real history; later months
   // are projections, even when the user has typed override values into them.
   const history         = getHistory().filter(h => h.month <= currentMonth)
-  const filteredHistory = getFilteredHistory(history, timeRange)
 
   const lastDataMonth = history.length > 0 ? history[history.length - 1].month : null
-  const forecastCount = lastDataMonth
-    ? (timeRange === 'custom'
-        ? customForecastCount(lastDataMonth, parseInt(customYear, 10))
-        : FORECAST_MONTHS[timeRange] ?? 1)
-    : 0
+  // Base forecast horizon comes from the selected range, but always extend it
+  // far enough to cover whatever (future) month the user has scrolled to.
+  const rangeCount = timeRange === 'custom'
+    ? customForecastCount(lastDataMonth, parseInt(customYear, 10))
+    : FORECAST_MONTHS[timeRange] ?? 1
+  const reachSelected = lastDataMonth ? monthIndex(selectedMonth) - monthIndex(lastDataMonth) : 0
+  const forecastCount = lastDataMonth ? Math.max(rangeCount, reachSelected) : 0
+  // The history window also extends back to include a past month being viewed.
+  const filteredHistory = getFilteredHistory(history, timeRange, selectedMonth)
+
   const accountModels = buildAccountModels(data.categories, data.snapshots, data.contributions || {}, history.map(h => h.month), currentMonth)
   const forecastData  = generateForecast(data.categories, accountModels, data.snapshots, data.contributions || {}, lastDataMonth, forecastCount)
   const forecastMap   = Object.fromEntries(forecastData.map(d => [d.month, d.netWorth]))
   const forecastByMonth = Object.fromEntries(forecastData.map(d => [d.month, d]))
 
-  const maxForecastMonth = forecastData.length > 0 ? forecastData[forecastData.length - 1].month : getCurrentMonth()
   const isEstimated      = !!(lastDataMonth && selectedMonth > lastDataMonth && selectedMonth in forecastMap)
 
   // Net worth at any month — forecast value for future months, real otherwise.
@@ -409,7 +422,7 @@ export default function Dashboard({
             Back to this month
           </button>
         )}
-        <MonthSelector month={selectedMonth} onChange={onMonthChange} maxMonth={maxForecastMonth} />
+        <MonthSelector month={selectedMonth} onChange={onMonthChange} />
       </div>
     </div>
   )

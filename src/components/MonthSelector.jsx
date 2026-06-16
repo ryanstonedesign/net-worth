@@ -1,13 +1,11 @@
 import { useRef, useEffect } from 'react'
-import { formatMonthDisplay, getAdjacentMonth, getCurrentMonth } from '../utils'
+import { formatMonthDisplay, getAdjacentMonth } from '../utils'
 
-export default function MonthSelector({ month, onChange, maxMonth }) {
-  const max = maxMonth ?? getCurrentMonth()
-  const isMax = month >= max
-
+export default function MonthSelector({ month, onChange }) {
   // Long-press to fast-scroll through months. We track the stepping month in a
   // ref so each tick advances from the last committed value (not a stale prop),
-  // and accelerate the repeat the longer the button is held.
+  // and accelerate the repeat the longer the button is held. There's no upper
+  // or lower bound — the graph expands to include whatever month is in view.
   const holdRef = useRef(null)
   const stepMonthRef = useRef(month)
 
@@ -18,19 +16,17 @@ export default function MonthSelector({ month, onChange, maxMonth }) {
 
   const step = (delta) => {
     const next = getAdjacentMonth(stepMonthRef.current, delta)
-    if (delta > 0 && next > max) return false // don't run past the forecast horizon
     stepMonthRef.current = next
     onChange(next)
-    return true
   }
 
   const startHold = (delta) => {
     clearHold()
     stepMonthRef.current = month
-    if (!step(delta)) return // immediate first step (also handles a plain tap)
+    step(delta) // immediate first step (also handles a plain tap)
     let speed = 240
     const tick = () => {
-      if (!step(delta)) { clearHold(); return }
+      step(delta)
       speed = Math.max(55, speed - 18) // accelerate
       holdRef.current = setTimeout(tick, speed)
     }
@@ -56,11 +52,10 @@ export default function MonthSelector({ month, onChange, maxMonth }) {
 
       <button
         className="month-nav-btn"
-        onPointerDown={e => { if (isMax) return; e.preventDefault(); startHold(1) }}
+        onPointerDown={e => { e.preventDefault(); startHold(1) }}
         onPointerUp={clearHold}
         onPointerLeave={clearHold}
         onPointerCancel={clearHold}
-        disabled={isMax}
         aria-label="Next month"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
