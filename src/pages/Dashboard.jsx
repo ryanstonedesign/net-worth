@@ -5,7 +5,7 @@ import NetWorthChart from '../components/NetWorthChart'
 import RollingNumber from '../components/RollingNumber'
 import EditCategorySheet from '../components/EditCategorySheet'
 import Modal from '../components/Modal'
-import { formatCurrency, formatCompact, getAdjacentMonth, getCurrentMonth, parseAmount } from '../utils'
+import { formatCurrency, formatCompact, formatMonthDisplay, getAdjacentMonth, getCurrentMonth, parseAmount } from '../utils'
 
 const RANGE_OPTIONS = ['1M', '3M', '6M', '1Y', 'custom']
 const RANGE_COUNTS   = { '1M': 2,  '3M': 3,  '6M': 6,  '1Y': 12 }
@@ -179,6 +179,7 @@ export default function Dashboard({
   setAccountGrowth,
   updateContributions,
   getContribution,
+  clearMonthSnapshot,
   updateCategorySnapshot,
   getSnapshot,
   getCategoryTotal,
@@ -190,6 +191,8 @@ export default function Dashboard({
 }) {
   const [editSheet, setEditSheet] = useState(null) // category obj | 'new' | null
   const [goalOpen, setGoalOpen]   = useState(false)
+  const [resetConfirm, setResetConfirm] = useState(false)
+  const [resetNonce, setResetNonce] = useState(0) // bump to remount cards after a reset
   const [timeRange, setTimeRange] = useState('1Y')
 
   const currentMonth = getCurrentMonth()
@@ -260,6 +263,9 @@ export default function Dashboard({
       : null
 
   const snapshot    = getSnapshot(selectedMonth)
+  // A month is "edited" once it has manually-entered balances — those can be
+  // reset back to the projected estimate.
+  const hasEdits    = Object.keys(snapshot).length > 0
   // Each month's own contributions are editable; future months fall back to the
   // average (shown as a hint) until overridden.
   const contribSnapshot = getContribution(selectedMonth)
@@ -284,9 +290,14 @@ export default function Dashboard({
           <RollingNumber value={displayNetWorth} />
         </div>
         <div className={`hero-delta-line${(isEstimated ? estDelta : delta) > 0 ? ' positive' : (isEstimated ? estDelta : delta) < 0 ? ' negative' : ''}`}>
-          {isEstimated
-            ? `${estDelta >= 0 ? '+' : ''}${formatCurrency(estDelta)} (est)`
-            : delta == null ? '—' : `${delta >= 0 ? '+' : ''}${formatCurrency(delta)} this month`}
+          <span>
+            {isEstimated
+              ? `${estDelta >= 0 ? '+' : ''}${formatCurrency(estDelta)} (est)`
+              : delta == null ? '—' : `${delta >= 0 ? '+' : ''}${formatCurrency(delta)} this month`}
+          </span>
+          {hasEdits && (
+            <button className="hero-reset" onClick={() => setResetConfirm(true)}>Reset</button>
+          )}
         </div>
 
         {/* Goal row */}
@@ -366,7 +377,7 @@ export default function Dashboard({
       <div className="cat-scroll">
         {data.categories.map(cat => (
           <CategoryCard
-            key={cat.id + selectedMonth + isEstimated}
+            key={cat.id + selectedMonth + isEstimated + resetNonce}
             category={cat}
             snapshot={snapshot}
             estimated={isEstimated}
@@ -425,6 +436,29 @@ export default function Dashboard({
             onSave={(v) => { setGoal(v); setGoalOpen(false) }}
             onClose={() => setGoalOpen(false)}
           />
+        </Modal>
+      )}
+
+      {/* Reset-to-estimates confirmation */}
+      {resetConfirm && (
+        <Modal title="Reset to estimates?" onClose={() => setResetConfirm(false)}>
+          <p style={{ fontSize: 14, color: 'var(--c-ink-mute)', lineHeight: 1.5, marginBottom: 24 }}>
+            This clears the values you entered for {formatMonthDisplay(selectedMonth)} and
+            returns every category to its estimated projection. This can't be undone.
+          </p>
+          <button
+            className="btn btn-primary btn-full"
+            onClick={() => { clearMonthSnapshot(selectedMonth); setResetNonce(n => n + 1); setResetConfirm(false) }}
+          >
+            Reset to estimates
+          </button>
+          <button
+            className="btn btn-secondary btn-full"
+            style={{ marginTop: 12 }}
+            onClick={() => setResetConfirm(false)}
+          >
+            Cancel
+          </button>
         </Modal>
       )}
 

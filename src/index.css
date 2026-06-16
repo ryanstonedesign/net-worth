@@ -345,9 +345,24 @@ a { text-decoration: none; color: inherit; }
   font-size: 13px;
   font-weight: 600;
   color: var(--c-ink-mute);
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 .hero-delta-line.positive { color: var(--c-tertiary); }
 .hero-delta-line.negative { color: var(--c-danger); }
+.hero-reset {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--c-primary);
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 
 .hero-goal {
   display: inline-flex;

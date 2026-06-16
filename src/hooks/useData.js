@@ -304,6 +304,15 @@ export function useData({ initialData = null, onChange = null } = {}) {
 
   const getContribution = useCallback((month) => data.contributions?.[month] || {}, [data.contributions])
 
+  // Discard a month's manually-entered balances so it reverts to its estimate.
+  const clearMonthSnapshot = useCallback((month) => {
+    setData(d => {
+      const snapshots = { ...d.snapshots }
+      delete snapshots[month]
+      return { ...d, snapshots }
+    })
+  }, [])
+
   const setGoal = useCallback((amount) => {
     setData(d => ({ ...d, goal: amount }))
   }, [])
@@ -423,6 +432,7 @@ export function useData({ initialData = null, onChange = null } = {}) {
     setAccountGrowth,
     updateContributions,
     getContribution,
+    clearMonthSnapshot,
     updateCategorySnapshot,
     bulkImport,
     getSnapshot,
