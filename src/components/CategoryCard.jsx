@@ -27,9 +27,13 @@ export default function CategoryCard({ category, snapshot, contributions = {}, o
   const [focused, setFocused] = useState(null)
 
   // Contributions are deliberately excluded from the category total — they only
-  // feed future estimates, not the current balance.
+  // feed future estimates, not the current balance. On future months, the total
+  // uses any value the user has overridden, falling back to the projection.
   const total = estimated
-    ? category.accounts.reduce((s, a) => s + (estimates?.[a.id] || 0), 0)
+    ? category.accounts.reduce((s, a) => {
+        const ov = values[a.id]
+        return s + (ov != null && ov !== '' ? parseAmount(ov) : (estimates?.[a.id] || 0))
+      }, 0)
     : category.accounts.reduce((s, a) => s + parseAmount(values[a.id] || '0'), 0)
 
   const handleBlur = useCallback(() => {
@@ -69,25 +73,35 @@ export default function CategoryCard({ category, snapshot, contributions = {}, o
             <div key={acc.id} className="cat-account-block">
               <div className="cat-account-row">
                 <span className="cat-account-name">{acc.name}</span>
-                {estimated ? (
-                  <span className="cat-account-input cat-account-est">
-                    {formatCurrency(estimates?.[acc.id] || 0)}
-                  </span>
-                ) : (
-                  <input
-                    className="cat-account-input"
-                    type="text"
-                    inputMode="decimal"
-                    placeholder="$0"
-                    value={focused === acc.id ? values[acc.id] : formatDisplay(values[acc.id])}
-                    onFocus={e => { setFocused(acc.id); e.target.select() }}
-                    onChange={e => {
-                      const raw = e.target.value.replace(/[^0-9.]/g, '')
-                      setValues(v => ({ ...v, [acc.id]: raw }))
-                    }}
-                    onBlur={handleBlur}
-                  />
-                )}
+                {(() => {
+                  const override = values[acc.id]
+                  const hasOverride = override != null && override !== ''
+                  // On future months, show the projection until the user types
+                  // an actual value (which is then saved to that month only).
+                  const showingEst = estimated && !hasOverride
+                  const display = focused === acc.id
+                    ? override
+                    : hasOverride
+                      ? formatDisplay(override)
+                      : estimated
+                        ? formatCurrency(estimates?.[acc.id] || 0)
+                        : ''
+                  return (
+                    <input
+                      className={`cat-account-input${showingEst ? ' cat-account-est' : ''}`}
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="$0"
+                      value={display}
+                      onFocus={e => { setFocused(acc.id); e.target.select() }}
+                      onChange={e => {
+                        const raw = e.target.value.replace(/[^0-9.]/g, '')
+                        setValues(v => ({ ...v, [acc.id]: raw }))
+                      }}
+                      onBlur={handleBlur}
+                    />
+                  )
+                })()}
               </div>
               {category.contributing && (
                 <div className="cat-contrib-row">

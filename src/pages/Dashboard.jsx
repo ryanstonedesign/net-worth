@@ -45,32 +45,40 @@ function buildAccountModels(categories, snapshots, contributions, historyMonths)
   return models
 }
 
-// Project an account forward: each month it earns its monthly-equivalent
-// interest rate AND receives its average monthly contribution.
-function projectValue({ base, contribution, annual }, monthsAhead) {
-  const monthlyRate = Math.pow(1 + annual, 1 / 12) - 1
-  let v = base
-  for (let i = 0; i < monthsAhead; i++) v = v * (1 + monthlyRate) + contribution
-  return Math.max(0, Math.round(v))
-}
-
-// Forecast future months. Each entry carries the projected per-account values
-// (so account cards can show estimates) and the resulting net worth.
-function generateForecast(categories, models, lastMonth, count) {
+// Forecast future months by walking forward one month at a time. Each month an
+// account earns its monthly-equivalent interest and receives its average
+// contribution — UNLESS the user has typed an override value for that month,
+// which replaces the projection and becomes the base the next month builds on.
+// Overrides live in `overrides` (a month → {accountId: value} map) so editing a
+// future month never corrupts real history.
+function generateForecast(categories, models, overrides, lastMonth, count) {
   if (!lastMonth || count < 1) return []
-  return Array.from({ length: count }, (_, i) => {
-    const monthsAhead = i + 1
+  const running = {}
+  Object.entries(models).forEach(([id, m]) => { running[id] = m.base })
+  const out = []
+  for (let i = 1; i <= count; i++) {
+    const month = getAdjacentMonth(lastMonth, i)
+    const ov = overrides[month] || {}
     const accounts = {}
     const netWorth = categories.reduce((total, cat) => {
       const catTotal = cat.accounts.reduce((sum, acc) => {
-        const v = projectValue(models[acc.id], monthsAhead)
+        const m = models[acc.id]
+        let v
+        if (ov[acc.id] != null) {
+          v = ov[acc.id]
+        } else {
+          const monthlyRate = Math.pow(1 + m.annual, 1 / 12) - 1
+          v = Math.max(0, Math.round(running[acc.id] * (1 + monthlyRate) + m.contribution))
+        }
+        running[acc.id] = v
         accounts[acc.id] = v
         return sum + v
       }, 0)
       return total + (cat.type === 'liability' ? -catTotal : catTotal)
     }, 0)
-    return { month: getAdjacentMonth(lastMonth, monthsAhead), netWorth, accounts, isForecast: true }
-  })
+    out.push({ month, netWorth, accounts, isForecast: true })
+  }
+  return out
 }
 
 function GoalEditor({ goal, onSave, onClose }) {
@@ -154,7 +162,10 @@ export default function Dashboard({
   const [goalOpen, setGoalOpen]   = useState(false)
   const [timeRange, setTimeRange] = useState('ALL')
 
-  const history         = getHistory()
+  const currentMonth = getCurrentMonth()
+  // Only months up to the current calendar month are real history; later months
+  // are projections, even when the user has typed override values into them.
+  const history         = getHistory().filter(h => h.month <= currentMonth)
   const filteredHistory = getFilteredHistory(history, timeRange)
 
   const lastDataMonth = history.length > 0 ? history[history.length - 1].month : null
@@ -162,7 +173,7 @@ export default function Dashboard({
     ? (timeRange === 'ALL' ? Math.max(history.length - 1, 1) : FORECAST_MONTHS[timeRange] ?? 1)
     : 0
   const accountModels = buildAccountModels(data.categories, data.snapshots, data.contributions || {}, history.map(h => h.month))
-  const forecastData  = generateForecast(data.categories, accountModels, lastDataMonth, forecastCount)
+  const forecastData  = generateForecast(data.categories, accountModels, data.snapshots, lastDataMonth, forecastCount)
   const forecastMap   = Object.fromEntries(forecastData.map(d => [d.month, d.netWorth]))
   const forecastByMonth = Object.fromEntries(forecastData.map(d => [d.month, d]))
 
