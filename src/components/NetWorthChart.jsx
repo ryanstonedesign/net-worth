@@ -54,7 +54,7 @@ function GoalLabel({ viewBox, goal }) {
   )
 }
 
-export default function NetWorthChart({ data, forecastData = [], selectedMonth, height = 160, goal = null }) {
+export default function NetWorthChart({ data, forecastData = [], selectedMonth, height = 160, goal = null, onSelectMonth }) {
   // ── Hooks (must run before any early return) ──
   // Build combined dataset with separate dataKeys for each segment.
   // Memoised on the data's content so hover / selected-month re-renders keep a
@@ -137,7 +137,15 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <AreaChart data={combined} margin={{ top: 20, right: 4, left: 4, bottom: 4 }}>
+      <AreaChart
+        data={combined}
+        margin={{ top: 20, right: 4, left: 4, bottom: 4 }}
+        onClick={(state) => {
+          const month = state?.activePayload?.[0]?.payload?.month
+          if (month && onSelectMonth) onSelectMonth(month)
+        }}
+        style={onSelectMonth ? { cursor: 'pointer' } : undefined}
+      >
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={color} stopOpacity={0.28} />
