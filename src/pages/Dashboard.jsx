@@ -365,12 +365,12 @@ export default function Dashboard({
         <div className="summary-row">
           <div className="card summary-cell assets">
             <div className="summary-cell-label">Assets</div>
-            <div className="summary-cell-amount">{formatCurrency(assets)}</div>
+            <div className="summary-cell-amount" style={isEstimated ? { color: 'var(--c-ink-mute)' } : undefined}>{formatCurrency(assets)}</div>
           </div>
           {hasLiabilities && (
             <div className="card summary-cell liabilities">
               <div className="summary-cell-label">Liabilities</div>
-              <div className="summary-cell-amount">{formatCurrency(liabilities)}</div>
+              <div className="summary-cell-amount" style={isEstimated ? { color: 'var(--c-ink-mute)' } : undefined}>{formatCurrency(liabilities)}</div>
             </div>
           )}
         </div>

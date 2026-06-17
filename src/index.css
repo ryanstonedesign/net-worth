@@ -561,7 +561,6 @@ a { text-decoration: none; color: inherit; }
 /* Read-only projected value shown on future (estimated) months */
 .cat-account-est {
   color: var(--c-ink-mute);
-  font-style: italic;
   opacity: 0.75;
 }
 /* Account block groups the balance row with its optional contribution row */
