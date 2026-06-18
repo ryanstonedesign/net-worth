@@ -50,3 +50,34 @@ export function parseAmount(str) {
   const num = parseFloat(String(str).replace(/[$,]/g, ''))
   return isNaN(num) ? 0 : num
 }
+
+// ── Pure net-worth helpers (operate on a raw data object, not the hook) ──
+// Used to render read-only scenario preview cards without wiring up the full
+// forecasting engine.
+export function netWorthAt(data, month) {
+  const snap = (data?.snapshots || {})[month] || {}
+  return (data?.categories || []).reduce((tot, cat) => {
+    const sum = cat.accounts.reduce((s, a) => s + (snap[a.id] || 0), 0)
+    return tot + (cat.type === 'liability' ? -sum : sum)
+  }, 0)
+}
+
+export function dataHistory(data) {
+  const snaps = data?.snapshots || {}
+  return Object.keys(snaps)
+    .filter(m => Object.keys(snaps[m]).length > 0)
+    .sort()
+    .map(month => ({ month, netWorth: netWorthAt(data, month) }))
+}
+
+// Totals at a month, split by category type.
+export function dataTotals(data, month) {
+  const snap = (data?.snapshots || {})[month] || {}
+  let assets = 0, liabilities = 0
+  for (const cat of data?.categories || []) {
+    const sum = cat.accounts.reduce((s, a) => s + (snap[a.id] || 0), 0)
+    if (cat.type === 'liability') liabilities += sum
+    else assets += sum
+  }
+  return { assets, liabilities }
+}

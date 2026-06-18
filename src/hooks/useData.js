@@ -125,6 +125,42 @@ function genScenarioData(scenario) {
   return { categories: [], snapshots: {}, goal: null } // firsttime
 }
 
+const emptyData = () => ({ categories: [], snapshots: {}, goal: null })
+
+// ── Forecast scenarios ──
+// Distinct from the demo "scenario" above (none/6month/…), forecast scenarios
+// are user-created what-if copies of the data living inside a single demo slot.
+// Each slot now stores a CONTAINER: { version, activeId, scenarios:[{id,name,data}] }.
+// Older saves held a flat { categories, snapshots, goal } object — migrate() wraps
+// those into a single "Default Scenario" so nothing is lost.
+function makeForecastId() {
+  return `sc_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`
+}
+
+function wrapData(data) {
+  return {
+    version: 2,
+    activeId: 'default',
+    scenarios: [{ id: 'default', name: 'Default Scenario', data: data || emptyData() }],
+  }
+}
+
+function migrate(obj) {
+  if (!obj) return null
+  if (obj.version === 2 && Array.isArray(obj.scenarios) && obj.scenarios.length) {
+    // Guard against a dangling activeId (e.g. a deleted scenario).
+    if (!obj.scenarios.some(s => s.id === obj.activeId)) {
+      return { ...obj, activeId: obj.scenarios[0].id }
+    }
+    return obj
+  }
+  return wrapData(obj) // legacy flat shape
+}
+
+function activeOf(container) {
+  return container.scenarios.find(s => s.id === container.activeId) || container.scenarios[0]
+}
+
 function loadScenario() {
   try {
     const s = localStorage.getItem(SCENARIO_KEY)
@@ -141,30 +177,47 @@ function readSlot(scenario) {
   return null
 }
 
+// Always returns a v2 container for the given demo slot.
 function loadInitial(scenario) {
-  const stored = readSlot(scenario)
+  const stored = migrate(readSlot(scenario))
   if (stored) return stored
-  if (scenario === 'none') return { categories: [], snapshots: {}, goal: null }
-  return genScenarioData(scenario)
+  if (scenario === 'none') return wrapData(emptyData())
+  return wrapData(genScenarioData(scenario))
 }
 
 export function useData({ initialData = null, onChange = null } = {}) {
   const [scenario, setScenarioState] = useState(loadScenario)
-  const [data, setData] = useState(() => {
+  // `container` holds every forecast scenario for the active demo slot plus the
+  // id of the one currently in focus. The flat data API below operates on that
+  // active scenario, so the rest of the app is unaware of the wrapper.
+  const [container, setContainer] = useState(() => {
     const active = loadScenario()
     if (active !== 'none') return loadInitial(active)
     // Vault mode: the server is the only source of truth. Never let stale
     // localStorage from a previous session leak in here — that's what caused
     // OLD values to get pushed back over NEW after a refresh.
-    if (onChange) return initialData || { categories: [], snapshots: {}, goal: null }
+    if (onChange) return migrate(initialData) || wrapData(emptyData())
     return loadInitial('none') // legacy local-only mode
   })
 
-  // Persist edits to the active scenario's own slot — never crosses slots.
-  // For "none" this is just an offline cache; the encrypted cloud row is authoritative.
+  const data = activeOf(container).data
+
+  // Mutating the active scenario's data — keeps the same (updater | value)
+  // contract setData had, so every existing mutator keeps working unchanged.
+  const setData = useCallback((updater) => {
+    setContainer(c => {
+      const act = activeOf(c)
+      const next = typeof updater === 'function' ? updater(act.data) : updater
+      return { ...c, scenarios: c.scenarios.map(s => s.id === act.id ? { ...s, data: next } : s) }
+    })
+  }, [])
+
+  // Persist the whole container to the active scenario's own slot — never crosses
+  // slots. For "none" this is just an offline cache; the encrypted cloud row is
+  // authoritative.
   useEffect(() => {
-    try { localStorage.setItem(SLOT_KEYS[scenario], JSON.stringify(data)) } catch {}
-  }, [data, scenario])
+    try { localStorage.setItem(SLOT_KEYS[scenario], JSON.stringify(container)) } catch {}
+  }, [container, scenario])
 
   // Hold onChange in a ref so its identity changing (which happens on every
   // parent re-render) doesn't re-run the push effect and spuriously push.
@@ -192,17 +245,63 @@ export function useData({ initialData = null, onChange = null } = {}) {
       skipPushRef.current = false
       return
     }
-    const t = setTimeout(() => { onChangeRef.current(data) }, 600)
+    const t = setTimeout(() => { onChangeRef.current(container) }, 600)
     return () => clearTimeout(t)
-  }, [data, scenario])
+  }, [container, scenario])
 
   const setScenario = useCallback((next) => {
     if (!SLOT_KEYS[next]) return
     setScenarioState(next)
     try { localStorage.setItem(SCENARIO_KEY, next) } catch {}
     // "None" restores the user's real data untouched; fake scenarios regenerate fresh.
-    setData(next === 'none' ? loadInitial('none') : genScenarioData(next))
+    setContainer(next === 'none' ? loadInitial('none') : wrapData(genScenarioData(next)))
   }, [])
+
+  // ── Forecast scenario controls ──
+  const forecasts = container.scenarios.map(s => ({ id: s.id, name: s.name }))
+
+  const setActiveForecast = useCallback((id) => {
+    setContainer(c => (c.scenarios.some(s => s.id === id) ? { ...c, activeId: id } : c))
+  }, [])
+
+  // New scenarios fork the currently-focused one so you can tweak a what-if
+  // without disturbing the original. Returns the new id and focuses it.
+  const addForecast = useCallback((name) => {
+    const id = makeForecastId()
+    setContainer(c => {
+      const copy = JSON.parse(JSON.stringify(activeOf(c).data))
+      return {
+        ...c,
+        activeId: id,
+        scenarios: [...c.scenarios, { id, name: (name || '').trim() || 'New Scenario', data: copy }],
+      }
+    })
+    return id
+  }, [])
+
+  const deleteForecast = useCallback((id) => {
+    setContainer(c => {
+      if (c.scenarios.length <= 1) return c // always keep at least one
+      const scenarios = c.scenarios.filter(s => s.id !== id)
+      const activeId = c.activeId === id ? scenarios[0].id : c.activeId
+      return { ...c, activeId, scenarios }
+    })
+  }, [])
+
+  const renameForecast = useCallback((id, name) => {
+    const clean = (name || '').trim()
+    if (!clean) return
+    setContainer(c => ({
+      ...c,
+      scenarios: c.scenarios.map(s => s.id === id ? { ...s, name: clean } : s),
+    }))
+  }, [])
+
+  // Raw data for any scenario — used to render read-only preview cards.
+  const getForecastData = useCallback(
+    (id) => container.scenarios.find(s => s.id === id)?.data ?? null,
+    [container]
+  )
 
   const addCategoryWithAccounts = useCallback((cat, accounts = []) => {
     const catId = `cat_${Date.now()}`
@@ -424,6 +523,14 @@ export function useData({ initialData = null, onChange = null } = {}) {
     data,
     scenario,
     setScenario,
+    // Forecast scenarios
+    forecasts,
+    activeForecastId: container.activeId,
+    setActiveForecast,
+    addForecast,
+    deleteForecast,
+    renameForecast,
+    getForecastData,
     goal: data.goal ?? null,
     setGoal,
     addCategoryWithAccounts,

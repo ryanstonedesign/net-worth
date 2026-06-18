@@ -1023,6 +1023,170 @@ a { text-decoration: none; color: inherit; }
 }
 .page-top-title { font-size: 28px; font-weight: 700; letter-spacing: -0.005em; }
 
+/* ── Scenario bar (dark top menu) ──
+   Shares the floating month selector's ink colour. Sits at a lower paint order
+   than the page content so the rounded content surface tucks in front of it,
+   making the bar look like it sits behind the page. */
+.scenario-bar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1;
+  height: calc(var(--safe-top) + 56px);
+  /* right padding clears the settings FAB; bottom padding leaves the seam the
+     content surface overlaps into. */
+  padding: var(--safe-top) 68px 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--c-ink);
+  color: #fff;
+}
+.scenario-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.scenario-bar-right { display: flex; align-items: center; flex-shrink: 0; }
+.scenario-bar-name {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 52vw;
+}
+.scenario-bar-input {
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #fff;
+  background: rgba(255,255,255,0.1);
+  border: none;
+  border-bottom: 1.5px solid rgba(255,255,255,0.5);
+  border-radius: 6px 6px 0 0;
+  padding: 2px 8px;
+  outline: none;
+  max-width: 52vw;
+}
+.scenario-bar-btn {
+  width: 30px; height: 30px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,0.92);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+.scenario-bar-btn svg { width: 16px; height: 16px; }
+.scenario-bar-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+.scenario-bar-btn.is-active { background: rgba(255,255,255,0.2); color: #fff; }
+.scenario-bar-btn:disabled { opacity: 0.32; cursor: default; }
+.scenario-bar-btn.scenario-bar-danger:hover { background: rgba(239,68,68,0.28); color: #fff; }
+
+/* Page content surface sits in front of the bar with a rounded top + soft
+   shadow, overlapping the bar's lower seam so the bar peeks behind it. */
+.has-scenario-bar .page-content { padding-top: calc(var(--safe-top) + 56px); }
+.scenario-stage {
+  position: relative;
+  min-height: 100%;
+  /* pull up so the rounded top overlaps the bar's lower edge — the bar peeks
+     behind the content surface. */
+  margin-top: -12px;
+  border-radius: 26px 26px 0 0;
+  box-shadow: 0 -5px 22px rgba(15,25,30,0.18);
+  background:
+    radial-gradient(ellipse 70% 55% at 12% 8%, rgba(243,246,249,0.75) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 45% at 88% 18%, rgba(248,250,252,0.65) 0%, transparent 58%),
+    var(--c-bg);
+  animation: stageIn 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+}
+@keyframes stageIn {
+  from { transform: scale(0.96) translateY(8px); opacity: 0; }
+  to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* ── Scenario switching carousel ── */
+.scenario-rail {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  padding: calc(var(--safe-top) + 56px) 0 calc(var(--safe-bottom) + 24px);
+  scrollbar-width: none;
+  animation: fadeIn 0.28s ease;
+}
+.scenario-rail::-webkit-scrollbar { display: none; }
+.scenario-card {
+  flex: 0 0 auto;
+  width: min(82vw, 460px);
+  scroll-snap-align: center;
+  display: flex;
+  cursor: pointer;
+  transform: scale(0.86);
+  opacity: 0.55;
+  transition: transform 0.3s cubic-bezier(0.32,0.72,0,1), opacity 0.3s ease;
+}
+.scenario-card.is-center { transform: scale(1); opacity: 1; cursor: default; }
+.scenario-card:first-child { margin-left: calc((100vw - min(82vw, 460px)) / 2); }
+.scenario-card:last-child  { margin-right: calc((100vw - min(82vw, 460px)) / 2); }
+.scenario-card-inner {
+  width: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 28px;
+  padding-bottom: 18px;
+}
+.scenario-card-inner::-webkit-scrollbar { display: none; }
+
+/* ── Scenario preview (read-only card body) ── */
+.sp-body { display: flex; flex-direction: column; }
+.sp-empty-chart, .sp-empty-cats {
+  font-size: 13px;
+  color: var(--c-ink-mute);
+  padding: 16px 20px;
+}
+.sp-empty-chart { text-align: center; }
+.sp-cat-list { padding: 6px 4px; margin-bottom: 4px; }
+.sp-cat-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border-bottom: 1px solid rgba(200,215,220,0.4);
+}
+.sp-cat-row:last-child { border-bottom: none; }
+.sp-cat-icon { font-size: 18px; flex-shrink: 0; }
+.sp-cat-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sp-cat-amount {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--c-ink);
+  flex-shrink: 0;
+}
+
 /* ── Misc ── */
 .divider { height: 1px; background: rgba(200,215,220,0.4); }
 .text-mute { color: var(--c-ink-mute); }
