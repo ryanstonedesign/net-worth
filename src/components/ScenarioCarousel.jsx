@@ -47,7 +47,7 @@ function readonlyDashboardProps(data) {
 // width while its neighbours peek from the edges. The centred card is reported
 // upward (for the bar's name + delete target); tapping any card focuses it.
 export default function ScenarioCarousel({
-  scenarios, centerId, getForecastData, onCenterChange, onFocus,
+  scenarios, centerId, selectedMonth, getForecastData, onCenterChange, onFocus,
 }) {
   const railRef = useRef(null)
   const startIndex = Math.max(0, scenarios.findIndex(s => s.id === centerId))
@@ -89,7 +89,9 @@ export default function ScenarioCarousel({
     railRef.current?.scrollTo({ left: i * stride(), behavior: 'smooth' })
   }
 
-  const month = getCurrentMonth()
+  // Show every card at the month that was selected before opening the switcher,
+  // so net-worth totals line up for comparison across scenarios.
+  const month = selectedMonth || getCurrentMonth()
 
   return (
     <div className="scenario-rail" ref={railRef} onScroll={recomputeCenter}>

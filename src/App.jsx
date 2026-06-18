@@ -104,6 +104,7 @@ function AppShell({ dataHook, settingsProps }) {
             key={forecasts.map(f => f.id).join('|')}
             scenarios={forecasts}
             centerId={centerId}
+            selectedMonth={selectedMonth}
             getForecastData={dataHook.getForecastData}
             onCenterChange={setCenterId}
             onFocus={focusScenario}
