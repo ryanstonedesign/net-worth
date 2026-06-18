@@ -6,9 +6,11 @@ import { getCurrentMonth, getAdjacentMonth } from '../utils'
 const SCENARIO_KEY = 'networth_scenario'
 const SLOT_KEYS = {
   none: 'networth_v1',
-  firsttime: 'networth_proto_firsttime',
-  '6month': 'networth_proto_6month',
-  '1year': 'networth_proto_1year',
+  // Demo slots are versioned so refreshed sample data (scenarios, contributions,
+  // growth) supersedes any older cached demo without touching real data.
+  firsttime: 'networth_proto_firsttime_v2',
+  '6month': 'networth_proto_6month_v2',
+  '1year': 'networth_proto_1year_v2',
 }
 
 export const CATEGORY_COLORS = [
@@ -19,60 +21,81 @@ export const CATEGORY_COLORS = [
 export const CATEGORY_ICONS = ['🏦', '📈', '🎓', '🏠', '🚗', '💰', '💳', '📊', '💎', '🏪']
 
 // ── Prototype scenario datasets ──
-const SCENARIO_6M = [
-  { name: 'Cash', type: 'asset', icon: '🏦', accounts: [
-    { name: 'Checking', base: 5200 },
-    { name: 'Savings', base: 16000 },
+// Specs carry the assumptions the forecast cares about: per-account annual
+// `growth` (% — positive for appreciation/return, negative for depreciation or
+// debt paydown) and, for categories you actively fund, `contributing: true`
+// plus a monthly `contrib` ($) per account.
+const SCENARIO_FIRST = [
+  { name: 'Cash', type: 'asset', icon: '🏦', contributing: true, accounts: [
+    { name: 'Checking', base: 3200, growth: 0 },
+    { name: 'Savings', base: 8000, growth: 4, contrib: 300 },
   ] },
-  { name: 'Investments', type: 'asset', icon: '📈', accounts: [
-    { name: 'Brokerage', base: 28000 },
-    { name: '401(k)', base: 47000 },
-  ] },
-  { name: 'Real Estate', type: 'asset', icon: '🏠', accounts: [
-    { name: 'Home', base: 320000 },
+  { name: 'Investments', type: 'asset', icon: '📈', contributing: true, accounts: [
+    { name: 'Brokerage', base: 6000, growth: 7, contrib: 250 },
   ] },
   { name: 'Credit Cards', type: 'liability', icon: '💳', accounts: [
-    { name: 'Visa', base: 4200 },
+    { name: 'Visa', base: 1800, growth: -20 }, // paying it down
+  ] },
+] // 3 categories, 4 accounts
+
+const SCENARIO_6M = [
+  { name: 'Cash', type: 'asset', icon: '🏦', contributing: true, accounts: [
+    { name: 'Checking', base: 5200, growth: 0 },
+    { name: 'Savings', base: 16000, growth: 4, contrib: 500 },
+  ] },
+  { name: 'Investments', type: 'asset', icon: '📈', contributing: true, accounts: [
+    { name: 'Brokerage', base: 28000, growth: 7, contrib: 600 },
+    { name: '401(k)', base: 47000, growth: 6, contrib: 800 },
+  ] },
+  { name: 'Real Estate', type: 'asset', icon: '🏠', accounts: [
+    { name: 'Home', base: 320000, growth: 3 }, // steady appreciation
+  ] },
+  { name: 'Credit Cards', type: 'liability', icon: '💳', accounts: [
+    { name: 'Visa', base: 4200, growth: -22 }, // paydown
   ] },
 ] // 4 categories, 6 accounts
 
 const SCENARIO_1Y = [
-  { name: 'Cash', type: 'asset', icon: '🏦', accounts: [
-    { name: 'Checking', base: 5200 },
-    { name: 'Savings', base: 16000 },
+  { name: 'Cash', type: 'asset', icon: '🏦', contributing: true, accounts: [
+    { name: 'Checking', base: 5200, growth: 0 },
+    { name: 'Savings', base: 16000, growth: 4, contrib: 500 },
   ] },
-  { name: 'Investments', type: 'asset', icon: '📈', accounts: [
-    { name: 'Brokerage', base: 28000 },
-    { name: 'Roth IRA', base: 13500 },
+  { name: 'Investments', type: 'asset', icon: '📈', contributing: true, accounts: [
+    { name: 'Brokerage', base: 28000, growth: 7, contrib: 700 },
+    { name: 'Roth IRA', base: 13500, growth: 7, contrib: 540 },
   ] },
-  { name: 'Retirement', type: 'asset', icon: '💰', accounts: [
-    { name: '401(k)', base: 47000 },
+  { name: 'Retirement', type: 'asset', icon: '💰', contributing: true, accounts: [
+    { name: '401(k)', base: 47000, growth: 6, contrib: 1500 },
   ] },
   { name: 'Real Estate', type: 'asset', icon: '🏠', accounts: [
-    { name: 'Home', base: 320000 },
+    { name: 'Home', base: 320000, growth: 3 },
+  ] },
+  { name: 'Vehicle', type: 'asset', icon: '🚗', accounts: [
+    { name: 'Car', base: 24000, growth: -12 }, // depreciating asset
   ] },
   { name: 'Crypto', type: 'asset', icon: '💎', accounts: [
-    { name: 'Bitcoin', base: 9000 },
-    { name: 'Ethereum', base: 4500 },
+    { name: 'Bitcoin', base: 9000, growth: 15 }, // optimistic, no steady funding
+    { name: 'Ethereum', base: 4500, growth: 12 },
   ] },
   { name: 'Business', type: 'asset', icon: '🏪', accounts: [
-    { name: 'Business Account', base: 21000 },
+    { name: 'Business Account', base: 21000, growth: 5 },
   ] },
   { name: 'Credit Cards', type: 'liability', icon: '💳', accounts: [
-    { name: 'Visa', base: 4200 },
-    { name: 'Amex', base: 2100 },
+    { name: 'Visa', base: 4200, growth: -25 },
+    { name: 'Amex', base: 2100, growth: -25 },
   ] },
   { name: 'Loans', type: 'liability', icon: '🎓', accounts: [
-    { name: 'Student Loan', base: 26000 },
+    { name: 'Student Loan', base: 26000, growth: -12 },
   ] },
-] // 8 categories, 12 accounts
+] // 9 categories, 13 accounts
 
 function buildFakeData(specs, months) {
   const now = getCurrentMonth()
   const monthList = Array.from({ length: months }, (_, i) =>
     getAdjacentMonth(now, -(months - 1 - i)))
   const snapshots = {}
-  monthList.forEach(m => { snapshots[m] = {} })
+  const contributions = {}
+  monthList.forEach(m => { snapshots[m] = {}; contributions[m] = {} })
 
   // Shared month-to-month market move so the whole portfolio rises/dips together.
   // Slight upward drift, but ~a third of months come out negative for variety.
@@ -96,8 +119,11 @@ function buildFakeData(specs, months) {
           }
         }
         snapshots[m][accId] = Math.round(val)
+        // Record the monthly contribution for funded accounts so the forecast
+        // has an average to project forward.
+        if (spec.contributing && acc.contrib) contributions[m][accId] = acc.contrib
       })
-      return { id: accId, name: acc.name }
+      return { id: accId, name: acc.name, growth: String(acc.growth ?? 0) }
     })
     return {
       id: `pcat_${ci}`,
@@ -105,8 +131,14 @@ function buildFakeData(specs, months) {
       type: spec.type,
       icon: spec.icon,
       color: CATEGORY_COLORS[ci % CATEGORY_COLORS.length],
+      contributing: !!spec.contributing,
       accounts,
     }
+  })
+
+  // Drop months that ended up with no contributions to keep the map tidy.
+  Object.keys(contributions).forEach(m => {
+    if (!Object.keys(contributions[m]).length) delete contributions[m]
   })
 
   const latest = monthList[monthList.length - 1]
@@ -116,13 +148,62 @@ function buildFakeData(specs, months) {
   }, 0)
   const goal = Math.max(10000, Math.round(latestNet * 1.3 / 10000) * 10000)
 
-  return { categories, snapshots, goal }
+  return { categories, snapshots, contributions, goal }
 }
 
+// Derive a what-if scenario from the baseline by nudging the forward-looking
+// levers — growth rates and contribution amounts — while leaving the shared
+// history untouched, so every scenario starts from the same past and diverges
+// only in its forecast.
+function applyVariant(base, { contribMult = 1, assetGrowthDelta = 0, liabGrowthDelta = 0 }) {
+  const data = JSON.parse(JSON.stringify(base))
+  data.categories.forEach(cat => {
+    const delta = cat.type === 'liability' ? liabGrowthDelta : assetGrowthDelta
+    if (delta) cat.accounts.forEach(acc => {
+      acc.growth = String(Math.round(((Number(acc.growth) || 0) + delta) * 10) / 10)
+    })
+  })
+  if (contribMult !== 1 && data.contributions) {
+    Object.values(data.contributions).forEach(month => {
+      Object.keys(month).forEach(id => { month[id] = Math.round(month[id] * contribMult) })
+    })
+  }
+  return data
+}
+
+// First entry is always the untouched baseline ("Default Scenario").
+const VARIANTS_FIRST = [
+  { name: 'Default Scenario' },
+  { name: 'Stretch Goal', contribMult: 2 },
+]
+const VARIANTS_6M = [
+  { name: 'Default Scenario' },
+  { name: 'Save More', contribMult: 1.6 },
+  { name: 'Lean Year', contribMult: 0.5, assetGrowthDelta: -3 },
+]
+const VARIANTS_1Y = [
+  { name: 'Default Scenario' },
+  { name: 'Aggressive Saving', contribMult: 1.8 },
+  { name: 'Market Downturn', assetGrowthDelta: -9 },
+  { name: 'Debt-Free Push', contribMult: 0.7, liabGrowthDelta: -18 },
+]
+
+function buildScenarioContainer(specs, months, variants) {
+  const base = buildFakeData(specs, months)
+  const scenarios = variants.map((v, i) => ({
+    id: i === 0 ? 'default' : makeForecastId(),
+    name: v.name,
+    data: i === 0 ? base : applyVariant(base, v),
+  }))
+  return { version: 2, activeId: 'default', scenarios }
+}
+
+// Returns a full v2 container (multiple forecast scenarios) per demo slot.
 function genScenarioData(scenario) {
-  if (scenario === '6month') return buildFakeData(SCENARIO_6M, 6)
-  if (scenario === '1year') return buildFakeData(SCENARIO_1Y, 12)
-  return { categories: [], snapshots: {}, goal: null } // firsttime
+  if (scenario === '6month') return buildScenarioContainer(SCENARIO_6M, 6, VARIANTS_6M)
+  if (scenario === '1year') return buildScenarioContainer(SCENARIO_1Y, 12, VARIANTS_1Y)
+  if (scenario === 'firsttime') return buildScenarioContainer(SCENARIO_FIRST, 3, VARIANTS_FIRST)
+  return wrapData(emptyData())
 }
 
 const emptyData = () => ({ categories: [], snapshots: {}, goal: null })
@@ -182,7 +263,7 @@ function loadInitial(scenario) {
   const stored = migrate(readSlot(scenario))
   if (stored) return stored
   if (scenario === 'none') return wrapData(emptyData())
-  return wrapData(genScenarioData(scenario))
+  return genScenarioData(scenario)
 }
 
 export function useData({ initialData = null, onChange = null } = {}) {
@@ -254,7 +335,7 @@ export function useData({ initialData = null, onChange = null } = {}) {
     setScenarioState(next)
     try { localStorage.setItem(SCENARIO_KEY, next) } catch {}
     // "None" restores the user's real data untouched; fake scenarios regenerate fresh.
-    setContainer(next === 'none' ? loadInitial('none') : wrapData(genScenarioData(next)))
+    setContainer(next === 'none' ? loadInitial('none') : genScenarioData(next))
   }, [])
 
   // ── Forecast scenario controls ──
