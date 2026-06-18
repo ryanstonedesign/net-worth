@@ -1030,16 +1030,17 @@ a { text-decoration: none; color: inherit; }
 .scenario-bar {
   position: fixed;
   top: 0; left: 0; right: 0;
-  z-index: 1;
+  /* Above the scrolling content / carousel so its controls stay clickable;
+     below modals (200) and the settings sheet. */
+  z-index: 100;
   height: calc(var(--safe-top) + 56px);
-  /* right padding clears the settings FAB; bottom padding leaves the seam the
-     content surface overlaps into. */
-  padding: var(--safe-top) 68px 12px 20px;
+  padding: var(--safe-top) 16px 12px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   background: var(--c-ink);
   color: #fff;
+  box-shadow: 0 6px 18px rgba(15,25,30,0.22);
 }
 .scenario-bar-left {
   display: flex;
@@ -1095,11 +1096,7 @@ a { text-decoration: none; color: inherit; }
 .scenario-stage {
   position: relative;
   min-height: 100%;
-  /* pull up so the rounded top overlaps the bar's lower edge — the bar peeks
-     behind the content surface. */
-  margin-top: -12px;
   border-radius: 26px 26px 0 0;
-  box-shadow: 0 -5px 22px rgba(15,25,30,0.18);
   background:
     radial-gradient(ellipse 70% 55% at 12% 8%, rgba(243,246,249,0.75) 0%, transparent 60%),
     radial-gradient(ellipse 55% 45% at 88% 18%, rgba(248,250,252,0.65) 0%, transparent 58%),

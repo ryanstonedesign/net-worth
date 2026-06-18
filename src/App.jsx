@@ -52,6 +52,7 @@ function AppShell({ dataHook, settingsProps }) {
   const [switching, setSwitching] = useState(false)
   const [centerId, setCenterId] = useState(dataHook.activeForecastId)
   const [createOpen, setCreateOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const { forecasts, activeForecastId } = dataHook
   const nameOf = (id) => forecasts.find(f => f.id === id)?.name ?? 'Scenario'
@@ -94,6 +95,7 @@ function AppShell({ dataHook, settingsProps }) {
         onDelete={handleDelete}
         canDelete={forecasts.length > 1}
         onRename={(name) => dataHook.renameForecast(centerId, name)}
+        onSettings={() => setSettingsOpen(true)}
       />
 
       <div className="app-shell has-scenario-bar" style={{ overflow: 'hidden' }}>
@@ -120,6 +122,8 @@ function AppShell({ dataHook, settingsProps }) {
       </div>
 
       <PrototypeSettings
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
         scenario={dataHook.scenario}
         onScenarioChange={dataHook.setScenario}
         categories={dataHook.data.categories}
