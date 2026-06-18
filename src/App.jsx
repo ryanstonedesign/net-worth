@@ -98,7 +98,7 @@ function AppShell({ dataHook, settingsProps }) {
         onSettings={() => setSettingsOpen(true)}
       />
 
-      <div className={`app-shell has-scenario-bar${switching ? ' switching' : ''}`} style={{ overflow: 'hidden' }}>
+      <div className="app-shell has-scenario-bar" style={{ overflow: 'hidden' }}>
         {switching ? (
           <>
             <ScenarioCarousel

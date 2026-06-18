@@ -1108,13 +1108,14 @@ a { text-decoration: none; color: inherit; }
    (so it scrolls) but starts below the bar's button strip, leaving only the
    bar's lower edge to peek behind the rounded content surface. */
 .app-shell.has-scenario-bar { pointer-events: none; }
-/* While switching, the whole back of the page is dark (only the cards stay light). */
-.app-shell.switching { background: var(--c-ink); }
-/* Selected month shown below the cards so totals are comparable across scenarios. */
+/* Selected month shown below the cards so totals are comparable across scenarios.
+   Dark like the bar/rail so the whole back of the page reads dark while switching
+   (only the cards stay light) — without painting over the bar. */
 .scenario-switch-month {
   flex-shrink: 0;
   text-align: center;
   padding: 6px 16px calc(var(--safe-bottom) + 18px);
+  background: var(--c-ink);
   color: rgba(255,255,255,0.9);
   font-size: 15px;
   font-weight: 700;

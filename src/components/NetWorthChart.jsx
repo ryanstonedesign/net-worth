@@ -1,6 +1,11 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { AreaChart, Area, Tooltip, ResponsiveContainer, ReferenceLine, YAxis } from 'recharts'
 import { formatMonthDisplay, formatCurrency, formatCompact } from '../utils'
+
+// Draw the line only on the app's first chart (page load). Charts mounted later
+// — entering/exiting the scenario switcher, or focusing another scenario —
+// render in place without replaying the draw animation.
+let firstChartDone = false
 
 function CustomTooltip({ active, payload }) {
   if (!active || !payload?.length) return null
@@ -60,6 +65,13 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
   // Memoised on the data's content so hover / selected-month re-renders keep a
   // stable reference — that prevents recharts from replaying its draw animation
   // on every interaction (it only replays on mount, i.e. on time-range change).
+  // Latch the entrance once, per chart instance: only the session's first chart
+  // (the page-load hero chart) plays the draw animation.
+  const animateRef = useRef(null)
+  if (animateRef.current === null) animateRef.current = !firstChartDone
+  const animate = animateRef.current
+  useEffect(() => { firstChartDone = true }, [])
+
   const dataSig = (data || []).map(d => `${d.month}:${d.netWorth}`).join('|')
   const forecastSig = forecastData.map(d => `${d.month}:${d.netWorth}`).join('|')
   const combined = useMemo(() => {
@@ -73,12 +85,14 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataSig, forecastSig])
 
-  // Dots stay hidden until the line has finished drawing, then fade in.
-  const [dotsVisible, setDotsVisible] = useState(false)
+  // Dots stay hidden until the line has finished drawing, then fade in. With no
+  // draw animation (later mounts) they're shown immediately.
+  const [dotsVisible, setDotsVisible] = useState(!animate)
   useEffect(() => {
+    if (!animate) return
     const t = setTimeout(() => setDotsVisible(true), 1200)
     return () => clearTimeout(t)
-  }, [])
+  }, [animate])
 
   if (!data || data.length < 2) return null
 
@@ -178,7 +192,7 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
           fill={`url(#${gradId})`}
           dot={historicalDot}
           activeDot={{ r: 6, fill: color, stroke: 'white', strokeWidth: 2 }}
-          isAnimationActive={true}
+          isAnimationActive={animate}
           animationBegin={0}
           animationDuration={1100}
           animationEasing="ease-out"
@@ -195,7 +209,7 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
             fill={`url(#${fGradId})`}
             dot={forecastDot}
             activeDot={{ r: 5, fill: color, fillOpacity: 0.7, stroke: 'white', strokeWidth: 2 }}
-            isAnimationActive={true}
+            isAnimationActive={animate}
             animationBegin={0}
             animationDuration={1100}
             animationEasing="ease-out"
