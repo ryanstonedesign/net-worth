@@ -1091,24 +1091,22 @@ a { text-decoration: none; color: inherit; }
 .scenario-bar-btn:disabled { opacity: 0.32; cursor: default; }
 .scenario-bar-btn.scenario-bar-danger:hover { background: rgba(239,68,68,0.28); color: #fff; }
 
-/* Page content surface sits in front of the bar with a rounded top + soft
-   shadow, overlapping the bar's lower seam so the bar peeks behind it. The
-   scroller is pointer-events:none so its empty top strip (over the bar) lets
-   clicks through to the bar; the stage itself re-enables events. */
-/* The shell (and its empty top strip) is click-through so the bar beneath
-   stays reachable; the stage / cards below re-enable pointer events. */
+/* The shell's empty band above the content is click-through so the bar's
+   controls stay reachable; the scrolling content itself keeps pointer events
+   (so it scrolls) but starts below the bar's button strip, leaving only the
+   bar's lower edge to peek behind the rounded content surface. */
 .app-shell.has-scenario-bar { pointer-events: none; }
 .has-scenario-bar .page-content {
-  padding-top: calc(var(--safe-top) + 56px);
-  pointer-events: none;
+  /* begin just under the bar's button strip; the 12px up to the bar's bottom
+     edge is where the content surface overlaps it. */
+  margin-top: calc(var(--safe-top) + 44px);
+  padding-top: 0;
+  pointer-events: auto;
 }
 .scenario-stage {
   position: relative;
   min-height: 100%;
   pointer-events: auto;
-  /* pull up so the rounded top overlaps the bar's lower edge — the bar peeks
-     behind the content surface. */
-  margin-top: -12px;
   border-radius: 26px 26px 0 0;
   box-shadow: 0 -6px 22px rgba(15,25,30,0.20);
   background:
@@ -1135,12 +1133,15 @@ a { text-decoration: none; color: inherit; }
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
-  padding: calc(var(--safe-top) + 56px) 0 calc(var(--safe-bottom) + 24px);
+  /* start below the bar's button strip so its controls stay clickable */
+  margin-top: calc(var(--safe-top) + 44px);
+  padding: 0 0 calc(var(--safe-bottom) + 24px);
   scrollbar-width: none;
+  /* dark backdrop behind the light scenario cards while switching */
+  background: var(--c-ink);
   /* scale-down entrance reads as the current view shrinking into a card */
   animation: railIn 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-  /* empty strip over the bar (and inter-card gaps) let clicks reach the bar */
-  pointer-events: none;
+  pointer-events: auto;
 }
 @keyframes railIn {
   from { transform: scale(1.06); opacity: 0.3; }
