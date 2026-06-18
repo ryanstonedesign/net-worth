@@ -12,12 +12,17 @@ export default function ScenarioBar({
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(name)
   const inputRef = useRef(null)
+  // Timestamp of the last save. Committing swaps the check button back to the
+  // switch icon in the same spot, so the tap's click can land on the freshly
+  // rendered switch icon — ignore a toggle that fires right after a save.
+  const lastCommitRef = useRef(0)
 
   // Keep the field in sync with the shown scenario whenever we're not editing.
   useEffect(() => { if (!editing) setDraft(name) }, [name, editing])
 
   const commit = () => {
     setEditing(false)
+    lastCommitRef.current = Date.now()
     const clean = draft.trim()
     if (clean && clean !== name) onRename?.(clean)
   }
@@ -55,7 +60,7 @@ export default function ScenarioBar({
         ) : (!switching && (
           <button
             className="scenario-bar-btn"
-            onClick={onToggleSwitch}
+            onClick={() => { if (Date.now() - lastCommitRef.current > 350) onToggleSwitch() }}
             aria-label="Switch scenarios"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
