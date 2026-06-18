@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useData } from './hooks/useData'
 import { useVault } from './hooks/useVault'
-import { getCurrentMonth } from './utils'
+import { getCurrentMonth, formatMonthDisplay } from './utils'
 import Dashboard from './pages/Dashboard'
 import PrototypeSettings from './components/PrototypeSettings'
 import ScenarioBar from './components/ScenarioBar'
@@ -98,17 +98,20 @@ function AppShell({ dataHook, settingsProps }) {
         onSettings={() => setSettingsOpen(true)}
       />
 
-      <div className="app-shell has-scenario-bar" style={{ overflow: 'hidden' }}>
+      <div className={`app-shell has-scenario-bar${switching ? ' switching' : ''}`} style={{ overflow: 'hidden' }}>
         {switching ? (
-          <ScenarioCarousel
-            key={forecasts.map(f => f.id).join('|')}
-            scenarios={forecasts}
-            centerId={centerId}
-            selectedMonth={selectedMonth}
-            getForecastData={dataHook.getForecastData}
-            onCenterChange={setCenterId}
-            onFocus={focusScenario}
-          />
+          <>
+            <ScenarioCarousel
+              key={forecasts.map(f => f.id).join('|')}
+              scenarios={forecasts}
+              centerId={centerId}
+              selectedMonth={selectedMonth}
+              getForecastData={dataHook.getForecastData}
+              onCenterChange={setCenterId}
+              onFocus={focusScenario}
+            />
+            <div className="scenario-switch-month">{formatMonthDisplay(selectedMonth)}</div>
+          </>
         ) : (
           <div className="page-content">
             <div className="scenario-stage" key={activeForecastId}>

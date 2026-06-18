@@ -1108,6 +1108,20 @@ a { text-decoration: none; color: inherit; }
    (so it scrolls) but starts below the bar's button strip, leaving only the
    bar's lower edge to peek behind the rounded content surface. */
 .app-shell.has-scenario-bar { pointer-events: none; }
+/* While switching, the whole back of the page is dark (only the cards stay light). */
+.app-shell.switching { background: var(--c-ink); }
+/* Selected month shown below the cards so totals are comparable across scenarios. */
+.scenario-switch-month {
+  flex-shrink: 0;
+  text-align: center;
+  padding: 6px 16px calc(var(--safe-bottom) + 18px);
+  color: rgba(255,255,255,0.9);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  pointer-events: none;
+  animation: fadeIn 0.3s ease;
+}
 .has-scenario-bar .page-content {
   /* begin just under the bar's button strip; the 12px up to the bar's bottom
      edge is where the content surface overlaps it. */
@@ -1147,7 +1161,7 @@ a { text-decoration: none; color: inherit; }
   overscroll-behavior-x: contain;
   /* start below the bar's button strip so its controls stay clickable */
   margin-top: calc(var(--safe-top) + 44px);
-  padding: 0 0 calc(var(--safe-bottom) + 24px);
+  padding: 0 0 8px;
   scrollbar-width: none;
   /* dark backdrop behind the light scenario cards while switching */
   background: var(--c-ink);
