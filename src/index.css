@@ -1030,17 +1030,18 @@ a { text-decoration: none; color: inherit; }
 .scenario-bar {
   position: fixed;
   top: 0; left: 0; right: 0;
-  /* Above the scrolling content / carousel so its controls stay clickable;
-     below modals (200) and the settings sheet. */
-  z-index: 100;
+  /* Lower paint order than the content so the rounded surface tucks in front of
+     it (the "peek behind" look). The content/carousel layers above it set
+     pointer-events: none on their empty regions, so clicks still reach the bar. */
+  z-index: 1;
   height: calc(var(--safe-top) + 56px);
-  padding: var(--safe-top) 16px 12px 20px;
+  /* Controls sit in the upper area, clear of the 12px the content overlaps. */
+  padding: var(--safe-top) 16px 14px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   background: var(--c-ink);
   color: #fff;
-  box-shadow: 0 6px 18px rgba(15,25,30,0.22);
 }
 .scenario-bar-left {
   display: flex;
@@ -1048,7 +1049,7 @@ a { text-decoration: none; color: inherit; }
   gap: 6px;
   min-width: 0;
 }
-.scenario-bar-right { display: flex; align-items: center; flex-shrink: 0; }
+.scenario-bar-right { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
 .scenario-bar-name {
   font-size: 16px;
   font-weight: 700;
@@ -1091,21 +1092,36 @@ a { text-decoration: none; color: inherit; }
 .scenario-bar-btn.scenario-bar-danger:hover { background: rgba(239,68,68,0.28); color: #fff; }
 
 /* Page content surface sits in front of the bar with a rounded top + soft
-   shadow, overlapping the bar's lower seam so the bar peeks behind it. */
-.has-scenario-bar .page-content { padding-top: calc(var(--safe-top) + 56px); }
+   shadow, overlapping the bar's lower seam so the bar peeks behind it. The
+   scroller is pointer-events:none so its empty top strip (over the bar) lets
+   clicks through to the bar; the stage itself re-enables events. */
+/* The shell (and its empty top strip) is click-through so the bar beneath
+   stays reachable; the stage / cards below re-enable pointer events. */
+.app-shell.has-scenario-bar { pointer-events: none; }
+.has-scenario-bar .page-content {
+  padding-top: calc(var(--safe-top) + 56px);
+  pointer-events: none;
+}
 .scenario-stage {
   position: relative;
   min-height: 100%;
+  pointer-events: auto;
+  /* pull up so the rounded top overlaps the bar's lower edge — the bar peeks
+     behind the content surface. */
+  margin-top: -12px;
   border-radius: 26px 26px 0 0;
+  box-shadow: 0 -6px 22px rgba(15,25,30,0.20);
   background:
     radial-gradient(ellipse 70% 55% at 12% 8%, rgba(243,246,249,0.75) 0%, transparent 60%),
     radial-gradient(ellipse 55% 45% at 88% 18%, rgba(248,250,252,0.65) 0%, transparent 58%),
     var(--c-bg);
   animation: stageIn 0.32s cubic-bezier(0.32, 0.72, 0, 1);
 }
+/* Opacity-only: a transform here would make the stage a containing block for
+   the Dashboard's fixed month selector and hide it mid-animation. */
 @keyframes stageIn {
-  from { transform: scale(0.96) translateY(8px); opacity: 0; }
-  to   { transform: scale(1) translateY(0); opacity: 1; }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* ── Scenario switching carousel ── */
@@ -1121,7 +1137,14 @@ a { text-decoration: none; color: inherit; }
   overscroll-behavior-x: contain;
   padding: calc(var(--safe-top) + 56px) 0 calc(var(--safe-bottom) + 24px);
   scrollbar-width: none;
-  animation: fadeIn 0.28s ease;
+  /* scale-down entrance reads as the current view shrinking into a card */
+  animation: railIn 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  /* empty strip over the bar (and inter-card gaps) let clicks reach the bar */
+  pointer-events: none;
+}
+@keyframes railIn {
+  from { transform: scale(1.06); opacity: 0.3; }
+  to   { transform: scale(1); opacity: 1; }
 }
 .scenario-rail::-webkit-scrollbar { display: none; }
 .scenario-card {
@@ -1130,6 +1153,7 @@ a { text-decoration: none; color: inherit; }
   scroll-snap-align: center;
   display: flex;
   cursor: pointer;
+  pointer-events: auto;
   transform: scale(0.86);
   opacity: 0.55;
   transition: transform 0.3s cubic-bezier(0.32,0.72,0,1), opacity 0.3s ease;
@@ -1137,52 +1161,21 @@ a { text-decoration: none; color: inherit; }
 .scenario-card.is-center { transform: scale(1); opacity: 1; cursor: default; }
 .scenario-card:first-child { margin-left: calc((100vw - min(82vw, 460px)) / 2); }
 .scenario-card:last-child  { margin-right: calc((100vw - min(82vw, 460px)) / 2); }
+/* The card holds the real Dashboard view, frozen: clipped to the card, faded at
+   the bottom, and non-interactive so a tap focuses the card instead of hitting
+   inputs inside it. */
 .scenario-card-inner {
   width: 100%;
-  max-height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  border-radius: 28px;
-  padding-bottom: 18px;
-}
-.scenario-card-inner::-webkit-scrollbar { display: none; }
-
-/* ── Scenario preview (read-only card body) ── */
-.sp-body { display: flex; flex-direction: column; }
-.sp-empty-chart, .sp-empty-cats {
-  font-size: 13px;
-  color: var(--c-ink-mute);
-  padding: 16px 20px;
-}
-.sp-empty-chart { text-align: center; }
-.sp-cat-list { padding: 6px 4px; margin-bottom: 4px; }
-.sp-cat-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 11px 16px;
-  border-bottom: 1px solid rgba(200,215,220,0.4);
-}
-.sp-cat-row:last-child { border-bottom: none; }
-.sp-cat-icon { font-size: 18px; flex-shrink: 0; }
-.sp-cat-name {
-  flex: 1;
-  min-width: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--c-ink);
-  white-space: nowrap;
+  height: 100%;
   overflow: hidden;
-  text-overflow: ellipsis;
+  border-radius: 28px;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, #000 80%, transparent 100%);
+          mask-image: linear-gradient(to bottom, #000 80%, transparent 100%);
 }
-.sp-cat-amount {
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--c-ink);
-  flex-shrink: 0;
-}
+/* The frozen Dashboard's floating month selector isn't part of the net-worth
+   content — hide it inside cards. */
+.scenario-card .month-float { display: none; }
 
 /* ── Misc ── */
 .divider { height: 1px; background: rgba(200,215,220,0.4); }

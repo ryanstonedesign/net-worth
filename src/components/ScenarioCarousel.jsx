@@ -1,10 +1,51 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
-import ScenarioPreview from './ScenarioPreview'
+import Dashboard from '../pages/Dashboard'
+import { getCurrentMonth, netWorthAt, dataHistory, dataTotals } from '../utils'
 
-// Horizontal, scroll-snapping rail of scenario preview cards. One card sits in
-// the middle taking most of the width while its neighbours peek from the edges.
-// The centred card is reported upward (for the bar's name + delete target) and
-// tapping any card brings it into focus.
+const noop = () => {}
+
+// Build the exact prop set Dashboard expects from a raw scenario data object,
+// with every getter computed from that data and every mutator stubbed out — so
+// a card renders the real net-worth view, just frozen and non-interactive.
+function readonlyDashboardProps(data) {
+  const d = data || { categories: [], snapshots: {}, goal: null }
+  return {
+    data: d,
+    goal: d.goal ?? null,
+    getSnapshot: (m) => d.snapshots?.[m] || {},
+    getContribution: (m) => d.contributions?.[m] || {},
+    getCategoryTotal: (cat, m) => {
+      const s = d.snapshots?.[m] || {}
+      return cat.accounts.reduce((sum, a) => sum + (s[a.id] || 0), 0)
+    },
+    getNetWorth: (m) => netWorthAt(d, m),
+    getHistory: () => dataHistory(d),
+    getPrevMonth: (m) => {
+      const ms = Object.keys(d.snapshots || {}).sort()
+      const i = ms.indexOf(m)
+      return i > 0 ? ms[i - 1] : null
+    },
+    getTotalAssets: (m) => dataTotals(d, m).assets,
+    getTotalLiabilities: (m) => dataTotals(d, m).liabilities,
+    setGoal: noop,
+    addCategoryWithAccounts: noop,
+    updateCategory: noop,
+    deleteCategory: noop,
+    addAccount: noop,
+    deleteAccount: noop,
+    renameAccount: noop,
+    setAccountGrowth: noop,
+    updateContributions: noop,
+    clearMonthSnapshot: noop,
+    updateCategorySnapshot: noop,
+    bulkImport: noop,
+  }
+}
+
+// Horizontal, scroll-snapping rail of scenario cards. Each card is the real
+// net-worth view shrunk into a card; one sits in the middle taking most of the
+// width while its neighbours peek from the edges. The centred card is reported
+// upward (for the bar's name + delete target); tapping any card focuses it.
 export default function ScenarioCarousel({
   scenarios, centerId, getForecastData, onCenterChange, onFocus,
 }) {
@@ -48,6 +89,8 @@ export default function ScenarioCarousel({
     railRef.current?.scrollTo({ left: i * stride(), behavior: 'smooth' })
   }
 
+  const month = getCurrentMonth()
+
   return (
     <div className="scenario-rail" ref={railRef} onScroll={recomputeCenter}>
       {scenarios.map((s, i) => (
@@ -61,7 +104,11 @@ export default function ScenarioCarousel({
           }}
         >
           <div className="scenario-card-inner card">
-            <ScenarioPreview data={getForecastData(s.id)} />
+            <Dashboard
+              {...readonlyDashboardProps(getForecastData(s.id))}
+              selectedMonth={month}
+              onMonthChange={noop}
+            />
           </div>
         </div>
       ))}
