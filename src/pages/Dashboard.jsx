@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import MonthSelector from '../components/MonthSelector'
 import CategoryCard from '../components/CategoryCard'
 import NetWorthChart from '../components/NetWorthChart'
@@ -6,6 +6,11 @@ import RollingNumber from '../components/RollingNumber'
 import EditCategorySheet from '../components/EditCategorySheet'
 import Modal from '../components/Modal'
 import { formatCurrency, formatCompact, formatMonthDisplay, getAdjacentMonth, getCurrentMonth, parseAmount } from '../utils'
+
+// Latches after the first Dashboard chart appears (page load) so a Dashboard
+// remounted by a scenario switch doesn't redraw, while time-range changes
+// (same instance staying mounted) still do.
+let appChartShown = false
 
 const RANGE_OPTIONS = ['1M', '3M', '6M', '1Y', 'custom']
 const RANGE_COUNTS   = { '1M': 2,  '3M': 3,  '6M': 6,  '1Y': 12 }
@@ -195,6 +200,15 @@ export default function Dashboard({
   const [resetNonce, setResetNonce] = useState(0) // bump to remount cards after a reset
   const [timeRange, setTimeRange] = useState('1Y')
 
+  // Chart draw animation: play on this instance's first chart only when it's the
+  // app's page-load Dashboard; once mounted, time-range changes (which remount
+  // the chart) always animate.
+  const chartPageLoadRef = useRef(null)
+  if (chartPageLoadRef.current === null) chartPageLoadRef.current = !appChartShown
+  const dashMountedRef = useRef(false)
+  useEffect(() => { appChartShown = true; dashMountedRef.current = true }, [])
+  const chartAnimate = dashMountedRef.current ? true : chartPageLoadRef.current
+
   const currentMonth = getCurrentMonth()
   const [customYear, setCustomYear] = useState(currentMonth.slice(0, 4))
 
@@ -326,7 +340,7 @@ export default function Dashboard({
       {/* Trend line + forecast */}
       {filteredHistory.length >= 2 && (
         <div style={{ padding: '20px 20px 0' }}>
-          <NetWorthChart key={timeRange} data={filteredHistory} forecastData={forecastData} selectedMonth={selectedMonth} height={180} goal={goal} onSelectMonth={onMonthChange} />
+          <NetWorthChart key={timeRange} data={filteredHistory} forecastData={forecastData} selectedMonth={selectedMonth} height={180} goal={goal} onSelectMonth={onMonthChange} animateDraw={chartAnimate} />
         </div>
       )}
 

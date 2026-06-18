@@ -2,10 +2,9 @@ import { useMemo, useState, useEffect, useRef } from 'react'
 import { AreaChart, Area, Tooltip, ResponsiveContainer, ReferenceLine, YAxis } from 'recharts'
 import { formatMonthDisplay, formatCurrency, formatCompact } from '../utils'
 
-// Draw the line only on the app's first chart (page load). Charts mounted later
-// — entering/exiting the scenario switcher, or focusing another scenario —
-// render in place without replaying the draw animation.
-let firstChartDone = false
+// Whether the draw animation plays is decided by the caller via `animateDraw`
+// and latched at mount: page load and time-range changes animate; the fresh
+// mounts from entering/exiting the scenario switcher don't.
 
 function CustomTooltip({ active, payload }) {
   if (!active || !payload?.length) return null
@@ -59,18 +58,16 @@ function GoalLabel({ viewBox, goal }) {
   )
 }
 
-export default function NetWorthChart({ data, forecastData = [], selectedMonth, height = 160, goal = null, onSelectMonth }) {
+export default function NetWorthChart({ data, forecastData = [], selectedMonth, height = 160, goal = null, onSelectMonth, animateDraw = false }) {
   // ── Hooks (must run before any early return) ──
   // Build combined dataset with separate dataKeys for each segment.
   // Memoised on the data's content so hover / selected-month re-renders keep a
   // stable reference — that prevents recharts from replaying its draw animation
   // on every interaction (it only replays on mount, i.e. on time-range change).
-  // Latch the entrance once, per chart instance: only the session's first chart
-  // (the page-load hero chart) plays the draw animation.
+  // Latch the draw decision at mount so later prop changes don't replay it.
   const animateRef = useRef(null)
-  if (animateRef.current === null) animateRef.current = !firstChartDone
+  if (animateRef.current === null) animateRef.current = !!animateDraw
   const animate = animateRef.current
-  useEffect(() => { firstChartDone = true }, [])
 
   const dataSig = (data || []).map(d => `${d.month}:${d.netWorth}`).join('|')
   const forecastSig = forecastData.map(d => `${d.month}:${d.netWorth}`).join('|')
