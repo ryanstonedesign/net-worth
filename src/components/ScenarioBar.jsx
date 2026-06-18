@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 
 // Dark bar pinned to the top, sharing the floating month selector's ink colour.
-// Left: the current scenario's name plus a switch toggle (and, while switching,
-// an edit-name control). Right: a "+" to create a scenario when focused, which
-// becomes a delete control while switching.
+// Left: the current scenario's name — tap it to rename inline (a check appears
+// to save) — plus a switch control to enter the scenario switcher. Right: a "+"
+// to create a scenario when focused, which becomes a delete control while
+// switching. In the switcher the switch icon is hidden; tap a card to exit.
 export default function ScenarioBar({
   name, switching, onToggleSwitch, onAdd, onDelete, canDelete, onRename, onSettings,
 }) {
@@ -27,51 +28,57 @@ export default function ScenarioBar({
     <div className="scenario-bar">
       <div className="scenario-bar-left">
         {editing ? (
-          <input
-            ref={inputRef}
-            className="scenario-bar-input"
-            value={draft}
-            onChange={e => setDraft(e.target.value)}
-            onBlur={commit}
-            onKeyDown={e => {
-              if (e.key === 'Enter') commit()
-              if (e.key === 'Escape') setEditing(false)
-            }}
-            maxLength={40}
-            aria-label="Scenario name"
-          />
+          <>
+            <input
+              ref={inputRef}
+              className="scenario-bar-input"
+              value={draft}
+              onChange={e => setDraft(e.target.value)}
+              onBlur={commit}
+              onKeyDown={e => {
+                if (e.key === 'Enter') commit()
+                if (e.key === 'Escape') setEditing(false)
+              }}
+              maxLength={40}
+              aria-label="Scenario name"
+            />
+            <button
+              className="scenario-bar-btn"
+              // commit on mousedown so we save before the input's blur can cancel focus
+              onMouseDown={e => { e.preventDefault(); commit() }}
+              aria-label="Save scenario name"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </button>
+          </>
         ) : (
-          <span className="scenario-bar-name">{name}</span>
+          <>
+            <button
+              className="scenario-bar-name"
+              onClick={() => setEditing(true)}
+              aria-label={`Rename scenario ${name}`}
+            >
+              {name}
+            </button>
+            {!switching && (
+              <button
+                className="scenario-bar-btn"
+                onClick={onToggleSwitch}
+                aria-label="Switch scenarios"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="16 3 21 3 21 8" />
+                  <line x1="4" y1="20" x2="21" y2="3" />
+                  <polyline points="21 16 21 21 16 21" />
+                  <line x1="15" y1="15" x2="21" y2="21" />
+                  <line x1="4" y1="4" x2="9" y2="9" />
+                </svg>
+              </button>
+            )}
+          </>
         )}
-
-        {switching && !editing && (
-          <button
-            className="scenario-bar-btn"
-            onClick={() => setEditing(true)}
-            aria-label="Rename scenario"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 20h9" />
-              <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-            </svg>
-          </button>
-        )}
-
-        <button
-          className={`scenario-bar-btn${switching ? ' is-active' : ''}`}
-          onClick={onToggleSwitch}
-          aria-label={switching ? 'Done switching scenarios' : 'Switch scenarios'}
-          aria-pressed={switching}
-        >
-          {/* switch / shuffle glyph */}
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="16 3 21 3 21 8" />
-            <line x1="4" y1="20" x2="21" y2="3" />
-            <polyline points="21 16 21 21 16 21" />
-            <line x1="15" y1="15" x2="21" y2="21" />
-            <line x1="4" y1="4" x2="9" y2="9" />
-          </svg>
-        </button>
       </div>
 
       <div className="scenario-bar-right">

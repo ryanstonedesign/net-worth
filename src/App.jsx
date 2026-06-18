@@ -94,7 +94,7 @@ function AppShell({ dataHook, settingsProps }) {
         onAdd={() => setCreateOpen(true)}
         onDelete={handleDelete}
         canDelete={forecasts.length > 1}
-        onRename={(name) => dataHook.renameForecast(centerId, name)}
+        onRename={(name) => dataHook.renameForecast(switching ? centerId : activeForecastId, name)}
         onSettings={() => setSettingsOpen(true)}
       />
 
