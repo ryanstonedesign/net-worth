@@ -134,7 +134,7 @@ export default function CategoryCard({ category, snapshot, contributions = {}, c
                           }}
                           onBlur={handleContribBlur}
                         />
-                        <span className="cat-contrib-suffix">{showingEst ? '/mo avg' : '/mo'}</span>
+                        <span className="cat-contrib-suffix">/mo</span>
                       </div>
                     )
                   })()}
@@ -148,7 +148,9 @@ export default function CategoryCard({ category, snapshot, contributions = {}, c
             <span className="cat-total-label">Total</span>
             <span
               className="cat-total-amount"
-              style={{ color: estimated ? 'var(--c-ink-mute)' : category.type === 'liability' ? 'var(--c-danger)' : 'var(--c-ink)' }}
+              style={estimated
+                ? { color: 'var(--c-ink-mute)', opacity: 0.75 }
+                : { color: category.type === 'liability' ? 'var(--c-danger)' : 'var(--c-ink)' }}
             >
               {formatCurrency(total)}{estimated ? ' (est)' : ''}
             </span>
