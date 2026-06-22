@@ -106,7 +106,10 @@ export default function ScenarioBar({
           <>
             <button
               className="scenario-bar-btn"
-              onClick={onAdd}
+              // Focus synchronously inside the tap so mobile keyboards open
+              // (iOS only opens the keyboard during a user gesture). onAdd then
+              // creates the scenario; the signal effect selects the new name.
+              onClick={() => { inputRef.current?.focus(); onAdd() }}
               aria-label="Create a new scenario"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
