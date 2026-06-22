@@ -16,6 +16,10 @@ export default function ScenarioBar({
   // switch icon in the same spot, so the tap's click can land on the freshly
   // rendered switch icon — ignore a toggle that fires right after a save.
   const lastCommitRef = useRef(0)
+  // Last seen focus signal, seeded with the mount value so we only react to
+  // genuine bumps — not to this instance mounting (e.g. when toggling the
+  // switcher swaps which bar is rendered).
+  const lastFocusSignalRef = useRef(focusNameSignal)
 
   // Keep the field in sync with the shown scenario whenever we're not editing.
   useEffect(() => { if (!editing) setDraft(name) }, [name, editing])
@@ -23,7 +27,8 @@ export default function ScenarioBar({
   // When the parent bumps the signal (e.g. right after creating a scenario),
   // drop into edit mode with the name selected so it can be typed over.
   useEffect(() => {
-    if (!focusNameSignal) return
+    if (focusNameSignal === lastFocusSignalRef.current) return
+    lastFocusSignalRef.current = focusNameSignal
     setEditing(true)
     setDraft(name)
     const id = requestAnimationFrame(() => {
