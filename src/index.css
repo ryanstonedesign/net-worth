@@ -644,8 +644,6 @@ a { text-decoration: none; color: inherit; }
 }
 .cat-empty-accounts {
   margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(200,215,220,0.4);
   font-size: 13px;
   color: var(--c-ink-mute);
 }
@@ -1121,6 +1119,10 @@ a { text-decoration: none; color: inherit; }
      card reads as one continuous surface with it. */
   margin-top: 0;
   padding-top: 0;
+  /* The bottom clearance for the floating month selector moves onto the stage
+     below, so the stage's light surface fills it and the dark backdrop never
+     shows beneath the content. */
+  padding-bottom: 0;
   pointer-events: auto;
   background: var(--c-ink);
 }
@@ -1136,6 +1138,9 @@ a { text-decoration: none; color: inherit; }
 .has-scenario-bar .page-content > .scenario-stage {
   margin-top: -12px;
   z-index: 1;
+  /* Carry the month-selector clearance so the light surface extends to the very
+     bottom of the scroll. */
+  padding-bottom: calc(var(--safe-bottom) + 132px);
 }
 .scenario-stage {
   position: relative;
