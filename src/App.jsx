@@ -6,44 +6,10 @@ import Dashboard from './pages/Dashboard'
 import PrototypeSettings from './components/PrototypeSettings'
 import ScenarioBar from './components/ScenarioBar'
 import ScenarioCarousel from './components/ScenarioCarousel'
-import Modal from './components/Modal'
 import AuthScreen from './components/AuthScreen'
 import LockScreen from './components/LockScreen'
 import RecoveryPhraseSetup from './components/RecoveryPhraseSetup'
 import RestoreAccessScreen from './components/RestoreAccessScreen'
-
-function NewScenarioModal({ onSave, onClose }) {
-  const [name, setName] = useState('')
-  const valid = name.trim().length > 0
-  return (
-    <Modal title="New Scenario" onClose={onClose}>
-      <p style={{ fontSize: 13, color: 'var(--c-ink-mute)', marginBottom: 20, lineHeight: 1.5 }}>
-        Forks the scenario you're viewing so you can tweak categories and values
-        to explore a different future. Your other scenarios stay untouched.
-      </p>
-      <div className="form-group">
-        <label className="form-label">Scenario name</label>
-        <input
-          className="input"
-          autoFocus
-          placeholder="e.g. Buy a house"
-          value={name}
-          maxLength={40}
-          onChange={e => setName(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter' && valid) onSave(name) }}
-        />
-      </div>
-      <button
-        className="btn btn-primary btn-full"
-        style={{ marginTop: 8 }}
-        disabled={!valid}
-        onClick={() => valid && onSave(name)}
-      >
-        Save
-      </button>
-    </Modal>
-  )
-}
 
 // Shared shell for both vaulted and legacy modes: the dark scenario bar over the
 // page content (or the scenario-switching carousel), plus the settings FAB.
@@ -51,7 +17,9 @@ function AppShell({ dataHook, settingsProps }) {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth)
   const [switching, setSwitching] = useState(false)
   const [centerId, setCenterId] = useState(dataHook.activeForecastId)
-  const [createOpen, setCreateOpen] = useState(false)
+  // Bumped to tell the scenario bar to focus its name field — used right after
+  // creating a scenario so it can be renamed immediately.
+  const [focusNameSignal, setFocusNameSignal] = useState(0)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   const { forecasts, activeForecastId } = dataHook
@@ -70,10 +38,12 @@ function AppShell({ dataHook, settingsProps }) {
     setSwitching(false)
   }
 
-  const handleAdd = (name) => {
-    dataHook.addForecast(name) // focuses the new scenario
-    setCreateOpen(false)
+  // Create + open a new scenario straight away (no naming modal), then focus the
+  // name field so the default "New scenario" can be typed over.
+  const handleAdd = () => {
+    dataHook.addForecast('New scenario') // forks + focuses the new scenario
     setSwitching(false)
+    setFocusNameSignal(n => n + 1)
   }
 
   const handleDelete = () => {
@@ -87,8 +57,9 @@ function AppShell({ dataHook, settingsProps }) {
   const barProps = {
     name: barName,
     switching,
+    focusNameSignal,
     onToggleSwitch: toggleSwitch,
-    onAdd: () => setCreateOpen(true),
+    onAdd: handleAdd,
     onDelete: handleDelete,
     canDelete: forecasts.length > 1,
     onRename: (name) => dataHook.renameForecast(switching ? centerId : activeForecastId, name),
@@ -141,10 +112,6 @@ function AppShell({ dataHook, settingsProps }) {
         onImport={dataHook.bulkImport}
         {...settingsProps}
       />
-
-      {createOpen && (
-        <NewScenarioModal onSave={handleAdd} onClose={() => setCreateOpen(false)} />
-      )}
     </>
   )
 }

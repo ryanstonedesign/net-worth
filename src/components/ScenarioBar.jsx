@@ -7,7 +7,7 @@ import { useState, useEffect, useRef } from 'react'
 // which becomes a delete control while switching. The switch icon (focused only)
 // enters the switcher; in the switcher you exit by tapping a card.
 export default function ScenarioBar({
-  name, switching, onToggleSwitch, onAdd, onDelete, canDelete, onRename, onSettings,
+  name, switching, focusNameSignal, onToggleSwitch, onAdd, onDelete, canDelete, onRename, onSettings,
 }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(name)
@@ -19,6 +19,19 @@ export default function ScenarioBar({
 
   // Keep the field in sync with the shown scenario whenever we're not editing.
   useEffect(() => { if (!editing) setDraft(name) }, [name, editing])
+
+  // When the parent bumps the signal (e.g. right after creating a scenario),
+  // drop into edit mode with the name selected so it can be typed over.
+  useEffect(() => {
+    if (!focusNameSignal) return
+    setEditing(true)
+    setDraft(name)
+    const id = requestAnimationFrame(() => {
+      const el = inputRef.current
+      if (el) { el.focus(); el.select() }
+    })
+    return () => cancelAnimationFrame(id)
+  }, [focusNameSignal]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const commit = () => {
     setEditing(false)
