@@ -84,19 +84,24 @@ function AppShell({ dataHook, settingsProps }) {
     if (neighbour) setCenterId(neighbour.id)
   }
 
+  const barProps = {
+    name: barName,
+    switching,
+    onToggleSwitch: toggleSwitch,
+    onAdd: () => setCreateOpen(true),
+    onDelete: handleDelete,
+    canDelete: forecasts.length > 1,
+    onRename: (name) => dataHook.renameForecast(switching ? centerId : activeForecastId, name),
+    onSettings: () => setSettingsOpen(true),
+  }
+
   return (
     <>
       <div className="app-bg" />
-      <ScenarioBar
-        name={barName}
-        switching={switching}
-        onToggleSwitch={toggleSwitch}
-        onAdd={() => setCreateOpen(true)}
-        onDelete={handleDelete}
-        canDelete={forecasts.length > 1}
-        onRename={(name) => dataHook.renameForecast(switching ? centerId : activeForecastId, name)}
-        onSettings={() => setSettingsOpen(true)}
-      />
+      {/* While switching, the bar floats fixed over the carousel. In the normal
+          view it lives inside the scroll content (below) so it scrolls out of
+          sight as you scroll, while staying tappable on load. */}
+      {switching && <ScenarioBar {...barProps} />}
 
       <div className="app-shell has-scenario-bar" style={{ overflow: 'hidden' }}>
         {switching ? (
@@ -114,6 +119,7 @@ function AppShell({ dataHook, settingsProps }) {
           </>
         ) : (
           <div className="page-content">
+            <ScenarioBar {...barProps} />
             <div className="scenario-stage" key={activeForecastId}>
               <Dashboard
                 {...dataHook}
