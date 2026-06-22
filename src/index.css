@@ -1031,10 +1031,11 @@ a { text-decoration: none; color: inherit; }
 .scenario-bar {
   position: fixed;
   top: 0; left: 0; right: 0;
-  /* Lower paint order than the content so the rounded surface tucks in front of
-     it (the "peek behind" look). The content/carousel layers above it set
-     pointer-events: none on their empty regions, so clicks still reach the bar. */
-  z-index: 1;
+  /* Strictly below the page content: the scrolling content paints over the bar
+     and hides it as you scroll. On load the content's transparent top spacer
+     leaves the bar visible, and that spacer is click-through so the bar's
+     controls stay reachable. */
+  z-index: 0;
   height: calc(var(--safe-top) + 56px);
   /* Controls sit in the upper area, clear of the 12px the content overlaps. */
   padding: var(--safe-top) 16px 14px 20px;
@@ -1116,11 +1117,16 @@ a { text-decoration: none; color: inherit; }
   animation: fadeIn 0.3s ease;
 }
 .has-scenario-bar .page-content {
-  /* begin just under the bar's button strip; the 12px up to the bar's bottom
-     edge is where the content surface overlaps it. */
-  margin-top: calc(var(--safe-top) + 44px);
-  padding-top: 0;
-  pointer-events: auto;
+  /* The bar-height offset is PADDING inside the scroll area (not a margin), so
+     the content scrolls up and over the bar — hiding it — instead of leaving a
+     permanent gap. On load the content begins just under the bar's button
+     strip; the 12px up to the bar's bottom edge is where the rounded surface
+     overlaps it. The whole scroller is click-through so the transparent top
+     spacer lets the bar receive clicks; the opaque stage below re-enables
+     pointer events, which also keeps the gesture scrolling the content. */
+  margin-top: 0;
+  padding-top: calc(var(--safe-top) + 44px);
+  pointer-events: none;
 }
 .scenario-stage {
   position: relative;
