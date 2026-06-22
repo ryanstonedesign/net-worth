@@ -522,7 +522,6 @@ a { text-decoration: none; color: inherit; }
 .cat-card-edit:hover { background: rgba(89,135,166,0.15); color: var(--c-primary); }
 /* Inline accounts */
 .cat-accounts {
-  border-top: 1px solid rgba(200,215,220,0.45);
   padding-top: 4px;
 }
 .cat-account-row {
@@ -630,7 +629,6 @@ a { text-decoration: none; color: inherit; }
   justify-content: space-between;
   padding: 8px 0 4px;
   margin-top: 4px;
-  border-top: 1px solid rgba(200,215,220,0.45);
 }
 .cat-total-label {
   font-size: 12px;
