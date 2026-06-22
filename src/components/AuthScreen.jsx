@@ -78,13 +78,17 @@ export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, error
   const [mode, setMode] = useState('signin') // 'signin' | 'signup' | 'forgot'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [ack, setAck] = useState(false)
+
+  const passwordsMatch = password === confirmPassword
+  const showMismatch = mode === 'signup' && confirmPassword.length > 0 && !passwordsMatch
 
   const submit = async (e) => {
     e.preventDefault()
     if (!email.trim() || !password) return
-    if (mode === 'signup' && !ack) return
+    if (mode === 'signup' && (!ack || !passwordsMatch)) return
     setBusy(true)
     try {
       if (mode === 'signin') await onSignIn(email.trim(), password)
@@ -141,6 +145,24 @@ export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, error
           </div>
 
           {mode === 'signup' && (
+            <div className="form-group">
+              <label className="form-label">Confirm password</label>
+              <input
+                className="input"
+                type="password"
+                autoComplete="new-password"
+                minLength={8}
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                required
+              />
+              {showMismatch && (
+                <div className="auth-error">Passwords don't match.</div>
+              )}
+            </div>
+          )}
+
+          {mode === 'signup' && (
             <label className="auth-warn">
               <input type="checkbox" checked={ack} onChange={e => setAck(e.target.checked)} />
               <span>
@@ -155,7 +177,7 @@ export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, error
           <button
             type="submit"
             className="btn btn-primary btn-full"
-            disabled={busy || !email.trim() || !password || (mode === 'signup' && !ack)}
+            disabled={busy || !email.trim() || !password || (mode === 'signup' && (!ack || !passwordsMatch))}
           >
             {busy ? 'Working…' : mode === 'signin' ? 'Sign In' : 'Create Account'}
           </button>
