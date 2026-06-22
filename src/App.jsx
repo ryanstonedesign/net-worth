@@ -1,11 +1,13 @@
 import { useState } from 'react'
+
+const noop = () => {}
 import { useData } from './hooks/useData'
 import { useVault } from './hooks/useVault'
 import { getCurrentMonth, formatMonthDisplay } from './utils'
 import Dashboard from './pages/Dashboard'
 import PrototypeSettings from './components/PrototypeSettings'
 import ScenarioBar from './components/ScenarioBar'
-import ScenarioCarousel from './components/ScenarioCarousel'
+import ScenarioCarousel, { readonlyDashboardProps } from './components/ScenarioCarousel'
 import AuthScreen from './components/AuthScreen'
 import LockScreen from './components/LockScreen'
 import RecoveryPhraseSetup from './components/RecoveryPhraseSetup'
@@ -21,6 +23,12 @@ function AppShell({ dataHook, settingsProps }) {
   // creating a scenario so it can be renamed immediately.
   const [focusNameSignal, setFocusNameSignal] = useState(0)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  // How the live stage enters when activeForecastId changes: 'push' (slide in
+  // from the right) right after creating a scenario, 'fade' for ordinary
+  // switches. `outgoing` holds the scenario being pushed out to the left while
+  // the push plays; it's cleared when its slide-out animation finishes.
+  const [enterMode, setEnterMode] = useState('fade')
+  const [outgoing, setOutgoing] = useState(null)
 
   const { forecasts, activeForecastId } = dataHook
   const nameOf = (id) => forecasts.find(f => f.id === id)?.name ?? 'Scenario'
@@ -34,13 +42,17 @@ function AppShell({ dataHook, settingsProps }) {
   }
 
   const focusScenario = (id) => {
+    setEnterMode('fade')
     dataHook.setActiveForecast(id)
     setSwitching(false)
   }
 
   // Create + open a new scenario straight away (no naming modal), then focus the
-  // name field so the default "New scenario" can be typed over.
+  // name field so the default "New scenario" can be typed over. The new card
+  // slides in from the right while the previous one (frozen) is pushed out left.
   const handleAdd = () => {
+    setOutgoing({ id: activeForecastId }) // freeze the card leaving to the left
+    setEnterMode('push')
     dataHook.addForecast('New scenario') // forks + focuses the new scenario
     setSwitching(false)
     setFocusNameSignal(n => n + 1)
@@ -91,12 +103,38 @@ function AppShell({ dataHook, settingsProps }) {
         ) : (
           <div className="page-content">
             <ScenarioBar {...barProps} />
-            <div className="scenario-stage" key={activeForecastId}>
-              <Dashboard
-                {...dataHook}
-                selectedMonth={selectedMonth}
-                onMonthChange={setSelectedMonth}
-              />
+            <div className="scenario-stage-track">
+              {/* The scenario being left behind, frozen, sliding out to the
+                  left. Cleared once its slide finishes. */}
+              {outgoing && (
+                <div
+                  key={outgoing.id}
+                  className="scenario-stage scenario-stage--out"
+                  // animationend bubbles — only react to the slide-out itself,
+                  // not to any animation inside the frozen Dashboard.
+                  onAnimationEnd={(e) => { if (e.animationName === 'stagePushOut') setOutgoing(null) }}
+                >
+                  <Dashboard
+                    {...readonlyDashboardProps(dataHook.getForecastData(outgoing.id))}
+                    selectedMonth={selectedMonth}
+                    onMonthChange={noop}
+                  />
+                </div>
+              )}
+              <div
+                key={activeForecastId}
+                className={
+                  'scenario-stage' +
+                  (enterMode === 'push' ? ' scenario-stage--push' : '') +
+                  (outgoing ? ' scenario-stage--transitioning' : '')
+                }
+              >
+                <Dashboard
+                  {...dataHook}
+                  selectedMonth={selectedMonth}
+                  onMonthChange={setSelectedMonth}
+                />
+              </div>
             </div>
           </div>
         )}

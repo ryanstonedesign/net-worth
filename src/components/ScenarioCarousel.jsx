@@ -7,7 +7,9 @@ const noop = () => {}
 // Build the exact prop set Dashboard expects from a raw scenario data object,
 // with every getter computed from that data and every mutator stubbed out — so
 // a card renders the real net-worth view, just frozen and non-interactive.
-function readonlyDashboardProps(data) {
+// Exported so the push-in transition (App.jsx) can render the outgoing scenario
+// as a frozen card while the new one slides in.
+export function readonlyDashboardProps(data) {
   const d = data || { categories: [], snapshots: {}, goal: null }
   return {
     data: d,

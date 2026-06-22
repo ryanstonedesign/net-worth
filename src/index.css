@@ -1135,16 +1135,25 @@ a { text-decoration: none; color: inherit; }
   top: 0;
   z-index: 0;
 }
-.has-scenario-bar .page-content > .scenario-stage {
+/* The track holds the live stage and — during a "+" push — the outgoing frozen
+   stage stacked over it, giving the absolutely-positioned outgoing card a
+   positioning context and clipping the slide to the content area. */
+.has-scenario-bar .page-content > .scenario-stage-track {
   margin-top: -12px;
   z-index: 1;
-  /* Carry the month-selector clearance so the light surface extends to the very
-     bottom of the scroll. */
-  padding-bottom: calc(var(--safe-bottom) + 132px);
+}
+.scenario-stage-track {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  /* Clip the cards sliding in/out so neither bleeds past the page edges. The
+     month selector is fixed (no transform on the track), so it stays put. */
+  overflow: hidden;
 }
 .scenario-stage {
   position: relative;
-  min-height: 100%;
+  flex: 1;
   pointer-events: auto;
   border-radius: 26px 26px 0 0;
   box-shadow: 0 -6px 22px rgba(15,25,30,0.20);
@@ -1152,6 +1161,9 @@ a { text-decoration: none; color: inherit; }
     radial-gradient(ellipse 70% 55% at 12% 8%, rgba(243,246,249,0.75) 0%, transparent 60%),
     radial-gradient(ellipse 55% 45% at 88% 18%, rgba(248,250,252,0.65) 0%, transparent 58%),
     var(--c-bg);
+  /* Carry the month-selector clearance so the light surface extends to the very
+     bottom of the scroll. */
+  padding-bottom: calc(var(--safe-bottom) + 132px);
   animation: stageIn 0.32s cubic-bezier(0.32, 0.72, 0, 1);
 }
 /* Opacity-only: a transform here would make the stage a containing block for
@@ -1159,6 +1171,34 @@ a { text-decoration: none; color: inherit; }
 @keyframes stageIn {
   from { opacity: 0; }
   to   { opacity: 1; }
+}
+
+/* ── New-scenario push: the new card slides in from the right while the
+   previous one is pushed out to the left. Subtle ease-out, no spring. ── */
+.scenario-stage--push {
+  animation: stagePushIn 0.34s ease-out;
+}
+@keyframes stagePushIn {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+.scenario-stage--out {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  animation: stagePushOut 0.34s ease-out forwards;
+}
+@keyframes stagePushOut {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-100%); }
+}
+/* The outgoing card's month selector is hidden (it isn't a live control), and
+   the incoming one's is too for the brief push — a transform reparents the
+   fixed selector to the stage, which would otherwise flick it out of place. */
+.scenario-stage--out .month-float,
+.scenario-stage--transitioning .month-float {
+  display: none;
 }
 
 /* ── Scenario switching carousel ── */
