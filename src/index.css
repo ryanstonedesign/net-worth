@@ -1116,19 +1116,21 @@ a { text-decoration: none; color: inherit; }
   animation: fadeIn 0.3s ease;
 }
 .has-scenario-bar .page-content {
-  /* The bar is the first child of this scroll area, so no top offset is needed:
-     the content scrolls up and over the bar (hiding it) and the bar stays fully
-     interactive on load. */
+  /* The bar is the first child of this scroll area, so no top offset is needed.
+     The dark backdrop matches the bar so the area revealed behind the scrolling
+     card reads as one continuous surface with it. */
   margin-top: 0;
   padding-top: 0;
   pointer-events: auto;
+  background: var(--c-ink);
 }
-/* In the normal view the bar scrolls with the content instead of floating. It
-   sits below the stage (z-index) so the opaque stage paints over it as it
-   scrolls up, and the stage's rounded top tucks 12px behind the bar's bottom
-   edge for the "peek behind" look on load. */
+/* In the normal view the bar stays pinned in place (sticky) but sits below the
+   stage in z-order, so the opaque card slides up in front of it as you scroll
+   — hiding it — while it remains fully interactive on load. Sticky (not a
+   pointer-events trick) keeps scrolling working. */
 .page-content > .scenario-bar {
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 0;
 }
 .has-scenario-bar .page-content > .scenario-stage {
