@@ -259,14 +259,18 @@ export default function Dashboard({
     }
   }
 
-  // Months-to-goal: use full history slope for stability across range changes
+  // Months-to-goal: use full history slope for stability across range changes.
+  // Measure the gap from the month being viewed — displayNetWorth is the
+  // projected value on estimated months (getNetWorth is 0 there, having no
+  // snapshot), so future months count down toward the goal instead of all
+  // reporting the same goal/slope distance.
   const goalSlope = history.length >= 2
     ? (history[history.length - 1].netWorth - history[0].netWorth) / (history.length - 1)
     : null
-  const monthsToGoal = goal != null && goalSlope != null && goalSlope > 0 && netWorth < goal
-    ? Math.ceil((goal - netWorth) / goalSlope)
+  const monthsToGoal = goal != null && goalSlope != null && goalSlope > 0 && displayNetWorth < goal
+    ? Math.ceil((goal - displayNetWorth) / goalSlope)
     : null
-  const goalReached = goal != null && netWorth >= goal
+  const goalReached = goal != null && displayNetWorth >= goal
 
   const goalLabel = goalReached
     ? 'Goal reached'
