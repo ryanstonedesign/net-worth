@@ -134,7 +134,6 @@ export default function CategoryCard({ category, snapshot, contributions = {}, c
                           }}
                           onBlur={handleContribBlur}
                         />
-                        {!showingEst && <span className="cat-contrib-suffix">/mo</span>}
                       </div>
                     )
                   })()}
