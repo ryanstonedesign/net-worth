@@ -558,8 +558,11 @@ a { text-decoration: none; color: inherit; }
 }
 .cat-account-input:focus { border-bottom-color: var(--c-primary); }
 .cat-account-input::placeholder { color: rgba(85,99,109,0.4); }
-/* Read-only projected value shown on future (estimated) months */
-.cat-account-est {
+/* Read-only projected value shown on future (estimated) months.
+   The compound selector ensures the muted color also wins on contribution
+   inputs, whose base rule is defined later in the cascade. */
+.cat-account-est,
+.cat-contrib-input.cat-account-est {
   color: var(--c-ink-mute);
   opacity: 0.75;
 }
