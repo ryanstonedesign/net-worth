@@ -1103,11 +1103,12 @@ a { text-decoration: none; color: inherit; }
   height: calc(var(--safe-top) + 96px);
   z-index: 15;
   pointer-events: none;
+  /* App background colour (--c-bg #dfe6ed), fading to transparent. */
   background: linear-gradient(
     to bottom,
-    rgba(255,255,255,0.92) 0%,
-    rgba(255,255,255,0.7) 45%,
-    rgba(255,255,255,0) 100%
+    rgba(223,230,237,0.92) 0%,
+    rgba(223,230,237,0.7) 45%,
+    rgba(223,230,237,0) 100%
   );
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
