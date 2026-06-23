@@ -1,39 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
-
 // Floating top nav, modern style: a circular menu button (top left) that opens
-// the side nav, the active scenario name beside it (tap to rename), and a
-// circular settings button (top right). No surface of its own — the buttons
-// float over the page content.
-export default function TopNav({ name, focusNameSignal, onMenu, onRename, onSettings }) {
-  const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState(name)
-  const inputRef = useRef(null)
-  // Seed with the mount value so we only react to genuine bumps, not to mounting.
-  const lastFocusSignalRef = useRef(focusNameSignal)
-
-  // Keep the field in sync with the shown scenario whenever we're not editing.
-  useEffect(() => { if (!editing) setDraft(name) }, [name, editing])
-
-  // When the parent bumps the signal (e.g. right after creating a scenario),
-  // drop into edit mode with the name selected so it can be typed over.
-  useEffect(() => {
-    if (focusNameSignal === lastFocusSignalRef.current) return
-    lastFocusSignalRef.current = focusNameSignal
-    setEditing(true)
-    setDraft(name)
-    const id = requestAnimationFrame(() => {
-      const el = inputRef.current
-      if (el) { el.focus(); el.select() }
-    })
-    return () => cancelAnimationFrame(id)
-  }, [focusNameSignal]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const commit = () => {
-    setEditing(false)
-    const clean = draft.trim()
-    if (clean && clean !== name) onRename?.(clean)
-  }
-
+// the side nav, the active scenario name beside it, and a circular settings
+// button (top right). No surface of its own — the buttons float over the page
+// content. Renaming lives in the side nav's per-scenario action menu.
+export default function TopNav({ name, onMenu, onSettings }) {
   return (
     <div className="top-nav">
       <div className="top-nav-left">
@@ -44,33 +13,7 @@ export default function TopNav({ name, focusNameSignal, onMenu, onRename, onSett
             <line x1="3" y1="18" x2="21" y2="18" />
           </svg>
         </button>
-        <input
-          ref={inputRef}
-          className={`top-nav-name${editing ? ' editing' : ''}`}
-          value={draft}
-          size={Math.max(2, draft.length)}
-          maxLength={40}
-          aria-label="Scenario name"
-          onFocus={e => { setEditing(true); e.target.select() }}
-          onChange={e => setDraft(e.target.value)}
-          onBlur={commit}
-          onKeyDown={e => {
-            if (e.key === 'Enter') inputRef.current?.blur()
-            if (e.key === 'Escape') { setDraft(name); inputRef.current?.blur() }
-          }}
-        />
-        {editing && (
-          <button
-            className="top-nav-check"
-            // preventDefault keeps focus, then blur commits via onBlur (single path)
-            onMouseDown={e => { e.preventDefault(); inputRef.current?.blur() }}
-            aria-label="Save scenario name"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </button>
-        )}
+        <span className="top-nav-name">{name}</span>
       </div>
 
       {onSettings && (
