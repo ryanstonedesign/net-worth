@@ -3,13 +3,6 @@ import { formatCurrency } from '../utils'
 
 const CELL = 1.35 // em — height of one digit cell and of the masked window
 
-// The entrance roll should play once, on the app's first paint of the hero —
-// not every time a fresh view mounts. Entering/exiting the scenario switcher
-// mounts new Dashboards, and we don't want the number to roll on those. This
-// module-level latch flips after the first RollingNumber mounts so only that
-// initial instance animates its entrance; every later mount appears in place.
-let firstMountDone = false
-
 // One digit position rendered as a vertical reel of 0-9 (twice, so it can spin
 // a full loop). It rolls THROUGH the intermediate digits to reach its target.
 // On the entrance (page load only) it spins a full loop into place; on an
@@ -55,12 +48,10 @@ function Digit({ value, animateEntrance, enterDelay }) {
   )
 }
 
-export default function RollingNumber({ value }) {
-  // Capture once, at this instance's first render: the very first RollingNumber
-  // in the session animates its entrance, later ones (switcher mounts) don't.
-  const entranceRef = useRef(null)
-  if (entranceRef.current === null) entranceRef.current = !firstMountDone
-  useEffect(() => { firstMountDone = true }, [])
+export default function RollingNumber({ value, animateEntrance = true }) {
+  // Roll the entrance on mount when asked (page load + scenario switches both
+  // remount the hero). Captured once so a later value change doesn't replay it.
+  const entranceRef = useRef(animateEntrance)
 
   const str = formatCurrency(Math.round(value || 0))
   let digitIdx = 0

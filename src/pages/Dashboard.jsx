@@ -7,11 +7,6 @@ import EditCategorySheet from '../components/EditCategorySheet'
 import Modal from '../components/Modal'
 import { formatCurrency, formatCompact, formatMonthDisplay, getAdjacentMonth, getCurrentMonth, parseAmount } from '../utils'
 
-// Latches after the first Dashboard chart appears (page load) so a Dashboard
-// remounted by a scenario switch doesn't redraw, while time-range changes
-// (same instance staying mounted) still do.
-let appChartShown = false
-
 const RANGE_OPTIONS = ['1M', '3M', '6M', '1Y', 'custom']
 const RANGE_COUNTS   = { '1M': 2,  '3M': 3,  '6M': 6,  '1Y': 12 }
 const FORECAST_MONTHS = { '1M': 1, '3M': 3,  '6M': 6,  '1Y': 12 }
@@ -173,6 +168,7 @@ export default function Dashboard({
   data,
   selectedMonth,
   onMonthChange,
+  animateEntrance = true,
   goal,
   setGoal,
   addCategoryWithAccounts,
@@ -200,14 +196,13 @@ export default function Dashboard({
   const [resetNonce, setResetNonce] = useState(0) // bump to remount cards after a reset
   const [timeRange, setTimeRange] = useState('1Y')
 
-  // Chart draw animation: play on this instance's first chart only when it's the
-  // app's page-load Dashboard; once mounted, time-range changes (which remount
-  // the chart) always animate.
-  const chartPageLoadRef = useRef(null)
-  if (chartPageLoadRef.current === null) chartPageLoadRef.current = !appChartShown
+  // Chart draw animation: this instance's first chart draws only when
+  // animateEntrance is set (page load and scenario switches — both remount the
+  // Dashboard; the frozen outgoing card passes false). Once mounted, time-range
+  // changes (which remount the chart) always animate.
   const dashMountedRef = useRef(false)
-  useEffect(() => { appChartShown = true; dashMountedRef.current = true }, [])
-  const chartAnimate = dashMountedRef.current ? true : chartPageLoadRef.current
+  useEffect(() => { dashMountedRef.current = true }, [])
+  const chartAnimate = dashMountedRef.current ? true : animateEntrance
 
   const currentMonth = getCurrentMonth()
   const [customYear, setCustomYear] = useState(currentMonth.slice(0, 4))
@@ -323,7 +318,7 @@ export default function Dashboard({
       <div className="hero">
         <div className="hero-eyebrow">Net Worth</div>
         <div className={`hero-amount${isEstimated ? ' estimated' : ''}`}>
-          <RollingNumber value={displayNetWorth} />
+          <RollingNumber value={displayNetWorth} animateEntrance={animateEntrance} />
         </div>
         <div className={`hero-delta-line${(isEstimated ? estDelta : delta) > 0 ? ' positive' : (isEstimated ? estDelta : delta) < 0 ? ' negative' : ''}`}>
           <span>
