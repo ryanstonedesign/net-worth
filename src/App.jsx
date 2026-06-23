@@ -21,9 +21,6 @@ import RestoreAccessScreen from './components/RestoreAccessScreen'
 function AppShell({ dataHook, settingsProps }) {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth)
   const [menuOpen, setMenuOpen] = useState(false)
-  // Bumped to tell the top nav to focus its name field — used right after
-  // creating a scenario so it can be renamed immediately.
-  const [focusNameSignal, setFocusNameSignal] = useState(0)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [stickerOpen, setStickerOpen] = useState(false)
   // How the live stage enters when activeForecastId changes: 'push' (slide in
@@ -50,9 +47,8 @@ function AppShell({ dataHook, settingsProps }) {
   const handleAdd = () => {
     setOutgoing({ id: activeForecastId }) // freeze the card leaving to the left
     setEnterMode('push')
-    dataHook.addForecast('New scenario') // forks + focuses the new scenario
+    dataHook.addForecast('New scenario') // forks + opens the new scenario
     setMenuOpen(false)
-    setFocusNameSignal(n => n + 1)
   }
 
   const handleDelete = (id) => {
@@ -71,15 +67,14 @@ function AppShell({ dataHook, settingsProps }) {
         onSelect={handleSelect}
         onAdd={handleAdd}
         onDelete={handleDelete}
+        onRename={(id, name) => dataHook.renameForecast(id, name)}
       />
 
       <div className={`app-shell${menuOpen ? ' nav-open' : ''}`} style={{ overflow: 'hidden' }}>
         <div className="top-nav-fade" />
         <TopNav
           name={barName}
-          focusNameSignal={focusNameSignal}
           onMenu={() => setMenuOpen(true)}
-          onRename={(name) => dataHook.renameForecast(activeForecastId, name)}
           onSettings={() => setSettingsOpen(true)}
         />
         <div className="page-content">
