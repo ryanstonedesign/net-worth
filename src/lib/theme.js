@@ -31,6 +31,22 @@ export const TOKEN_GROUPS = [
     ],
   },
   {
+    title: 'Card',
+    kind: 'color',
+    tokens: [
+      { var: '--card-border-color', label: 'Card border' },
+    ],
+  },
+  {
+    title: 'Shadows',
+    kind: 'text',
+    tokens: [
+      { var: '--shadow-card', label: 'Card shadow' },
+      { var: '--shadow-btn-primary', label: 'Primary button shadow' },
+      { var: '--shadow-btn-secondary', label: 'Raised / secondary shadow' },
+    ],
+  },
+  {
     title: 'Shape',
     kind: 'size',
     tokens: [

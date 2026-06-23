@@ -109,9 +109,9 @@ function TokenGroup({ group, onEdit }) {
 
 /* ── Gallery specimens ─────────────────────────────────────────── */
 
-function Specimen({ label, full, children }) {
+function Specimen({ label, full, surface, children }) {
   return (
-    <div className={'ds-specimen' + (full ? ' ds-specimen-full' : '')}>
+    <div className={'ds-specimen' + (full ? ' ds-specimen-full' : '') + (surface ? ' ds-specimen-surface' : '')}>
       <div className="ds-specimen-stage">{children}</div>
       <div className="ds-specimen-label">{label}</div>
     </div>
@@ -173,8 +173,11 @@ function Gallery() {
 
       <div className="ds-group-title">Inputs</div>
       <div className="ds-gallery">
-        <Specimen label="input" full>
+        <Specimen label="input · primary" full>
           <input className="input" placeholder="e.g. Retirement" defaultValue="Retirement" />
+        </Specimen>
+        <Specimen label="input-secondary" full>
+          <input className="input-secondary" placeholder="0" defaultValue="12,500" />
         </Specimen>
         <Specimen label="input · placeholder" full>
           <input className="input" placeholder="Account name" />
@@ -196,13 +199,13 @@ function Gallery() {
 
       <div className="ds-group-title">Surfaces</div>
       <div className="ds-gallery">
-        <Specimen label="card" full>
+        <Specimen label="card" full surface>
           <div className="card" style={{ padding: '16px 20px' }}>
             <div className="form-label" style={{ marginBottom: 6 }}>Retirement</div>
             <div className="hero-amount" style={{ fontSize: 24, margin: 0 }}>$128,400</div>
           </div>
         </Specimen>
-        <Specimen label="summary-row" full>
+        <Specimen label="summary-row" full surface>
           <div className="summary-row" style={{ padding: 0, width: '100%' }}>
             <div className="card summary-cell assets">
               <div className="summary-cell-label">Assets</div>

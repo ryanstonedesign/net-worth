@@ -11,6 +11,9 @@
   --c-bg: #dfe6ed;
   --c-danger: #EF4444;
 
+  /* Surface / card customisation */
+  --card-border-color: #ffffff;
+
   --r-card: 32px;
   --r-btn: 16px;
   --font: 'Afacad', system-ui, sans-serif;
@@ -117,14 +120,15 @@ a { text-decoration: none; color: inherit; }
   z-index: -1;
   pointer-events: none;
 }
-/* 1px gradient border — white, fading from full opacity at top to 0 at bottom. */
+/* 1px gradient border — fades from the card border colour at the top to 0 at
+   the bottom. Drive the start colour from a token so it can be customised. */
 .card::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);
+  background: linear-gradient(to bottom, var(--card-border-color) 0%, transparent 100%);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -223,6 +227,24 @@ a { text-decoration: none; color: inherit; }
 }
 .input:focus { border-color: var(--c-primary); }
 .input::placeholder { color: var(--c-ink-mute); }
+
+/* Secondary input — matches the account-value field: tighter, weightier,
+   for compact numeric / inline edits beside the primary input style. */
+.input-secondary {
+  width: 100%;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--c-ink);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.input-secondary:focus { border-color: var(--c-primary); }
+.input-secondary::placeholder { color: var(--c-ink-mute); font-weight: 500; }
 
 /* ── Bottom nav ── */
 .bottom-nav {
@@ -1656,6 +1678,17 @@ a { text-decoration: none; color: inherit; }
   flex-wrap: wrap;
   gap: 10px;
   min-height: 40px;
+  /* Own stacking context so a card's drop-shadow layer (.card::after, z-index
+     -1) paints against this stage instead of escaping behind the page. */
+  position: relative;
+  z-index: 0;
+}
+/* Show surfaces on the real app backdrop, with room to breathe, so their
+   drop shadows read just like they do in the app. */
+.ds-specimen-surface .ds-specimen-stage {
+  background: var(--c-bg);
+  border-radius: 14px;
+  padding: 20px 16px;
 }
 .ds-specimen-label {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
