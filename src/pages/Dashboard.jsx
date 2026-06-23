@@ -259,14 +259,26 @@ export default function Dashboard({
     }
   }
 
-  // Months-to-goal: use full history slope for stability across range changes
-  const goalSlope = history.length >= 2
-    ? (history[history.length - 1].netWorth - history[0].netWorth) / (history.length - 1)
-    : null
-  const monthsToGoal = goal != null && goalSlope != null && goalSlope > 0 && netWorth < goal
-    ? Math.ceil((goal - netWorth) / goalSlope)
-    : null
-  const goalReached = goal != null && netWorth >= goal
+  // Time-to-goal: walk the same forecast model the chart draws, so the label and
+  // the projected line always agree. Use the selected month's effective net
+  // worth (forecast value on estimated months, real value otherwise) — not the
+  // raw snapshot, which is 0 on un-entered future months and would otherwise
+  // make the estimate blow up. Project far enough ahead to find the crossing
+  // even when the goal is beyond the visible range.
+  const goalReached = goal != null && displayNetWorth >= goal
+  let monthsToGoal = null
+  if (goal != null && !goalReached && lastDataMonth) {
+    const GOAL_HORIZON = 600 // look up to ~50 years ahead
+    const goalForecast = generateForecast(
+      data.categories, accountModels, data.snapshots, data.contributions || {},
+      lastDataMonth, GOAL_HORIZON,
+    )
+    const crossing = goalForecast.find(d => d.netWorth >= goal)
+    if (crossing) {
+      const months = monthIndex(crossing.month) - monthIndex(selectedMonth)
+      if (months > 0) monthsToGoal = months
+    }
+  }
 
   const goalLabel = goalReached
     ? 'Goal reached'
