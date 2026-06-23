@@ -168,11 +168,11 @@ a { text-decoration: none; color: inherit; }
   box-shadow: var(--shadow-neu-hover);
 }
 .btn-primary:active {
-  /* Settle (flatter elevation) + lighten + a slight scale-up. */
+  /* Lift (deeper elevation) + lighten + a slight scale-up. */
   transform: scale(1.035);
   filter: none;
   background: #6f99b3;
-  box-shadow: 2px 2px 5px rgba(174,182,192,0.3), -2px -2px 5px rgba(255,255,255,0.4), inset 1px 1px 0 rgba(255,255,255,0.5);
+  box-shadow: 9px 9px 20px rgba(174,182,192,0.34), -9px -9px 20px rgba(255,255,255,0.55), inset 1px 1px 0 rgba(255,255,255,0.5);
 }
 .btn-secondary {
   background: var(--c-surface);
@@ -188,7 +188,7 @@ a { text-decoration: none; color: inherit; }
   transform: scale(1.035);
   filter: none;
   background: #ffffff;
-  box-shadow: 2px 2px 5px rgba(174,182,192,0.28), -2px -2px 5px rgba(255,255,255,0.6), inset 1px 1px 0 rgba(255,255,255,0.85);
+  box-shadow: 9px 9px 20px rgba(174,182,192,0.32), -9px -9px 20px rgba(255,255,255,0.65), inset 1px 1px 0 rgba(255,255,255,0.85);
 }
 .btn-tertiary {
   background: transparent;
@@ -219,7 +219,7 @@ a { text-decoration: none; color: inherit; }
 .btn-icon:active {
   transform: scale(1.05);
   background: #f6f9fc;
-  box-shadow: 2px 2px 5px rgba(174,182,192,0.28), -2px -2px 5px rgba(255,255,255,0.6);
+  box-shadow: 8px 8px 18px rgba(174,182,192,0.32), -8px -8px 18px rgba(255,255,255,0.6);
 }
 
 /* ── Input ── */
@@ -1140,7 +1140,7 @@ a { text-decoration: none; color: inherit; }
 .fab:active {
   transform: scale(1.06);
   background: #f3f7fb;
-  box-shadow: 2px 2px 6px rgba(174,182,192,0.3), -2px -2px 6px rgba(255,255,255,0.55);
+  box-shadow: 9px 9px 22px rgba(174,182,192,0.34), -9px -9px 22px rgba(255,255,255,0.6);
 }
 .fab-sm { width: 36px; height: 36px; }
 .fab-sm svg { width: 18px; height: 18px; }
