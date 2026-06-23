@@ -131,7 +131,7 @@ export default function PrototypeSettings({
   open, onClose,
   scenario, onScenarioChange, onSignOut, onChangePassword,
   onGenerateRecovery, onDeleteAccount,
-  categories, selectedMonth, onImport,
+  categories, selectedMonth, onImport, onOpenStickerSheet,
 }) {
   const [view, setView] = useState('main')
   const [recoveryPhrase, setRecoveryPhrase] = useState(null)
@@ -217,6 +217,16 @@ export default function PrototypeSettings({
                     </p>
                   )}
                 </>
+              )}
+
+              {onOpenStickerSheet && (
+                <button
+                  className="btn btn-secondary btn-full"
+                  style={{ marginTop: 16 }}
+                  onClick={() => { onOpenStickerSheet(); close() }}
+                >
+                  Design System
+                </button>
               )}
 
               {onChangePassword && (

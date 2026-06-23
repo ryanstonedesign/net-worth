@@ -6,6 +6,7 @@ import { useVault } from './hooks/useVault'
 import { getCurrentMonth, formatMonthDisplay } from './utils'
 import Dashboard from './pages/Dashboard'
 import PrototypeSettings from './components/PrototypeSettings'
+import StickerSheet from './components/StickerSheet'
 import ScenarioBar from './components/ScenarioBar'
 import ScenarioCarousel, { readonlyDashboardProps } from './components/ScenarioCarousel'
 import AuthScreen from './components/AuthScreen'
@@ -23,6 +24,7 @@ function AppShell({ dataHook, settingsProps }) {
   // creating a scenario so it can be renamed immediately.
   const [focusNameSignal, setFocusNameSignal] = useState(0)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [stickerOpen, setStickerOpen] = useState(false)
   // How the live stage enters when activeForecastId changes: 'push' (slide in
   // from the right) right after creating a scenario, 'fade' for ordinary
   // switches. `outgoing` holds the scenario being pushed out to the left while
@@ -148,8 +150,11 @@ function AppShell({ dataHook, settingsProps }) {
         categories={dataHook.data.categories}
         selectedMonth={selectedMonth}
         onImport={dataHook.bulkImport}
+        onOpenStickerSheet={() => { setSettingsOpen(false); setStickerOpen(true) }}
         {...settingsProps}
       />
+
+      {stickerOpen && <StickerSheet onClose={() => setStickerOpen(false)} />}
     </>
   )
 }
