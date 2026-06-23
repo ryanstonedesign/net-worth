@@ -5,6 +5,7 @@
   --c-tertiary: #4F9289;
   --c-surface: #F7F7F8;
   --c-surface-muted: #E8E8E9;
+  --c-tertiary-muted: #DDDEDF;
   --c-border: #D3D4D5;
   --c-ink: #1F2529;
   --c-ink-mute: #55636D;
@@ -1012,7 +1013,7 @@ a { text-decoration: none; color: inherit; }
   padding: 8px;
   border-radius: 999px;
   font-size: 13px; font-weight: 600;
-  transition: color 0.2s, transform 0.12s ease;
+  transition: color 0.2s, transform 0.12s ease, background 0.12s ease;
   color: var(--c-ink-mute);
   text-align: center;
   cursor: pointer;
@@ -1025,7 +1026,7 @@ a { text-decoration: none; color: inherit; }
   color: var(--c-primary);
 }
 /* Pressed feedback while held; springs back on release. */
-.type-toggle-btn:active { transform: scale(0.93); }
+.type-toggle-btn:active { transform: scale(0.93); background: var(--c-tertiary-muted); }
 
 /* ── Color swatches ── */
 .swatch-row { display: flex; gap: 8px; flex-wrap: wrap; }

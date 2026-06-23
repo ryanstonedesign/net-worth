@@ -26,6 +26,7 @@ export const TOKEN_GROUPS = [
       { var: '--c-ink-mute', label: 'Ink muted' },
       { var: '--c-surface', label: 'Surface' },
       { var: '--c-surface-muted', label: 'Surface muted' },
+      { var: '--c-tertiary-muted', label: 'Tertiary muted (pressed)' },
       { var: '--c-border', label: 'Border' },
       { var: '--c-bg', label: 'App background' },
     ],
