@@ -3,24 +3,25 @@ import { useState } from 'react'
 const noop = () => {}
 import { useData } from './hooks/useData'
 import { useVault } from './hooks/useVault'
-import { getCurrentMonth, formatMonthDisplay } from './utils'
+import { getCurrentMonth } from './utils'
 import Dashboard from './pages/Dashboard'
 import PrototypeSettings from './components/PrototypeSettings'
 import StickerSheet from './components/StickerSheet'
-import ScenarioBar from './components/ScenarioBar'
-import ScenarioCarousel, { readonlyDashboardProps } from './components/ScenarioCarousel'
+import TopNav from './components/TopNav'
+import SideNav from './components/SideNav'
+import { readonlyDashboardProps } from './components/readonlyDashboard'
 import AuthScreen from './components/AuthScreen'
 import LockScreen from './components/LockScreen'
 import RecoveryPhraseSetup from './components/RecoveryPhraseSetup'
 import RestoreAccessScreen from './components/RestoreAccessScreen'
 
-// Shared shell for both vaulted and legacy modes: the dark scenario bar over the
-// page content (or the scenario-switching carousel), plus the settings FAB.
+// Shared shell for both vaulted and legacy modes: a side nav drawer behind the
+// page content, a floating top nav (menu + scenario name + settings), and the
+// scenario "push" entrance when a new scenario is created.
 function AppShell({ dataHook, settingsProps }) {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth)
-  const [switching, setSwitching] = useState(false)
-  const [centerId, setCenterId] = useState(dataHook.activeForecastId)
-  // Bumped to tell the scenario bar to focus its name field — used right after
+  const [menuOpen, setMenuOpen] = useState(false)
+  // Bumped to tell the top nav to focus its name field — used right after
   // creating a scenario so it can be renamed immediately.
   const [focusNameSignal, setFocusNameSignal] = useState(0)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -34,19 +35,13 @@ function AppShell({ dataHook, settingsProps }) {
 
   const { forecasts, activeForecastId } = dataHook
   const nameOf = (id) => forecasts.find(f => f.id === id)?.name ?? 'Scenario'
-  const barName = switching ? nameOf(centerId) : nameOf(activeForecastId)
+  const barName = nameOf(activeForecastId)
 
-  const toggleSwitch = () => {
-    setSwitching(s => {
-      if (!s) setCenterId(activeForecastId) // open centred on the focused scenario
-      return !s
-    })
-  }
-
-  const focusScenario = (id) => {
+  // Switch to a scenario from the side nav, then close the drawer.
+  const handleSelect = (id) => {
     setEnterMode('fade')
     dataHook.setActiveForecast(id)
-    setSwitching(false)
+    setMenuOpen(false)
   }
 
   // Create + open a new scenario straight away (no naming modal), then focus the
@@ -56,89 +51,78 @@ function AppShell({ dataHook, settingsProps }) {
     setOutgoing({ id: activeForecastId }) // freeze the card leaving to the left
     setEnterMode('push')
     dataHook.addForecast('New scenario') // forks + focuses the new scenario
-    setSwitching(false)
+    setMenuOpen(false)
     setFocusNameSignal(n => n + 1)
   }
 
-  const handleDelete = () => {
+  const handleDelete = (id) => {
     if (forecasts.length <= 1) return
-    const idx = forecasts.findIndex(f => f.id === centerId)
-    const neighbour = forecasts[idx + 1] || forecasts[idx - 1]
-    dataHook.deleteForecast(centerId)
-    if (neighbour) setCenterId(neighbour.id)
-  }
-
-  const barProps = {
-    name: barName,
-    switching,
-    focusNameSignal,
-    onToggleSwitch: toggleSwitch,
-    onAdd: handleAdd,
-    onDelete: handleDelete,
-    canDelete: forecasts.length > 1,
-    onRename: (name) => dataHook.renameForecast(switching ? centerId : activeForecastId, name),
-    onSettings: () => setSettingsOpen(true),
+    dataHook.deleteForecast(id)
   }
 
   return (
     <>
       <div className="app-bg" />
-      {/* While switching, the bar floats fixed over the carousel. In the normal
-          view it lives inside the scroll content (below) so it scrolls out of
-          sight as you scroll, while staying tappable on load. */}
-      {switching && <ScenarioBar {...barProps} />}
 
-      <div className="app-shell has-scenario-bar" style={{ overflow: 'hidden' }}>
-        {switching ? (
-          <>
-            <ScenarioCarousel
-              key={forecasts.map(f => f.id).join('|')}
-              scenarios={forecasts}
-              centerId={centerId}
-              selectedMonth={selectedMonth}
-              getForecastData={dataHook.getForecastData}
-              onCenterChange={setCenterId}
-              onFocus={focusScenario}
-            />
-            <div className="scenario-switch-month">{formatMonthDisplay(selectedMonth)}</div>
-          </>
-        ) : (
-          <div className="page-content">
-            <ScenarioBar {...barProps} />
-            <div className="scenario-stage-track">
-              {/* The scenario being left behind, frozen, sliding out to the
-                  left. Cleared once its slide finishes. */}
-              {outgoing && (
-                <div
-                  key={outgoing.id}
-                  className="scenario-stage scenario-stage--out"
-                  // animationend bubbles — only react to the slide-out itself,
-                  // not to any animation inside the frozen Dashboard.
-                  onAnimationEnd={(e) => { if (e.animationName === 'stagePushOut') setOutgoing(null) }}
-                >
-                  <Dashboard
-                    {...readonlyDashboardProps(dataHook.getForecastData(outgoing.id))}
-                    selectedMonth={selectedMonth}
-                    onMonthChange={noop}
-                  />
-                </div>
-              )}
+      <SideNav
+        open={menuOpen}
+        scenarios={forecasts}
+        activeId={activeForecastId}
+        onSelect={handleSelect}
+        onAdd={handleAdd}
+        onDelete={handleDelete}
+      />
+
+      <div className={`app-shell${menuOpen ? ' nav-open' : ''}`} style={{ overflow: 'hidden' }}>
+        <TopNav
+          name={barName}
+          focusNameSignal={focusNameSignal}
+          onMenu={() => setMenuOpen(true)}
+          onRename={(name) => dataHook.renameForecast(activeForecastId, name)}
+          onSettings={() => setSettingsOpen(true)}
+        />
+        <div className="page-content">
+          <div className="scenario-stage-track">
+            {/* The scenario being left behind, frozen, sliding out to the
+                left. Cleared once its slide finishes. */}
+            {outgoing && (
               <div
-                key={activeForecastId}
-                className={
-                  'scenario-stage' +
-                  (enterMode === 'push' ? ' scenario-stage--push' : '') +
-                  (outgoing ? ' scenario-stage--transitioning' : '')
-                }
+                key={outgoing.id}
+                className="scenario-stage scenario-stage--out"
+                // animationend bubbles — only react to the slide-out itself,
+                // not to any animation inside the frozen Dashboard.
+                onAnimationEnd={(e) => { if (e.animationName === 'stagePushOut') setOutgoing(null) }}
               >
                 <Dashboard
-                  {...dataHook}
+                  {...readonlyDashboardProps(dataHook.getForecastData(outgoing.id))}
                   selectedMonth={selectedMonth}
-                  onMonthChange={setSelectedMonth}
+                  onMonthChange={noop}
                 />
               </div>
+            )}
+            <div
+              key={activeForecastId}
+              className={
+                'scenario-stage' +
+                (enterMode === 'push' ? ' scenario-stage--push' : '') +
+                (outgoing ? ' scenario-stage--transitioning' : '')
+              }
+            >
+              <Dashboard
+                {...dataHook}
+                selectedMonth={selectedMonth}
+                onMonthChange={setSelectedMonth}
+              />
             </div>
           </div>
+        </div>
+        {/* Tap the slid-aside content to close the drawer. */}
+        {menuOpen && (
+          <button
+            className="nav-scrim"
+            onClick={() => setMenuOpen(false)}
+            aria-label="Close scenarios menu"
+          />
         )}
       </div>
 
