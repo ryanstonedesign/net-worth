@@ -59,6 +59,18 @@ export default function TopNav({ name, focusNameSignal, onMenu, onRename, onSett
             if (e.key === 'Escape') { setDraft(name); inputRef.current?.blur() }
           }}
         />
+        {editing && (
+          <button
+            className="top-nav-check"
+            // preventDefault keeps focus, then blur commits via onBlur (single path)
+            onMouseDown={e => { e.preventDefault(); inputRef.current?.blur() }}
+            aria-label="Save scenario name"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {onSettings && (
