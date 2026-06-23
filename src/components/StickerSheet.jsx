@@ -109,6 +109,19 @@ function TokenGroup({ group, onEdit }) {
 
 /* ── Gallery specimens ─────────────────────────────────────────── */
 
+// Mirrors the real roles used across the app. Title-tier rows render in the
+// title font; the rest in the body font.
+const TYPE_SCALE = [
+  { role: 'Display', cls: 'ds-t-display', specs: '48 / 700', font: 'Title', sample: '$227,500' },
+  { role: 'Title', cls: 'ds-t-title', specs: '20 / 700', font: 'Title', sample: 'Edit Category' },
+  { role: 'Heading', cls: 'ds-t-heading', specs: '17 / 700', font: 'Title', sample: 'Retirement' },
+  { role: 'Subhead', cls: 'ds-t-subhead', specs: '15 / 700', font: 'Title', sample: 'Accounts' },
+  { role: 'Body', cls: 'ds-t-body', specs: '15 / 500', font: 'Body', sample: 'Preview demo datasets and your own saved data.' },
+  { role: 'Body small', cls: 'ds-t-small', specs: '13 / 500', font: 'Body', sample: 'Estimated annual growth, used for future estimates.' },
+  { role: 'Label', cls: 'ds-t-label', specs: '12 / 700 · caps', font: 'Body', sample: 'Section label' },
+  { role: 'Caption', cls: 'ds-t-caption', specs: '11 / 600', font: 'Body', sample: 'Dashboard' },
+]
+
 function Specimen({ label, full, surface, children }) {
   return (
     <div className={'ds-specimen' + (full ? ' ds-specimen-full' : '') + (surface ? ' ds-specimen-surface' : '')}>
@@ -225,18 +238,24 @@ function Gallery() {
         <Specimen label="badge-liability"><span className="badge badge-liability">LIABILITY</span></Specimen>
       </div>
 
-      <div className="ds-group-title">Typography</div>
-      <div className="ds-gallery">
-        <Specimen label="hero-eyebrow + hero-amount" full>
-          <div>
-            <div className="hero-eyebrow">Net worth</div>
-            <div className="hero-amount" style={{ fontSize: 40 }}>$227,500</div>
+      <div className="ds-group-title">Type scale</div>
+      <div className="ds-type-list">
+        {TYPE_SCALE.map(t => (
+          <div className="ds-type-row" key={t.role}>
+            <div className={`ds-type-sample ${t.cls}`}>{t.sample}</div>
+            <div className="ds-type-meta"><b>{t.role}</b> · {t.specs} · {t.font}</div>
           </div>
-        </Specimen>
+        ))}
+      </div>
+
+      <div className="ds-group-title">Semantic text</div>
+      <div className="ds-gallery">
         <Specimen label="hero-delta · positive" full>
           <div className="hero-delta-line positive">▲ $4,200 this month</div>
         </Specimen>
-        <Specimen label="form-label" full><div className="form-label">Section label</div></Specimen>
+        <Specimen label="hero-delta · negative" full>
+          <div className="hero-delta-line negative">▼ $1,800 this month</div>
+        </Specimen>
         <Specimen label="ink / ink-mute" full>
           <div>
             <div style={{ color: 'var(--c-ink)', fontSize: 15 }}>Primary ink text</div>

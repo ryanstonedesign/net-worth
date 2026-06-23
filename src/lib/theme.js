@@ -58,7 +58,8 @@ export const TOKEN_GROUPS = [
     title: 'Typography',
     kind: 'text',
     tokens: [
-      { var: '--font', label: 'Font family' },
+      { var: '--font-title', label: 'Title font (display, titles, headings)' },
+      { var: '--font', label: 'Body font (everything else)' },
     ],
   },
 ]
