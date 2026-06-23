@@ -74,6 +74,7 @@ function AppShell({ dataHook, settingsProps }) {
       />
 
       <div className={`app-shell${menuOpen ? ' nav-open' : ''}`} style={{ overflow: 'hidden' }}>
+        <div className="top-nav-fade" />
         <TopNav
           name={barName}
           focusNameSignal={focusNameSignal}
