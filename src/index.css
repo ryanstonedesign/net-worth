@@ -1341,11 +1341,10 @@ a { text-decoration: none; color: inherit; }
   position: relative;
   flex: 1;
   pointer-events: auto;
-  background:
-    radial-gradient(ellipse 70% 55% at 12% 8%, rgba(243,246,249,0.75) 0%, transparent 60%),
-    radial-gradient(ellipse 55% 45% at 88% 18%, rgba(248,250,252,0.65) 0%, transparent 58%),
-    var(--c-bg);
-  /* Carry the month-selector clearance so the light surface extends to the very
+  /* No background of its own — the single .app-shell gradient shows through so
+     the page reads as one continuous surface (and it stays put while the
+     content scrolls over it). */
+  /* Carry the month-selector clearance so the surface extends to the very
      bottom of the scroll. */
   padding-bottom: calc(var(--safe-bottom) + 132px);
   animation: stageIn 0.32s cubic-bezier(0.32, 0.72, 0, 1);
@@ -1371,6 +1370,14 @@ a { text-decoration: none; color: inherit; }
   inset: 0;
   z-index: 2;
   pointer-events: none;
+  /* Opaque while sliding out so it cleanly wipes left to reveal the new
+     scenario, instead of the two stages overlapping. Matches .app-shell. */
+  background:
+    radial-gradient(ellipse 70% 55% at 12% 8%, rgba(243,246,249,0.75) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 45% at 88% 18%, rgba(248,250,252,0.65) 0%, transparent 58%),
+    radial-gradient(ellipse 50% 60% at 72% 88%, rgba(220,227,234,0.55) 0%, transparent 62%),
+    radial-gradient(ellipse 60% 50% at 6% 74%, rgba(228,233,238,0.5) 0%, transparent 60%),
+    var(--c-bg);
   animation: stagePushOut 0.34s ease-out forwards;
 }
 @keyframes stagePushOut {
