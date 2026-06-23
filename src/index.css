@@ -229,14 +229,16 @@ a { text-decoration: none; color: inherit; }
 .input:focus { border-color: var(--c-primary); }
 .input::placeholder { color: var(--c-ink-mute); }
 
-/* Secondary input — matches the account-value field: tighter, weightier,
-   for compact numeric / inline edits beside the primary input style. */
+/* Secondary input — the account-value style: borderless with an underline
+   that highlights on focus, weightier text, transparent fill. For inline /
+   in-row value edits, distinct from the boxed primary input. */
 .input-secondary {
   width: 100%;
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
-  border-radius: 12px;
-  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--c-border);
+  border-radius: 0;
+  padding: 5px 2px;
   font-family: var(--font);
   font-size: 16px;
   font-weight: 600;
@@ -244,8 +246,8 @@ a { text-decoration: none; color: inherit; }
   outline: none;
   transition: border-color 0.2s;
 }
-.input-secondary:focus { border-color: var(--c-primary); }
-.input-secondary::placeholder { color: var(--c-ink-mute); font-weight: 500; }
+.input-secondary:focus { border-bottom-color: var(--c-primary); }
+.input-secondary::placeholder { color: rgba(85,99,109,0.4); font-weight: 600; }
 
 /* ── Bottom nav ── */
 .bottom-nav {
