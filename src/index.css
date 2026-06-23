@@ -90,7 +90,8 @@ a { text-decoration: none; color: inherit; }
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior-y: contain;
-  padding-top: var(--safe-top);
+  /* Clear the floating top nav (safe area + the 44px button row). */
+  padding-top: calc(var(--safe-top) + 68px);
   /* Leave room for the floating month selector (and its "Back to this month"
      button) pinned near the bottom. */
   padding-bottom: calc(var(--safe-bottom) + 132px);
@@ -1070,124 +1071,192 @@ a { text-decoration: none; color: inherit; }
 }
 .page-top-title { font-size: 28px; font-weight: 700; letter-spacing: -0.005em; }
 
-/* ── Scenario bar (dark top menu) ──
-   Shares the floating month selector's ink colour. Sits at a lower paint order
-   than the page content so the rounded content surface tucks in front of it,
-   making the bar look like it sits behind the page. */
-.scenario-bar {
-  /* Fixed only in the switching view (rendered outside the scroll area). In the
-     normal view the bar sits inside .page-content (see below), where it scrolls
-     with the content. */
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  z-index: 0;
-  height: calc(var(--safe-top) + 56px);
-  /* Controls sit in the upper area, clear of the 12px the content overlaps. */
-  padding: var(--safe-top) 16px 14px 20px;
+/* ── Floating top nav ──
+   Circular buttons that float over the page content: a menu button + the
+   scenario name on the left, settings on the right. No surface of its own. */
+.top-nav {
+  position: absolute;
+  top: calc(var(--safe-top) + 12px);
+  left: 16px;
+  right: 16px;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--c-ink);
-  color: #fff;
+  gap: 10px;
+  pointer-events: none; /* let the gap between buttons scroll the page */
 }
-.scenario-bar-left {
+.top-nav-left {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
 }
-.scenario-bar-right { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
-.scenario-bar-name {
+.top-nav > *, .top-nav-left > * { pointer-events: auto; }
+
+/* Neumorphic floating icon button */
+.fab {
+  width: 44px; height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--c-ink);
+  background: #e7edf3;
+  box-shadow: var(--shadow-btn-secondary);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.fab svg { width: 20px; height: 20px; }
+.fab:active { transform: scale(0.94); box-shadow: var(--shadow-neu-in); }
+.fab-sm { width: 36px; height: 36px; }
+.fab-sm svg { width: 18px; height: 18px; }
+
+.top-nav-name {
   font-family: var(--font);
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: #fff;
+  color: var(--c-ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 52vw;
-  /* tappable to rename */
+  max-width: 48vw;
   background: none;
   border: none;
   padding: 4px 6px;
-  margin-left: -6px;
   border-radius: 8px;
   text-align: left;
   cursor: pointer;
   outline: none;
   transition: background 0.18s, box-shadow 0.18s;
 }
-.scenario-bar-name:hover { background: rgba(255,255,255,0.1); }
-.scenario-bar-name.editing {
+.top-nav-name:hover { background: rgba(120,140,160,0.12); }
+.top-nav-name.editing {
   cursor: text;
-  background: rgba(255,255,255,0.12);
-  box-shadow: inset 0 -1.5px 0 rgba(255,255,255,0.6);
+  background: rgba(120,140,160,0.14);
+  box-shadow: inset 0 -1.5px 0 rgba(89,135,166,0.7);
 }
-.scenario-bar-btn {
-  width: 30px; height: 30px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  display: inline-flex; align-items: center; justify-content: center;
-  color: rgba(255,255,255,0.92);
+
+/* ── Side nav drawer ──
+   Fixed behind the page content; the shell slides aside (.nav-open) to reveal
+   it. Anchored to the left, full height, light like the rest of the app. */
+.side-nav {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: 82vw;
+  max-width: 360px;
+  z-index: 1; /* behind the shell (z-index 2); revealed when it slides aside */
+  display: flex;
+  flex-direction: column;
+  padding: calc(var(--safe-top) + 14px) 14px calc(var(--safe-bottom) + 20px);
+  pointer-events: none;
+  visibility: hidden;
+  /* Stay visible through the close animation, then hide. */
+  transition: visibility 0s linear 0.42s;
+}
+.side-nav.open {
+  pointer-events: auto;
+  visibility: visible;
+  transition: visibility 0s;
+}
+.side-nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 8px 4px 12px;
+}
+.side-nav-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--c-ink);
+}
+.side-nav-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.side-nav-item {
+  display: flex;
+  align-items: center;
+  border-radius: 14px;
+  transition: background 0.16s;
+}
+.side-nav-item:hover { background: rgba(120,140,160,0.1); }
+.side-nav-item.active { background: rgba(89,135,166,0.16); }
+.side-nav-item-name {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
   background: none;
   border: none;
   cursor: pointer;
-  transition: background 0.18s, color 0.18s;
+  padding: 13px 14px;
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--c-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.scenario-bar-btn svg { width: 16px; height: 16px; }
-.scenario-bar-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
-.scenario-bar-btn.is-active { background: rgba(255,255,255,0.2); color: #fff; }
-.scenario-bar-btn:disabled { opacity: 0.32; cursor: default; }
-.scenario-bar-btn.scenario-bar-danger:hover { background: rgba(239,68,68,0.28); color: #fff; }
-
-/* The shell's empty band above the content is click-through so the bar's
-   controls stay reachable; the scrolling content itself keeps pointer events
-   (so it scrolls) but starts below the bar's button strip, leaving only the
-   bar's lower edge to peek behind the rounded content surface. */
-.app-shell.has-scenario-bar { pointer-events: none; }
-/* Selected month shown below the cards so totals are comparable across scenarios.
-   Dark like the bar/rail so the whole back of the page reads dark while switching
-   (only the cards stay light) — without painting over the bar. */
-.scenario-switch-month {
+.side-nav-item.active .side-nav-item-name { color: var(--c-primary); }
+.side-nav-item-del {
   flex-shrink: 0;
-  text-align: center;
-  padding: 6px 16px calc(var(--safe-bottom) + 18px);
-  background: var(--c-ink);
-  color: rgba(255,255,255,0.9);
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  pointer-events: none;
+  width: 36px; height: 36px;
+  margin-right: 6px;
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: none;
+  border: none;
+  color: var(--c-ink-mute);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.16s, background 0.16s, color 0.16s;
+}
+.side-nav-item:hover .side-nav-item-del,
+.side-nav-item.active .side-nav-item-del { opacity: 1; }
+.side-nav-item-del svg { width: 16px; height: 16px; }
+.side-nav-item-del:hover { background: rgba(239,68,68,0.16); color: var(--c-danger); }
+
+/* The shell slides aside + scales down to reveal the drawer behind it. It paints
+   above the drawer (z-index) and is opaque, so the drawer is fully hidden until
+   the shell moves. */
+.app-shell {
+  z-index: 2;
+  background:
+    radial-gradient(ellipse 70% 55% at 12% 8%, rgba(243,246,249,0.75) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 45% at 88% 18%, rgba(248,250,252,0.65) 0%, transparent 58%),
+    radial-gradient(ellipse 50% 60% at 72% 88%, rgba(220,227,234,0.55) 0%, transparent 62%),
+    radial-gradient(ellipse 60% 50% at 6% 74%, rgba(228,233,238,0.5) 0%, transparent 60%),
+    var(--c-bg);
+  transition: transform 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+              border-radius 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+              box-shadow 0.42s ease;
+}
+.app-shell.nav-open {
+  transform: translateX(75vw) scale(0.86);
+  border-radius: 28px;
+  box-shadow: 0 24px 70px rgba(15, 25, 30, 0.4);
+}
+/* Dim + capture taps on the slid-aside content so a tap anywhere closes it. */
+.nav-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  border: none;
+  border-radius: 28px;
+  background: rgba(15, 25, 30, 0.18);
+  cursor: pointer;
   animation: fadeIn 0.3s ease;
-}
-.has-scenario-bar .page-content {
-  /* The bar is the first child of this scroll area, so no top offset is needed.
-     The dark backdrop matches the bar so the area revealed behind the scrolling
-     card reads as one continuous surface with it. */
-  margin-top: 0;
-  padding-top: 0;
-  /* The bottom clearance for the floating month selector moves onto the stage
-     below, so the stage's light surface fills it and the dark backdrop never
-     shows beneath the content. */
-  padding-bottom: 0;
-  pointer-events: auto;
-  background: var(--c-ink);
-}
-/* In the normal view the bar stays pinned in place (sticky) but sits below the
-   stage in z-order, so the opaque card slides up in front of it as you scroll
-   — hiding it — while it remains fully interactive on load. Sticky (not a
-   pointer-events trick) keeps scrolling working. */
-.page-content > .scenario-bar {
-  position: sticky;
-  top: 0;
-  z-index: 0;
 }
 /* The track holds the live stage and — during a "+" push — the outgoing frozen
    stage stacked over it, giving the absolutely-positioned outgoing card a
    positioning context and clipping the slide to the content area. */
-.has-scenario-bar .page-content > .scenario-stage-track {
-  margin-top: -12px;
+.page-content > .scenario-stage-track {
   z-index: 1;
 }
 .scenario-stage-track {
@@ -1248,62 +1317,6 @@ a { text-decoration: none; color: inherit; }
 .scenario-stage--transitioning .month-float {
   display: none;
 }
-
-/* ── Scenario switching carousel ── */
-.scenario-rail {
-  flex: 1;
-  display: flex;
-  align-items: stretch;
-  gap: 16px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
-  /* start below the bar's button strip so its controls stay clickable */
-  margin-top: calc(var(--safe-top) + 44px);
-  padding: 0 0 8px;
-  scrollbar-width: none;
-  /* dark backdrop behind the light scenario cards while switching */
-  background: var(--c-ink);
-  /* scale-down entrance reads as the current view shrinking into a card */
-  animation: railIn 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-  pointer-events: auto;
-}
-@keyframes railIn {
-  from { transform: scale(1.06); opacity: 0.3; }
-  to   { transform: scale(1); opacity: 1; }
-}
-.scenario-rail::-webkit-scrollbar { display: none; }
-.scenario-card {
-  flex: 0 0 auto;
-  width: min(82vw, 460px);
-  scroll-snap-align: center;
-  display: flex;
-  cursor: pointer;
-  pointer-events: auto;
-  transform: scale(0.86);
-  opacity: 0.55;
-  transition: transform 0.3s cubic-bezier(0.32,0.72,0,1), opacity 0.3s ease;
-}
-.scenario-card.is-center { transform: scale(1); opacity: 1; cursor: default; }
-.scenario-card:first-child { margin-left: calc((100vw - min(82vw, 460px)) / 2); }
-.scenario-card:last-child  { margin-right: calc((100vw - min(82vw, 460px)) / 2); }
-/* The card holds the real Dashboard view, frozen: clipped to the card, faded at
-   the bottom, and non-interactive so a tap focuses the card instead of hitting
-   inputs inside it. */
-.scenario-card-inner {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  border-radius: 28px;
-  pointer-events: none;
-  -webkit-mask-image: linear-gradient(to bottom, #000 80%, transparent 100%);
-          mask-image: linear-gradient(to bottom, #000 80%, transparent 100%);
-}
-/* The frozen Dashboard's floating month selector isn't part of the net-worth
-   content — hide it inside cards. */
-.scenario-card .month-float { display: none; }
 
 /* ── Misc ── */
 .divider { height: 1px; background: rgba(200,215,220,0.4); }
