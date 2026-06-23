@@ -11,6 +11,8 @@ export function readonlyDashboardProps(data) {
   const d = data || { categories: [], snapshots: {}, goal: null }
   return {
     data: d,
+    // Frozen card sliding away — don't replay the number roll / chart draw.
+    animateEntrance: false,
     goal: d.goal ?? null,
     getSnapshot: (m) => d.snapshots?.[m] || {},
     getContribution: (m) => d.contributions?.[m] || {},
