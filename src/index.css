@@ -1291,9 +1291,9 @@ a { text-decoration: none; color: inherit; }
 .popover-item-icon { display: inline-flex; flex-shrink: 0; }
 .popover-item-icon svg { width: 17px; height: 17px; }
 
-/* The shell slides aside + scales down to reveal the drawer behind it. It paints
-   above the drawer (z-index) and is opaque, so the drawer is fully hidden until
-   the shell moves. */
+/* The shell slides aside to reveal the drawer behind it (full height — no
+   scaling). It paints above the drawer (z-index) and is opaque, so the drawer
+   is fully hidden until the shell moves. */
 .app-shell {
   z-index: 2;
   background:
@@ -1307,18 +1307,19 @@ a { text-decoration: none; color: inherit; }
               box-shadow 0.42s ease;
 }
 .app-shell.nav-open {
-  transform: translateX(75vw) scale(0.86);
+  transform: translateX(82vw);
   border-radius: 28px;
-  box-shadow: 0 24px 70px rgba(15, 25, 30, 0.4);
+  box-shadow: 0 24px 70px rgba(15, 25, 30, 0.28);
 }
-/* Dim + capture taps on the slid-aside content so a tap anywhere closes it. */
+/* Light veil + capture taps on the slid-aside content so a tap anywhere
+   closes it. */
 .nav-scrim {
   position: absolute;
   inset: 0;
   z-index: 40;
   border: none;
   border-radius: 28px;
-  background: rgba(15, 25, 30, 0.18);
+  background: rgba(255, 255, 255, 0.4);
   cursor: pointer;
   animation: fadeIn 0.3s ease;
 }
