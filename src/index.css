@@ -1327,7 +1327,9 @@ a { text-decoration: none; color: inherit; }
 .nav-scrim {
   position: absolute;
   inset: 0;
-  z-index: 40;
+  /* Above the month selector (z 90), which now shares the app-shell stacking
+     context, so it can't poke through the drawer veil. */
+  z-index: 100;
   border: none;
   border-radius: 28px;
   background: rgba(255, 255, 255, 0.4);
@@ -1337,9 +1339,9 @@ a { text-decoration: none; color: inherit; }
 /* The track holds the live stage and — during a "+" push — the outgoing frozen
    stage stacked over it, giving the absolutely-positioned outgoing card a
    positioning context and clipping the slide to the content area. */
-.page-content > .scenario-stage-track {
-  z-index: 1;
-}
+/* The track is the positioning context (position: relative below) and clip for
+   the new-scenario push. It deliberately does NOT create a stacking context
+   (no z-index) so Dashboard modals can paint above the floating top nav. */
 .scenario-stage-track {
   position: relative;
   display: flex;
