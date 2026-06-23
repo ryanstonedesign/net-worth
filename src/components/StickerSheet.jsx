@@ -240,12 +240,17 @@ function Gallery() {
 
       <div className="ds-group-title">Type scale</div>
       <div className="ds-type-list">
-        {TYPE_SCALE.map(t => (
-          <div className="ds-type-row" key={t.role}>
-            <div className={`ds-type-sample ${t.cls}`}>{t.sample}</div>
-            <div className="ds-type-meta"><b>{t.role}</b> · {t.specs} · {t.font}</div>
-          </div>
-        ))}
+        {TYPE_SCALE.map(t => {
+          const isDisplay = t.role === 'Display'
+          return (
+            <div className="ds-type-row" key={t.role}>
+              <div className={`ds-type-sample ${t.cls}`}>{isDisplay ? t.sample : t.role}</div>
+              <div className="ds-type-meta">
+                {isDisplay ? <><b>{t.role}</b> · {t.specs} · {t.font}</> : <>{t.specs} · {t.font}</>}
+              </div>
+            </div>
+          )
+        })}
       </div>
 
       <div className="ds-group-title">Semantic text</div>
