@@ -432,19 +432,21 @@ a { text-decoration: none; color: inherit; }
   color: var(--c-ink-mute);
 }
 .custom-range-input {
-  width: 64px;
+  width: 88px;
   text-align: center;
-  font-size: 16px;
   font-weight: 700;
-  color: var(--c-ink);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-btn);
+  padding: 10px 12px;
   font-family: var(--font);
-  background: #edf1f5;
-  box-shadow: var(--shadow-neu-in);
-  border: none;
-  border-radius: 10px;
-  padding: 6px 8px;
+  font-size: 16px;
+  color: var(--c-ink);
   outline: none;
+  transition: border-color 0.2s;
 }
+.custom-range-input:focus { border-color: var(--c-primary); }
+.custom-range-input::placeholder { color: var(--c-ink-mute); }
 
 /* ── Section ── */
 .section { padding: 0 20px; margin-bottom: 24px; }
