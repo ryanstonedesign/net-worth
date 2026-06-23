@@ -464,7 +464,7 @@ a { text-decoration: none; color: inherit; }
   background: var(--c-surface);
   border: 1px solid var(--c-border);
   border-radius: var(--r-btn);
-  padding: 10px 12px;
+  padding: 10px;
   font-family: var(--font);
   font-size: 16px;
   color: var(--c-ink);
