@@ -972,30 +972,30 @@ a { text-decoration: none; color: inherit; }
 .form-label { font-size: 12px; font-weight: 700; color: var(--c-ink-mute); text-transform: uppercase; letter-spacing: 0.06em; }
 .type-toggle {
   display: flex;
+  position: relative;
   background: var(--c-surface-muted);
   border-radius: 999px;
   padding: 4px;
 }
-.type-toggle-btn {
-  flex: 1;
-  padding: 8px;
+/* Sliding thumb — sits behind the buttons and animates between the two
+   slots. Width/offset match a single button exactly (50% minus the 4px
+   container padding). */
+.type-toggle-thumb {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  height: calc(100% - 8px);
   border-radius: 999px;
-  font-size: 13px; font-weight: 600;
-  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-  color: var(--c-ink-mute);
-  text-align: center;
-  cursor: pointer;
-  border: none;
-  background: none;
-  position: relative;
-}
-.type-toggle-btn.active {
   background: var(--c-surface);
-  color: var(--c-primary);
   box-shadow: 3px 3px 7px rgba(174,182,192,0.3), -3px -3px 7px rgba(255,255,255,0.5);
+  transition: transform 0.25s ease-in-out;
+  pointer-events: none;
+  z-index: 0;
 }
-/* 1px gradient border (white, fading top→bottom) on the selected thumb only */
-.type-toggle-btn.active::before {
+.type-toggle[data-pos="1"] .type-toggle-thumb { transform: translateX(100%); }
+/* 1px gradient border (white, fading top→bottom) on the thumb */
+.type-toggle-thumb::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -1006,6 +1006,23 @@ a { text-decoration: none; color: inherit; }
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
+}
+.type-toggle-btn {
+  flex: 1;
+  padding: 8px;
+  border-radius: 999px;
+  font-size: 13px; font-weight: 600;
+  transition: color 0.2s;
+  color: var(--c-ink-mute);
+  text-align: center;
+  cursor: pointer;
+  border: none;
+  background: none;
+  position: relative;
+  z-index: 1;
+}
+.type-toggle-btn.active {
+  color: var(--c-primary);
 }
 
 /* ── Color swatches ── */

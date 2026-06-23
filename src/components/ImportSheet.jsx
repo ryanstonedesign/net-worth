@@ -196,7 +196,8 @@ export default function ImportSheet({ categories = [], selectedMonth, onImport, 
       {/* ── Step 1: source ── */}
       {step === 'source' && (
         <>
-          <div className="type-toggle" style={{ marginBottom: 16 }}>
+          <div className="type-toggle" data-pos={tab === 'pdf' ? 1 : 0} style={{ marginBottom: 16 }}>
+            <span className="type-toggle-thumb" aria-hidden="true" />
             <button type="button" className={`type-toggle-btn${tab === 'csv' ? ' active' : ''}`} onClick={() => { setTab('csv'); setError(null) }}>Paste sheet</button>
             <button type="button" className={`type-toggle-btn${tab === 'pdf' ? ' active' : ''}`} onClick={() => { setTab('pdf'); setError(null) }}>Upload PDF</button>
           </div>
@@ -243,7 +244,8 @@ export default function ImportSheet({ categories = [], selectedMonth, onImport, 
         <>
           <div className="form-group" style={{ marginBottom: 14 }}>
             <label className="form-label">Layout</label>
-            <div className="type-toggle">
+            <div className="type-toggle" data-pos={orientation === 'long' ? 1 : 0}>
+              <span className="type-toggle-thumb" aria-hidden="true" />
               <button type="button" className={`type-toggle-btn${orientation === 'wide' ? ' active' : ''}`} onClick={() => { setOrientation('wide'); setError(null) }}>Months in columns</button>
               <button type="button" className={`type-toggle-btn${orientation === 'long' ? ' active' : ''}`} onClick={() => { setOrientation('long'); setError(null) }}>One row per entry</button>
             </div>
@@ -330,7 +332,8 @@ export default function ImportSheet({ categories = [], selectedMonth, onImport, 
                 </div>
                 <div className="import-row-fields">
                   <input className="input import-mini import-cat" list="import-cat-options" placeholder="Category" value={r.categoryName} onChange={e => updateRow(r.id, { categoryName: e.target.value })} />
-                  <div className="type-toggle import-type">
+                  <div className="type-toggle import-type" data-pos={r.type === 'liability' ? 1 : 0}>
+                    <span className="type-toggle-thumb" aria-hidden="true" />
                     <button type="button" className={`type-toggle-btn${r.type === 'asset' ? ' active' : ''}`} onClick={() => updateRow(r.id, { type: 'asset' })}>Asset</button>
                     <button type="button" className={`type-toggle-btn${r.type === 'liability' ? ' active' : ''}`} onClick={() => updateRow(r.id, { type: 'liability' })}>Liab.</button>
                   </div>

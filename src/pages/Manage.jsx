@@ -125,7 +125,8 @@ function AddCategoryModal({ onClose, onSave }) {
 
         <div className="form-group">
           <label className="form-label">Type</label>
-          <div className="type-toggle">
+          <div className="type-toggle" data-pos={type === 'liability' ? 1 : 0}>
+            <span className="type-toggle-thumb" aria-hidden="true" />
             <button
               type="button"
               className={`type-toggle-btn${type === 'asset' ? ' active' : ''}`}

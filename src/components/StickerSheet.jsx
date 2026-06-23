@@ -143,7 +143,8 @@ function Chevron() {
 function ToggleDemo() {
   const [v, setV] = useState('asset')
   return (
-    <div className="type-toggle" style={{ width: '100%' }}>
+    <div className="type-toggle" data-pos={v === 'liability' ? 1 : 0} style={{ width: '100%' }}>
+      <span className="type-toggle-thumb" aria-hidden="true" />
       <button className={`type-toggle-btn${v === 'asset' ? ' active' : ''}`} onClick={() => setV('asset')}>Asset</button>
       <button className={`type-toggle-btn${v === 'liability' ? ' active' : ''}`} onClick={() => setV('liability')}>Liability</button>
     </div>
