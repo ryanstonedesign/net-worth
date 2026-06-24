@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 
 export default function Modal({ title, onClose, children }) {
   useEffect(() => {
@@ -7,7 +8,11 @@ export default function Modal({ title, onClose, children }) {
     return () => document.removeEventListener('keydown', handleKey)
   }, [onClose])
 
-  return (
+  // Portal to <body> so the overlay sits above the whole app-shell. Rendering it
+  // inside the Dashboard left it nested in app-shell's stacking context (which
+  // also has overflow:hidden); WebKit/iOS then painted the floating top nav
+  // above the modal's blur. At the document root there's no such ambiguity.
+  return createPortal(
     <div
       className="modal-overlay"
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
@@ -29,6 +34,7 @@ export default function Modal({ title, onClose, children }) {
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
