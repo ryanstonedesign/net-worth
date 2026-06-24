@@ -746,8 +746,8 @@ a { text-decoration: none; color: inherit; }
   gap: 8px;
   padding: 8px 12px;
   border-radius: 999px;
-  background: var(--c-ink);
-  box-shadow: 0 10px 24px rgba(15,25,30,0.32), inset 0 1px 0 rgba(255,255,255,0.08);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-btn-secondary);
 }
 /* Floating month selector pinned 24px above the bottom edge */
 .month-float {
@@ -769,9 +769,9 @@ a { text-decoration: none; color: inherit; }
   font-family: var(--font);
   font-size: 13px;
   font-weight: 700;
-  color: #fff;
-  background: var(--c-ink);
-  box-shadow: 0 10px 24px rgba(15,25,30,0.32), inset 0 1px 0 rgba(255,255,255,0.08);
+  color: var(--c-ink);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-btn-secondary);
   padding: 8px 16px;
   border-radius: 999px;
   letter-spacing: -0.01em;
@@ -787,13 +787,13 @@ a { text-decoration: none; color: inherit; }
   letter-spacing: -0.01em;
   min-width: 110px;
   text-align: center;
-  color: #fff;
+  color: var(--c-ink);
 }
 .month-nav-btn {
   width: 28px; height: 28px;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  color: rgba(255,255,255,0.92);
+  color: var(--c-ink-mute);
   transition: background 0.18s, color 0.18s;
   border: none;
   cursor: pointer;
@@ -803,7 +803,7 @@ a { text-decoration: none; color: inherit; }
   -webkit-user-select: none;
   -webkit-touch-callout: none;
 }
-.month-nav-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+.month-nav-btn:hover { background: rgba(120,140,160,0.16); color: var(--c-ink); }
 .month-nav-btn:disabled { opacity: 0.32; cursor: default; }
 
 /* ── Chart ── */
