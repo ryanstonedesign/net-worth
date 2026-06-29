@@ -11,6 +11,7 @@ import TopNav from './components/TopNav'
 import SideNav from './components/SideNav'
 import { readonlyDashboardProps } from './components/readonlyDashboard'
 import AuthScreen from './components/AuthScreen'
+import LandingPage from './components/LandingPage'
 import LockScreen from './components/LockScreen'
 import RecoveryPhraseSetup from './components/RecoveryPhraseSetup'
 import RestoreAccessScreen from './components/RestoreAccessScreen'
@@ -158,6 +159,10 @@ function LegacyApp() {
 
 export default function App() {
   const vault = useVault()
+  // While logged out we lead with the Worthfolio marketing landing page;
+  // `authView` holds the mode to open the auth screen in once the visitor
+  // chooses to sign in / get started (null = still on the landing page).
+  const [authView, setAuthView] = useState(null) // 'signin' | 'signup' | null
 
   if (vault.stage === 'legacy') return <LegacyApp />
   if (vault.stage === 'loading') return <div className="app-bg" />
@@ -165,12 +170,21 @@ export default function App() {
     return (
       <>
         <div className="app-bg" />
-        <AuthScreen
-          onSignIn={vault.signIn}
-          onSignUp={vault.signUp}
-          onForgotPassword={vault.requestPasswordReset}
-          error={vault.error}
-        />
+        {authView ? (
+          <AuthScreen
+            initialMode={authView}
+            onSignIn={vault.signIn}
+            onSignUp={vault.signUp}
+            onForgotPassword={vault.requestPasswordReset}
+            onBack={() => setAuthView(null)}
+            error={vault.error}
+          />
+        ) : (
+          <LandingPage
+            onGetStarted={() => setAuthView('signup')}
+            onSignIn={() => setAuthView('signin')}
+          />
+        )}
       </>
     )
   }

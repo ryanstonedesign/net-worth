@@ -74,8 +74,8 @@ function ForgotPasswordView({ defaultEmail, onSubmit, onBack }) {
   )
 }
 
-export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, error }) {
-  const [mode, setMode] = useState('signin') // 'signin' | 'signup' | 'forgot'
+export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, onBack, error, initialMode = 'signin' }) {
+  const [mode, setMode] = useState(initialMode) // 'signin' | 'signup' | 'forgot'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -109,7 +109,7 @@ export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, error
   return (
     <div className="auth-shell">
       <div className="auth-card card">
-        <div className="auth-eyebrow">Net Worth</div>
+        <div className="auth-eyebrow">Worthfolio</div>
         <h1 className="auth-title">
           {mode === 'signin' ? 'Welcome back' : 'Create your vault'}
         </h1>
@@ -194,6 +194,9 @@ export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, error
         >
           {mode === 'signin' ? 'Need an account? Create one' : 'Have an account? Sign in'}
         </button>
+        {onBack && (
+          <button className="auth-switch" onClick={onBack}>← Back to home</button>
+        )}
       </div>
     </div>
   )

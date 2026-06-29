@@ -16,7 +16,7 @@ export default function RecoveryPhraseSetup({ phrase, onDone }) {
 
   const download = () => {
     const blob = new Blob(
-      [`Net Worth — Recovery Phrase\n\nKeep this somewhere safe. If you forget your password, this is the only way to recover your data.\n\n${formatted}\n`],
+      [`Worthfolio — Recovery Phrase\n\nKeep this somewhere safe. If you forget your password, this is the only way to recover your data.\n\n${formatted}\n`],
       { type: 'text/plain' },
     )
     const url = URL.createObjectURL(blob)
