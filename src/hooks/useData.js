@@ -13,9 +13,11 @@ const SLOT_KEYS = {
   '1year': 'networth_proto_1year_v2',
 }
 
+// Column palette — navy structure, seafoam data, plus the system's
+// decorative blues and the warm accent pair.
 export const CATEGORY_COLORS = [
-  '#5987A6', '#4E4D8F', '#4F9289', '#F59E0B',
-  '#EF4444', '#8B5CF6', '#EC4899', '#F97316',
+  '#111a4a', '#167e6c', '#44b48b', '#ec652b',
+  '#dc2626', '#1e4199', '#0c6997', '#023247',
 ]
 
 export const CATEGORY_ICONS = ['🏦', '📈', '🎓', '🏠', '🚗', '💰', '💳', '📊', '💎', '🏪']

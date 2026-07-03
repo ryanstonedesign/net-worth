@@ -19,19 +19,19 @@ function CustomTooltip({ active, payload }) {
 
   return (
     <div style={{
-      background: '#edf1f5',
-      borderRadius: 14,
+      background: 'var(--c-surface)',
+      borderRadius: 'var(--r-card)',
       padding: '8px 16px',
-      boxShadow: '6px 6px 12px rgba(174,182,192,0.48), -6px -6px 12px rgba(255,255,255,1)',
+      boxShadow: 'var(--shadow-md), var(--shadow-sm)',
       border: 'none',
       fontFamily: 'var(--font)',
     }}>
-      <div style={{ fontSize: 12, fontWeight: 600, color: '#55636D', marginBottom: 4 }}>
+      <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--c-ink-mute)', marginBottom: 4 }}>
         {formatMonthDisplay(point.month)}{isForecast ? ' · Est.' : ''}
       </div>
       <div style={{
-        fontSize: 17, fontWeight: 700, letterSpacing: '-0.02em',
-        color: isForecast ? '#55636D' : '#1F2529',
+        fontSize: 17, fontWeight: 600, letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums',
+        color: isForecast ? 'var(--c-ink-mute)' : 'var(--c-ink)',
       }}>
         {formatCurrency(value)}
       </div>
@@ -48,10 +48,10 @@ function GoalLabel({ viewBox, goal }) {
       x={x + width - 4}
       y={y - 5}
       textAnchor="end"
-      fill="#F59E0B"
+      fill="#ec652b"
       fontSize={10}
-      fontWeight={700}
-      fontFamily="Afacad, system-ui, sans-serif"
+      fontWeight={500}
+      fontFamily="Inter, system-ui, sans-serif"
     >
       {label}
     </text>
@@ -97,7 +97,7 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
   const lastHistorical = data[data.length - 1]
   const endPoint = hasForecast ? forecastData[forecastData.length - 1] : lastHistorical
   const isUp = endPoint.netWorth >= data[0].netWorth
-  const color = isUp ? '#4F9289' : '#EF4444'
+  const color = isUp ? '#167e6c' : '#dc2626'
   const gradId = isUp ? 'nwGradUp' : 'nwGradDown'
   const fGradId = isUp ? 'nwForecastUp' : 'nwForecastDown'
 
@@ -170,12 +170,12 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
         <YAxis domain={yDomain} hide />
         <Tooltip
           content={<CustomTooltip />}
-          cursor={{ stroke: 'rgba(28,41,43,0.12)', strokeWidth: 1, strokeDasharray: '4 3' }}
+          cursor={{ stroke: 'rgba(17,26,74,0.15)', strokeWidth: 1, strokeDasharray: '4 3' }}
         />
         {goal != null && (
           <ReferenceLine
             y={goal}
-            stroke="#F59E0B"
+            stroke="#ec652b"
             strokeDasharray="5 3"
             strokeWidth={1.5}
             label={<GoalLabel goal={goal} />}

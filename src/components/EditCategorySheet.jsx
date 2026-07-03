@@ -93,7 +93,7 @@ export default function EditCategorySheet({
         <div className="form-label" style={{ marginBottom: 8 }}>Accounts</div>
 
         {accounts.length > 0 && (
-          <div style={{ borderTop: '1px solid rgba(200,215,220,0.4)', marginBottom: 8 }}>
+          <div style={{ borderTop: '1px solid var(--c-border)', marginBottom: 8 }}>
             {accounts.map(acc => (
               <div key={acc.id} className="manage-account-row">
                 {isNew ? (

@@ -70,7 +70,7 @@ function ManageCatCard({ cat, onDelete, onDeleteAccount, onAddAccount }) {
             <span className={`badge badge-${cat.type}`}>
               {cat.type === 'liability' ? 'Liability' : 'Asset'}
             </span>
-            <span style={{ marginLeft: 6, fontSize: 12, color: '#55636D' }}>
+            <span style={{ marginLeft: 6, fontSize: 12, color: 'var(--c-ink-mute)' }}>
               · {cat.accounts.length} account{cat.accounts.length !== 1 ? 's' : ''}
             </span>
           </div>

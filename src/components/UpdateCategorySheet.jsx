@@ -42,8 +42,8 @@ export default function UpdateCategorySheet({ category, month, snapshot, onSave,
         <button
           onClick={() => { onClose(); onEdit() }}
           style={{
-            width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-            background: 'rgba(89,135,166,0.1)', border: 'none', cursor: 'pointer',
+            width: 36, height: 36, borderRadius: 'var(--r-btn)', flexShrink: 0,
+            background: 'rgba(17,26,74,0.06)', border: 'none', cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: 'var(--c-primary)', transition: 'background 0.15s',
           }}
@@ -68,12 +68,12 @@ export default function UpdateCategorySheet({ category, month, snapshot, onSave,
         </div>
       ) : (
         <>
-          <div style={{ borderTop: '1px solid rgba(200,215,220,0.4)' }}>
+          <div style={{ borderTop: '1px solid var(--c-border)' }}>
             {category.accounts.map(acc => (
               <div key={acc.id} style={{
                 display: 'flex', alignItems: 'center', gap: 12,
                 padding: '12px 0',
-                borderBottom: '1px solid rgba(200,215,220,0.35)',
+                borderBottom: '1px solid var(--c-surface-muted)',
               }}>
                 <div style={{ flex: 1, fontSize: 15, fontWeight: 500 }}>{acc.name}</div>
                 <div style={{ position: 'relative' }}>

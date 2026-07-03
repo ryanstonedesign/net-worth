@@ -42,6 +42,44 @@ const Icon = {
   ),
 }
 
+/* Halftone dot field — Column's signature decorative element. A grid of
+   2–4px dots spaced ~9px apart, colored along the spectrum gradient
+   orange → violet → blue → sky cyan → seafoam → yellow. The gradient lives
+   only on this illustration, never on UI elements. */
+const HALFTONE_STOPS = ['#d65620', '#9f7aee', '#4575cd', '#71d2f0', '#44b48b', '#f4df69']
+function halftoneColor(t) {
+  return HALFTONE_STOPS[Math.round(t * (HALFTONE_STOPS.length - 1))]
+}
+function HalftoneField({ cols = 90, rows = 48, gap = 9 }) {
+  const dots = []
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      // Deterministic pseudo-random size variation, 1–2px radius (2–4px dots).
+      const h = Math.sin(c * 12.9898 + r * 78.233) * 43758.5453
+      const rand = h - Math.floor(h)
+      dots.push(
+        <circle
+          key={`${r}-${c}`}
+          cx={c * gap + gap / 2}
+          cy={r * gap + gap / 2}
+          r={1 + rand}
+          fill={halftoneColor(c / (cols - 1))}
+        />
+      )
+    }
+  }
+  return (
+    <svg
+      className="lp-halftone"
+      viewBox={`0 0 ${cols * gap} ${rows * gap}`}
+      preserveAspectRatio="xMidYMid slice"
+      aria-hidden="true"
+    >
+      {dots}
+    </svg>
+  )
+}
+
 /* A mini net-worth line chart: a solid "history" leg that hands off to a
    dashed "forecast" leg, with an optional goal line. Pure SVG so it stays
    crisp at any tile size and needs no chart dependency. */
@@ -125,7 +163,7 @@ function PhoneMock() {
 
         <div className="lp-mock-cat">
           <div className="lp-mock-cat-head">
-            <span className="lp-mock-cat-icon" style={{ background: 'rgba(79,146,137,0.16)', color: 'var(--c-tertiary)' }}>📈</span>
+            <span className="lp-mock-cat-icon" style={{ background: 'rgba(22,126,108,0.1)', color: 'var(--c-tertiary)' }}>📈</span>
             <span className="lp-mock-cat-name">Investments</span>
             <span className="lp-mock-cat-total">$182,300</span>
           </div>
@@ -135,7 +173,7 @@ function PhoneMock() {
 
         <div className="lp-mock-cat">
           <div className="lp-mock-cat-head">
-            <span className="lp-mock-cat-icon" style={{ background: 'rgba(89,135,166,0.16)', color: 'var(--c-primary)' }}>🏦</span>
+            <span className="lp-mock-cat-icon" style={{ background: 'rgba(17,26,74,0.06)', color: 'var(--c-primary)' }}>🏦</span>
             <span className="lp-mock-cat-name">Cash</span>
             <span className="lp-mock-cat-total">$28,640</span>
           </div>
@@ -314,26 +352,36 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
       <main className="lp-main" id="top">
         {/* ── Hero ── */}
         <section className="lp-hero">
+          <HalftoneField />
           <div className="lp-hero-copy">
-            <span className="lp-badge"><Icon.Lock width={13} height={13} /> End-to-end encrypted</span>
-            <div className="lp-wordmark">Worthfolio</div>
+            <span className="lp-tag"><i aria-hidden="true" /> Private by design</span>
             <h1 className="lp-hero-title">Know what you’re worth — and where you’re headed.</h1>
             <p className="lp-hero-sub">
               Track every account, project your future net worth, and watch your
-              wealth take shape. Private by design and synced across all your devices.
+              wealth take shape. End-to-end encrypted and synced across all your
+              devices.
             </p>
             <div className="lp-hero-cta">
               <button className="btn btn-primary lp-cta-lg" onClick={onGetStarted}>
-                Get started free <Icon.Arrow width={17} height={17} />
+                Get started free <Icon.Arrow width={16} height={16} />
               </button>
               <button className="btn btn-secondary lp-cta-lg" onClick={onSignIn}>Sign in</button>
             </div>
-            <p className="lp-hero-fineprint">Free to start · No bank logins · Your keys, your data</p>
+            <p className="lp-hero-fineprint">
+              <Icon.Lock width={12} height={12} /> Free to start · No bank logins · Your keys, your data
+            </p>
           </div>
           <div className="lp-hero-art">
-            <div className="lp-hero-glow" aria-hidden="true" />
             <PhoneMock />
           </div>
+        </section>
+
+        {/* ── Trust stats ── */}
+        <section className="lp-stats" aria-label="Worthfolio at a glance">
+          <div className="lp-stat"><div className="lp-stat-num">AES-256</div><div className="lp-stat-label">Encrypted on your device</div></div>
+          <div className="lp-stat"><div className="lp-stat-num">0</div><div className="lp-stat-label">Bank logins required</div></div>
+          <div className="lp-stat"><div className="lp-stat-num">30 yrs</div><div className="lp-stat-label">Of forecast, if you want it</div></div>
+          <div className="lp-stat"><div className="lp-stat-num">100%</div><div className="lp-stat-label">Yours — export any time</div></div>
         </section>
 
         {/* ── Bento features ── */}
@@ -367,34 +415,33 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
             <span className="lp-kicker">A closer look</span>
             <h2 className="lp-section-title">Designed to feel effortless</h2>
             <p className="lp-section-sub">
-              A soft, tactile interface that makes checking in on your net worth
-              something you’ll actually want to do.
+              A calm, banking-grade interface that makes checking in on your net
+              worth something you’ll actually want to do.
             </p>
           </div>
           <div className="lp-look-stage">
-            <div className="lp-look-glow" aria-hidden="true" />
             <PhoneMock />
             <ul className="lp-look-points">
-              <li><span className="lp-look-dot" style={{ background: 'var(--c-primary)' }} /> Live net-worth ticker with month-over-month change</li>
-              <li><span className="lp-look-dot" style={{ background: 'var(--c-secondary)' }} /> Interactive trend chart with a dashed forecast</li>
-              <li><span className="lp-look-dot" style={{ background: 'var(--c-tertiary)' }} /> Assets and liabilities split at a glance</li>
-              <li><span className="lp-look-dot" style={{ background: 'var(--c-primary)' }} /> Scroll any month, past or projected</li>
+              <li><span className="lp-look-dot" style={{ background: 'var(--color-indigo-navy)' }} /> Live net-worth ticker with month-over-month change</li>
+              <li><span className="lp-look-dot" style={{ background: 'var(--color-seafoam-600)' }} /> Interactive trend chart with a dashed forecast</li>
+              <li><span className="lp-look-dot" style={{ background: 'var(--color-seafoam-700)' }} /> Assets and liabilities split at a glance</li>
+              <li><span className="lp-look-dot" style={{ background: 'var(--color-deep-sea)' }} /> Scroll any month, past or projected</li>
             </ul>
           </div>
         </section>
 
-        {/* ── Final CTA ── */}
+        {/* ── Final CTA — dark inversion surface with the page's single
+            Signal Orange accent ── */}
         <section className="lp-final">
-          <div className="card lp-final-card">
-            <div className="lp-final-glow" aria-hidden="true" />
+          <div className="lp-final-card">
             <h2 className="lp-final-title">Start building your Worthfolio</h2>
             <p className="lp-final-sub">
               Create an encrypted vault in seconds. Free to start, and your data
               never leaves your control.
             </p>
             <div className="lp-hero-cta lp-final-cta">
-              <button className="btn btn-primary lp-cta-lg" onClick={onGetStarted}>
-                Get started free <Icon.Arrow width={17} height={17} />
+              <button className="btn btn-accent lp-cta-lg" onClick={onGetStarted}>
+                Get started free <Icon.Arrow width={16} height={16} />
               </button>
               <button className="btn btn-secondary lp-cta-lg" onClick={onSignIn}>I already have an account</button>
             </div>

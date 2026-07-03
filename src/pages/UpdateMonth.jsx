@@ -108,7 +108,7 @@ export default function UpdateMonth({
                 </div>
 
                 {cat.accounts.length === 0 ? (
-                  <div style={{ padding: '12px 20px 16px', color: '#55636D', fontSize: 13 }}>
+                  <div style={{ padding: '12px 20px 16px', color: 'var(--c-ink-mute)', fontSize: 13 }}>
                     No accounts — add them in Manage.
                   </div>
                 ) : (
