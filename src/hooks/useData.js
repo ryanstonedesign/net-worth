@@ -8,7 +8,7 @@ const SLOT_KEYS = {
   none: 'networth_v1',
   // Demo slots are versioned so refreshed sample data (scenarios, contributions,
   // growth) supersedes any older cached demo without touching real data.
-  firsttime: 'networth_proto_firsttime_v2',
+  firsttime: 'networth_proto_firsttime_v3',
   '6month': 'networth_proto_6month_v2',
   '1year': 'networth_proto_1year_v2',
 }
@@ -27,19 +27,6 @@ export const CATEGORY_ICONS = ['🏦', '📈', '🎓', '🏠', '🚗', '💰', '
 // `growth` (% — positive for appreciation/return, negative for depreciation or
 // debt paydown) and, for categories you actively fund, `contributing: true`
 // plus a monthly `contrib` ($) per account.
-const SCENARIO_FIRST = [
-  { name: 'Cash', type: 'asset', icon: '🏦', contributing: true, accounts: [
-    { name: 'Checking', base: 3200, growth: 0 },
-    { name: 'Savings', base: 8000, growth: 4, contrib: 300 },
-  ] },
-  { name: 'Investments', type: 'asset', icon: '📈', contributing: true, accounts: [
-    { name: 'Brokerage', base: 6000, growth: 7, contrib: 250 },
-  ] },
-  { name: 'Credit Cards', type: 'liability', icon: '💳', accounts: [
-    { name: 'Visa', base: 1800, growth: -20 }, // paying it down
-  ] },
-] // 3 categories, 4 accounts
-
 const SCENARIO_6M = [
   { name: 'Cash', type: 'asset', icon: '🏦', contributing: true, accounts: [
     { name: 'Checking', base: 5200, growth: 0 },
@@ -174,10 +161,6 @@ function applyVariant(base, { contribMult = 1, assetGrowthDelta = 0, liabGrowthD
 }
 
 // First entry is always the untouched baseline ("Default Scenario").
-const VARIANTS_FIRST = [
-  { name: 'Default Scenario' },
-  { name: 'Stretch Goal', contribMult: 2 },
-]
 const VARIANTS_6M = [
   { name: 'Default Scenario' },
   { name: 'Save More', contribMult: 1.6 },
@@ -204,7 +187,8 @@ function buildScenarioContainer(specs, months, variants) {
 function genScenarioData(scenario) {
   if (scenario === '6month') return buildScenarioContainer(SCENARIO_6M, 6, VARIANTS_6M)
   if (scenario === '1year') return buildScenarioContainer(SCENARIO_1Y, 12, VARIANTS_1Y)
-  if (scenario === 'firsttime') return buildScenarioContainer(SCENARIO_FIRST, 3, VARIANTS_FIRST)
+  // "First time" previews the untouched first-run experience: no categories,
+  // no history, no goal — exactly what a brand-new user lands on.
   return wrapData(emptyData())
 }
 
