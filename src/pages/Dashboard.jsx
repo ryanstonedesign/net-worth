@@ -487,7 +487,10 @@ export default function Dashboard({
           </p>
           <ul style={{ fontSize: 14, color: 'var(--c-ink-mute)', lineHeight: 1.5, marginBottom: 16, paddingLeft: 20 }}>
             <li style={{ marginBottom: 8 }}>
-              Grows by its annual growth rate, applied as a compounding monthly rate.
+              Grows by the annual growth rate you set on the account, applied as a
+              compounding monthly rate. This must be entered manually — past balance
+              changes are not used to infer growth, and accounts without a rate
+              project at 0%.
             </li>
             <li>
               Receives its average monthly contribution, based on the contributions
