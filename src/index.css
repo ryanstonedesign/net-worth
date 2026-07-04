@@ -449,6 +449,18 @@ a { text-decoration: none; color: inherit; }
 }
 .hero-delta-line.positive { color: var(--c-tertiary); }
 .hero-delta-line.negative { color: var(--c-danger); }
+.hero-est-info {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  margin-left: -4px;
+  color: inherit;
+  opacity: 0.6;
+  display: inline-flex;
+  align-items: center;
+}
+.hero-est-info:active { opacity: 1; }
 .hero-reset {
   border: none;
   background: none;

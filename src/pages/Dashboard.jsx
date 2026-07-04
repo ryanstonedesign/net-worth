@@ -192,6 +192,7 @@ export default function Dashboard({
 }) {
   const [editSheet, setEditSheet] = useState(null) // category obj | 'new' | null
   const [goalOpen, setGoalOpen]   = useState(false)
+  const [estInfoOpen, setEstInfoOpen] = useState(false)
   const [resetConfirm, setResetConfirm] = useState(false)
   const [resetNonce, setResetNonce] = useState(0) // bump to remount cards after a reset
   const [timeRange, setTimeRange] = useState('1Y')
@@ -326,6 +327,13 @@ export default function Dashboard({
               ? `${estDelta >= 0 ? '+' : ''}${formatCurrency(estDelta)} (est)`
               : delta == null ? '—' : `${delta >= 0 ? '+' : ''}${formatCurrency(delta)} this month`}
           </span>
+          {isEstimated && (
+            <button className="hero-est-info" onClick={() => setEstInfoOpen(true)} aria-label="How estimates are calculated">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+            </button>
+          )}
           {hasEdits && (
             <button className="hero-reset" onClick={() => setResetConfirm(true)}>Reset</button>
           )}
@@ -467,6 +475,34 @@ export default function Dashboard({
             onSave={(v) => { setGoal(v); setGoalOpen(false) }}
             onClose={() => setGoalOpen(false)}
           />
+        </Modal>
+      )}
+
+      {/* How-estimates-work explainer sheet */}
+      {estInfoOpen && (
+        <Modal title="How estimates are calculated" onClose={() => setEstInfoOpen(false)}>
+          <p style={{ fontSize: 14, color: 'var(--c-ink-mute)', lineHeight: 1.5, marginBottom: 16 }}>
+            Future months are projected one month at a time, starting from each
+            account's most recent balance. Each month, every account:
+          </p>
+          <ul style={{ fontSize: 14, color: 'var(--c-ink-mute)', lineHeight: 1.5, marginBottom: 16, paddingLeft: 20 }}>
+            <li style={{ marginBottom: 8 }}>
+              Grows by its annual growth rate, applied as a compounding monthly rate.
+            </li>
+            <li>
+              Receives its average monthly contribution, based on the contributions
+              you've recorded so far (contributing categories only).
+            </li>
+          </ul>
+          <p style={{ fontSize: 14, color: 'var(--c-ink-mute)', lineHeight: 1.5, marginBottom: 16 }}>
+            Liabilities are projected the same way and subtracted from assets to get
+            your estimated net worth. The monthly increase is the difference between
+            this month's projection and the previous month's.
+          </p>
+          <p style={{ fontSize: 14, color: 'var(--c-ink-mute)', lineHeight: 1.5, marginBottom: 8 }}>
+            Entering a balance or contribution for a future month replaces its
+            estimate, and later months build on what you entered.
+          </p>
         </Modal>
       )}
 
