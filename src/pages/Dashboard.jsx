@@ -276,12 +276,13 @@ export default function Dashboard({
     }
   }
 
-  const goalLabel = goalReached
-    ? 'Goal reached'
+  // Rendered on the chart's goal line next to the target amount.
+  const goalEta = goalReached
+    ? 'Reached'
     : monthsToGoal != null
       ? monthsToGoal > 24
-        ? `~${Math.round(monthsToGoal / 12)} years to goal`
-        : `~${monthsToGoal} months to goal`
+        ? `~${Math.round(monthsToGoal / 12)} years`
+        : `~${monthsToGoal} months`
       : null
 
   const snapshot    = getSnapshot(selectedMonth)
@@ -338,26 +339,14 @@ export default function Dashboard({
             <button className="hero-reset" onClick={() => setResetConfirm(true)}>Reset</button>
           )}
         </div>
-
-        {/* Goal row */}
-        <button className="hero-goal" onClick={() => setGoalOpen(true)}>
-          {goal == null ? (
-            <span className="hero-goal-set">Set a goal</span>
-          ) : (
-            <span className="hero-goal-time">{goalLabel ?? 'Goal set'}</span>
-          )}
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 4, opacity: 0.5, flexShrink: 0 }}>
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
-        </button>
       </div>
 
-      {/* Trend line + forecast */}
-      {filteredHistory.length >= 2 && (
-        <div style={{ padding: '20px 20px 0' }}>
-          <NetWorthChart key={timeRange} data={filteredHistory} forecastData={forecastData} selectedMonth={selectedMonth} height={180} goal={goal} onSelectMonth={onMonthChange} animateDraw={chartAnimate} />
-        </div>
-      )}
+      {/* Trend line + forecast. The goal line on the chart is the single goal
+          element — it shows the target, the time to reach it, and opens the
+          editor; with no data yet it still renders as the set-a-goal CTA. */}
+      <div style={{ padding: '20px 20px 0' }}>
+        <NetWorthChart key={timeRange} data={filteredHistory} forecastData={forecastData} selectedMonth={selectedMonth} height={180} goal={goal} goalEta={goalEta} onGoalClick={() => setGoalOpen(true)} onSelectMonth={onMonthChange} animateDraw={chartAnimate} />
+      </div>
 
       {/* Time range filter */}
       {history.length >= 2 && (

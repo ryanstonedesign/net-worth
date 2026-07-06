@@ -474,26 +474,6 @@ a { text-decoration: none; color: inherit; }
   text-underline-offset: 2px;
 }
 
-.hero-goal {
-  display: inline-flex;
-  align-items: center;
-  margin-top: 10px;
-  padding: 0;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: var(--font);
-  font-size: 13px;
-  font-weight: var(--font-weight-medium);
-  color: var(--c-ink-mute);
-  opacity: 0.85;
-  transition: opacity 0.15s;
-}
-.hero-goal:hover { opacity: 1; }
-.hero-goal-set { color: var(--c-primary); }
-.hero-goal-target { color: var(--c-ink-mute); }
-.hero-goal-time { color: var(--c-ink-mute); font-weight: var(--font-weight-regular); }
-
 /* ── Range pills ── */
 .range-pills {
   display: flex;

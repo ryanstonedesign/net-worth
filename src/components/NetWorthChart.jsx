@@ -39,26 +39,39 @@ function CustomTooltip({ active, payload }) {
   )
 }
 
-function GoalLabel({ viewBox, goal }) {
+// Label for the goal reference line. The line is the single goal element on
+// the dashboard — it shows the target, the time remaining, and (via onClick)
+// opens the goal editor, so a transparent hit strip covers the line and label
+// to make the whole thing tappable.
+function GoalLabel({ viewBox, label, onClick }) {
   if (!viewBox) return null
   const { x, y, width } = viewBox
-  const label = `Goal ${formatCompact(goal)}`
   return (
-    <text
-      x={x + width - 4}
-      y={y - 5}
-      textAnchor="end"
-      fill="#ec652b"
-      fontSize={10}
-      fontWeight={500}
-      fontFamily="Inter, system-ui, sans-serif"
+    <g
+      onClick={onClick ? (e) => { e.stopPropagation(); onClick() } : undefined}
+      style={onClick ? { cursor: 'pointer' } : undefined}
     >
-      {label}
-    </text>
+      <text
+        x={x + width - 4}
+        y={y - 5}
+        textAnchor="end"
+        fill="#ec652b"
+        fontSize={10}
+        fontWeight={500}
+        fontFamily="Inter, system-ui, sans-serif"
+      >
+        {label}
+      </text>
+      {onClick && <rect x={x} y={y - 24} width={width} height={36} fill="transparent" />}
+    </g>
   )
 }
 
-export default function NetWorthChart({ data, forecastData = [], selectedMonth, height = 160, goal = null, onSelectMonth, animateDraw = false }) {
+function goalLineText(goal, goalEta) {
+  return `Goal ${formatCompact(goal)}${goalEta ? ` · ${goalEta}` : ''}`
+}
+
+export default function NetWorthChart({ data, forecastData = [], selectedMonth, height = 160, goal = null, goalEta = null, onGoalClick = null, onSelectMonth, animateDraw = false }) {
   // ── Hooks (must run before any early return) ──
   // Build combined dataset with separate dataKeys for each segment.
   // Memoised on the data's content so hover / selected-month re-renders keep a
@@ -91,7 +104,46 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
     return () => clearTimeout(t)
   }, [animate])
 
-  if (!data || data.length < 2) return null
+  // First-time / empty state: no trend to draw yet, but the goal line still
+  // renders (or a CTA to create one) so the goal lives in one place — on the
+  // chart — from day one. Plain SVG since recharts needs data for a domain.
+  if (!data || data.length < 2) {
+    if (goal == null && !onGoalClick) return null
+    const label = goal != null ? goalLineText(goal, goalEta) : '+ Set a goal'
+    const lineY = 26
+    return (
+      <div
+        style={{ height, cursor: onGoalClick ? 'pointer' : undefined }}
+        role={onGoalClick ? 'button' : undefined}
+        tabIndex={onGoalClick ? 0 : undefined}
+        aria-label={goal != null ? 'Edit goal' : 'Set a goal'}
+        onClick={onGoalClick ?? undefined}
+        onKeyDown={onGoalClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onGoalClick() } } : undefined}
+      >
+        <svg width="100%" height={height} style={{ display: 'block' }}>
+          <text
+            x="100%"
+            dx={-4}
+            y={lineY - 9}
+            textAnchor="end"
+            fill="#ec652b"
+            fontSize={10}
+            fontWeight={500}
+            fontFamily="Inter, system-ui, sans-serif"
+          >
+            {label}
+          </text>
+          <line
+            x1={4} y1={lineY} x2="100%" y2={lineY}
+            stroke="#ec652b"
+            strokeOpacity={goal != null ? 1 : 0.5}
+            strokeDasharray="5 3"
+            strokeWidth={1.5}
+          />
+        </svg>
+      </div>
+    )
+  }
 
   const hasForecast = forecastData.length > 0
   const lastHistorical = data[data.length - 1]
@@ -101,13 +153,16 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
   const gradId = isUp ? 'nwGradUp' : 'nwGradDown'
   const fGradId = isUp ? 'nwForecastUp' : 'nwForecastDown'
 
-  // Y-axis domain — expand to include goal line if above data range
+  // Y-axis domain — expand to include the goal line if above data range. With
+  // no goal set, a placeholder line floats above the data as the set-a-goal CTA.
   const allValues = combined.map(d => d.historical ?? d.forecast).filter(v => v != null)
   const maxDataVal = allValues.length > 0 ? Math.max(...allValues) : 0
   const minDataVal = allValues.length > 0 ? Math.min(...allValues) : 0
-  const goalAbove = goal != null && goal > maxDataVal
+  const placeholderGoalY = maxDataVal + Math.max((maxDataVal - minDataVal) * 0.3, Math.abs(maxDataVal) * 0.08, 1)
+  const goalLineY = goal ?? (onGoalClick ? placeholderGoalY : null)
+  const goalAbove = goalLineY != null && goalLineY > maxDataVal
   const yDomain = goalAbove
-    ? [minDataVal, Math.round(goal * 1.12)]
+    ? [minDataVal, Math.round(goalLineY * 1.12)]
     : ['auto', 'auto']
 
   // Thin the dots on long ranges so they don't crowd the line. The line itself
@@ -172,13 +227,19 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
           content={<CustomTooltip />}
           cursor={{ stroke: 'rgba(17,26,74,0.15)', strokeWidth: 1, strokeDasharray: '4 3' }}
         />
-        {goal != null && (
+        {goalLineY != null && (
           <ReferenceLine
-            y={goal}
+            y={goalLineY}
             stroke="#ec652b"
+            strokeOpacity={goal != null ? 1 : 0.5}
             strokeDasharray="5 3"
             strokeWidth={1.5}
-            label={<GoalLabel goal={goal} />}
+            label={
+              <GoalLabel
+                label={goal != null ? goalLineText(goal, goalEta) : '+ Set a goal'}
+                onClick={onGoalClick}
+              />
+            }
           />
         )}
         <Area
