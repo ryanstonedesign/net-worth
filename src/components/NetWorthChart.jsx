@@ -39,11 +39,19 @@ function CustomTooltip({ active, payload }) {
   )
 }
 
+// Goal line colors: orange when a goal is set; with none set the placeholder
+// uses the app's border color for the line and secondary ink for the CTA text
+// (hex because SVG presentation attributes can't read CSS vars — matches
+// --c-border / --c-ink-mute in index.css).
+const GOAL_COLOR = '#ec652b'
+const UNSET_LINE_COLOR = '#e3e4e8'
+const UNSET_TEXT_COLOR = '#7c7f88'
+
 // Label for the goal reference line. The line is the single goal element on
 // the dashboard — it shows the target, the time remaining, and (via onClick)
 // opens the goal editor, so a transparent hit strip covers the line and label
 // to make the whole thing tappable.
-function GoalLabel({ viewBox, label, onClick }) {
+function GoalLabel({ viewBox, label, fill = GOAL_COLOR, onClick }) {
   if (!viewBox) return null
   const { x, y, width } = viewBox
   return (
@@ -55,7 +63,7 @@ function GoalLabel({ viewBox, label, onClick }) {
         x={x + width - 4}
         y={y - 5}
         textAnchor="end"
-        fill="#ec652b"
+        fill={fill}
         fontSize={10}
         fontWeight={500}
         fontFamily="Inter, system-ui, sans-serif"
@@ -104,41 +112,53 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
     return () => clearTimeout(t)
   }, [animate])
 
-  // First-time / empty state: no trend to draw yet, but the goal line still
-  // renders (or a CTA to create one) so the goal lives in one place — on the
-  // chart — from day one. Plain SVG since recharts needs data for a domain.
+  // First-time / empty state: no trend to draw yet, but the chart frame still
+  // renders — a flat baseline in the border color stands in for the (empty)
+  // net worth line, and the goal line (or a CTA to create one) lives on the
+  // chart from day one. Plain SVG since recharts needs data for a domain.
   if (!data || data.length < 2) {
-    if (goal == null && !onGoalClick) return null
-    const label = goal != null ? goalLineText(goal, goalEta) : '+ Set a goal'
+    const hasGoal = goal != null
+    const showGoalLine = hasGoal || !!onGoalClick
+    const label = hasGoal ? goalLineText(goal, goalEta) : '+ Set a goal'
     const lineY = 26
     return (
       <div
         style={{ height, cursor: onGoalClick ? 'pointer' : undefined }}
         role={onGoalClick ? 'button' : undefined}
         tabIndex={onGoalClick ? 0 : undefined}
-        aria-label={goal != null ? 'Edit goal' : 'Set a goal'}
+        aria-label={onGoalClick ? (hasGoal ? 'Edit goal' : 'Set a goal') : undefined}
         onClick={onGoalClick ?? undefined}
         onKeyDown={onGoalClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onGoalClick() } } : undefined}
       >
         <svg width="100%" height={height} style={{ display: 'block' }}>
-          <text
-            x="100%"
-            dx={-4}
-            y={lineY - 9}
-            textAnchor="end"
-            fill="#ec652b"
-            fontSize={10}
-            fontWeight={500}
-            fontFamily="Inter, system-ui, sans-serif"
-          >
-            {label}
-          </text>
+          {showGoalLine && (
+            <>
+              <text
+                x="100%"
+                dx={-4}
+                y={lineY - 9}
+                textAnchor="end"
+                fill={hasGoal ? GOAL_COLOR : UNSET_TEXT_COLOR}
+                fontSize={10}
+                fontWeight={500}
+                fontFamily="Inter, system-ui, sans-serif"
+              >
+                {label}
+              </text>
+              <line
+                x1={4} y1={lineY} x2="100%" y2={lineY}
+                stroke={hasGoal ? GOAL_COLOR : UNSET_LINE_COLOR}
+                strokeDasharray="5 3"
+                strokeWidth={1.5}
+              />
+            </>
+          )}
+          {/* Flat "no data yet" net worth line along the bottom */}
           <line
-            x1={4} y1={lineY} x2="100%" y2={lineY}
-            stroke="#ec652b"
-            strokeOpacity={goal != null ? 1 : 0.5}
-            strokeDasharray="5 3"
-            strokeWidth={1.5}
+            x1={4} y1={height - 8} x2="100%" y2={height - 8}
+            stroke={UNSET_LINE_COLOR}
+            strokeWidth={2.5}
+            strokeLinecap="round"
           />
         </svg>
       </div>
@@ -230,13 +250,13 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
         {goalLineY != null && (
           <ReferenceLine
             y={goalLineY}
-            stroke="#ec652b"
-            strokeOpacity={goal != null ? 1 : 0.5}
+            stroke={goal != null ? GOAL_COLOR : UNSET_LINE_COLOR}
             strokeDasharray="5 3"
             strokeWidth={1.5}
             label={
               <GoalLabel
                 label={goal != null ? goalLineText(goal, goalEta) : '+ Set a goal'}
+                fill={goal != null ? GOAL_COLOR : UNSET_TEXT_COLOR}
                 onClick={onGoalClick}
               />
             }

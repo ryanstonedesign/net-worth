@@ -348,34 +348,31 @@ export default function Dashboard({
         <NetWorthChart key={timeRange} data={filteredHistory} forecastData={forecastData} selectedMonth={selectedMonth} height={180} goal={goal} goalEta={goalEta} onGoalClick={() => setGoalOpen(true)} onSelectMonth={onMonthChange} animateDraw={chartAnimate} />
       </div>
 
-      {/* Time range filter */}
-      {history.length >= 2 && (
-        <>
-          <div className="range-pills">
-            {RANGE_OPTIONS.map(r => (
-              <button
-                key={r}
-                className={`range-pill${timeRange === r ? ' active' : ''}`}
-                onClick={() => setTimeRange(r)}
-              >
-                {r === 'custom' ? 'Custom' : r}
-              </button>
-            ))}
-          </div>
-          {timeRange === 'custom' && (
-            <div className="custom-range-row">
-              <span className="custom-range-label">Estimate through end of</span>
-              <input
-                className="custom-range-input"
-                inputMode="numeric"
-                maxLength={4}
-                placeholder="2035"
-                value={customYear}
-                onChange={e => setCustomYear(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
-              />
-            </div>
-          )}
-        </>
+      {/* Time range filter — always shown so first-time users see the full
+          chart frame (empty line + tabs) before any data exists */}
+      <div className="range-pills">
+        {RANGE_OPTIONS.map(r => (
+          <button
+            key={r}
+            className={`range-pill${timeRange === r ? ' active' : ''}`}
+            onClick={() => setTimeRange(r)}
+          >
+            {r === 'custom' ? 'Custom' : r}
+          </button>
+        ))}
+      </div>
+      {timeRange === 'custom' && (
+        <div className="custom-range-row">
+          <span className="custom-range-label">Estimate through end of</span>
+          <input
+            className="custom-range-input"
+            inputMode="numeric"
+            maxLength={4}
+            placeholder="2035"
+            value={customYear}
+            onChange={e => setCustomYear(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
+          />
+        </div>
       )}
 
       {/* Asset / Liability summary */}
@@ -394,8 +391,10 @@ export default function Dashboard({
         </div>
       )}
 
-      {/* Categories */}
-      <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 20, paddingRight: 20, marginBottom: 12 }}>
+      {/* Categories — the summary row above normally provides the spacing;
+          without it (no categories yet) the header needs its own gap from
+          the range pills */}
+      <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 20, paddingRight: 20, marginBottom: 12, marginTop: data.categories.length === 0 ? 28 : 0 }}>
         <span className="section-title">Categories</span>
         {data.categories.length > 0 && (
           <button className="add-category-link" onClick={() => setEditSheet('new')}>Add</button>
