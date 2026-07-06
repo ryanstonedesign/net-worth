@@ -345,7 +345,7 @@ export default function Dashboard({
           element — it shows the target, the time to reach it, and opens the
           editor; with no data yet it still renders as the set-a-goal CTA. */}
       <div style={{ padding: '20px 20px 0' }}>
-        <NetWorthChart key={timeRange} data={filteredHistory} forecastData={forecastData} selectedMonth={selectedMonth} height={180} goal={goal} goalEta={goalEta} onGoalClick={() => setGoalOpen(true)} onSelectMonth={onMonthChange} animateDraw={chartAnimate} />
+        <NetWorthChart key={timeRange} data={filteredHistory} forecastData={forecastData} selectedMonth={selectedMonth} height={180} goal={goal} goalEta={goalEta} onGoalClick={() => setGoalOpen(true)} onSelectMonth={onMonthChange} animateDraw={chartAnimate} emptyPointCount={RANGE_COUNTS[timeRange] ?? 12} />
       </div>
 
       {/* Time range filter — always shown so first-time users see the full

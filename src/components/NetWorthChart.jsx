@@ -46,6 +46,7 @@ function CustomTooltip({ active, payload }) {
 const GOAL_COLOR = '#ec652b'
 const UNSET_LINE_COLOR = '#e3e4e8'
 const UNSET_TEXT_COLOR = '#7c7f88'
+const UNSET_DOT_COLOR = '#cbcccf' /* --color-mist — tertiary grey */
 
 // Label for the goal reference line. The line is the single goal element on
 // the dashboard — it shows the target, the time remaining, and (via onClick)
@@ -79,7 +80,7 @@ function goalLineText(goal, goalEta) {
   return `Goal ${formatCompact(goal)}${goalEta ? ` · ${goalEta}` : ''}`
 }
 
-export default function NetWorthChart({ data, forecastData = [], selectedMonth, height = 160, goal = null, goalEta = null, onGoalClick = null, onSelectMonth, animateDraw = false }) {
+export default function NetWorthChart({ data, forecastData = [], selectedMonth, height = 160, goal = null, goalEta = null, onGoalClick = null, onSelectMonth, animateDraw = false, emptyPointCount = 12 }) {
   // ── Hooks (must run before any early return) ──
   // Build combined dataset with separate dataKeys for each segment.
   // Memoised on the data's content so hover / selected-month re-renders keep a
@@ -153,13 +154,27 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
               />
             </>
           )}
-          {/* Flat "no data yet" net worth line along the bottom */}
+          {/* Flat "no data yet" net worth line along the bottom — drawn out
+              with the same timing as the real chart, month dots fading in
+              after (dotsVisible reuses that latch) */}
           <line
-            x1={4} y1={height - 8} x2="100%" y2={height - 8}
+            className={animate ? 'nw-empty-draw' : undefined}
+            pathLength={1}
+            x1="1%" y1={height - 8} x2="99%" y2={height - 8}
             stroke={UNSET_LINE_COLOR}
             strokeWidth={2.5}
             strokeLinecap="round"
           />
+          {dotsVisible && Array.from({ length: Math.max(2, emptyPointCount) }, (_, i) => (
+            <circle
+              key={i}
+              className="nw-dot-appear"
+              cx={`${1 + (i / (Math.max(2, emptyPointCount) - 1)) * 98}%`}
+              cy={height - 8}
+              r={3.5}
+              fill={UNSET_DOT_COLOR}
+            />
+          ))}
         </svg>
       </div>
     )

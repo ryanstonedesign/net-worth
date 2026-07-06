@@ -1531,6 +1531,15 @@ a { text-decoration: none; color: inherit; }
 .nw-dot-appear { animation: nwDotIn 0.4s ease-out both; }
 @keyframes nwDotIn { from { opacity: 0; } to { opacity: 1; } }
 
+/* Empty-state baseline draws left-to-right like the recharts line
+   (pathLength=1 on the element normalises the dash length) */
+.nw-empty-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: nwEmptyDraw 1.1s ease-out forwards;
+}
+@keyframes nwEmptyDraw { to { stroke-dashoffset: 0; } }
+
 /* ── Settings FAB ── */
 .settings-fab {
   position: fixed;
