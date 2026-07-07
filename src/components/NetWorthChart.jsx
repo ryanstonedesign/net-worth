@@ -55,9 +55,16 @@ const UNSET_DOT_COLOR = '#cbcccf' /* --color-mist — tertiary grey */
 function GoalLabel({ viewBox, label, fill = GOAL_COLOR, onClick }) {
   if (!viewBox) return null
   const { x, y, width } = viewBox
+  // Swallow pointer movement over the strip so the chart's tooltip / month
+  // selection never fires from a tap meant for the goal line.
+  const stop = onClick ? (e) => e.stopPropagation() : undefined
   return (
     <g
       onClick={onClick ? (e) => { e.stopPropagation(); onClick() } : undefined}
+      onMouseMove={stop}
+      onMouseDown={stop}
+      onTouchStart={stop}
+      onTouchMove={stop}
       style={onClick ? { cursor: 'pointer' } : undefined}
     >
       <text
@@ -196,9 +203,14 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
   const placeholderGoalY = maxDataVal + Math.max((maxDataVal - minDataVal) * 0.3, Math.abs(maxDataVal) * 0.08, 1)
   const goalLineY = goal ?? (onGoalClick ? placeholderGoalY : null)
   const goalAbove = goalLineY != null && goalLineY > maxDataVal
+  // A goal under the data range must also stretch the domain — outside it,
+  // recharts discards the reference line and the goal becomes uneditable.
+  const goalBelow = goalLineY != null && goalLineY < minDataVal
   const yDomain = goalAbove
     ? [minDataVal, Math.round(goalLineY * 1.12)]
-    : ['auto', 'auto']
+    : goalBelow
+      ? [Math.round(goalLineY - (maxDataVal - goalLineY) * 0.08), 'auto']
+      : ['auto', 'auto']
 
   // Thin the dots on long ranges so they don't crowd the line. The line itself
   // stays continuous — only the markers are sampled. The selected month and the
@@ -262,21 +274,6 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
           content={<CustomTooltip />}
           cursor={{ stroke: 'rgba(17,26,74,0.15)', strokeWidth: 1, strokeDasharray: '4 3' }}
         />
-        {goalLineY != null && (
-          <ReferenceLine
-            y={goalLineY}
-            stroke={goal != null ? GOAL_COLOR : UNSET_LINE_COLOR}
-            strokeDasharray="5 3"
-            strokeWidth={1.5}
-            label={
-              <GoalLabel
-                label={goal != null ? goalLineText(goal, goalEta) : '+ Set a goal'}
-                fill={goal != null ? GOAL_COLOR : UNSET_TEXT_COLOR}
-                onClick={onGoalClick}
-              />
-            }
-          />
-        )}
         <Area
           type="monotone"
           dataKey="historical"
@@ -307,6 +304,24 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
             animationDuration={1100}
             animationEasing="ease-out"
             connectNulls={false}
+          />
+        )}
+        {/* Declared after the areas: SVG hit-tests in document order, so the
+            goal line and its tap strip must come last to stay clickable when
+            the trend line crosses above it */}
+        {goalLineY != null && (
+          <ReferenceLine
+            y={goalLineY}
+            stroke={goal != null ? GOAL_COLOR : UNSET_LINE_COLOR}
+            strokeDasharray="5 3"
+            strokeWidth={1.5}
+            label={
+              <GoalLabel
+                label={goal != null ? goalLineText(goal, goalEta) : '+ Set a goal'}
+                fill={goal != null ? GOAL_COLOR : UNSET_TEXT_COLOR}
+                onClick={onGoalClick}
+              />
+            }
           />
         )}
       </AreaChart>
