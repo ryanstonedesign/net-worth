@@ -667,7 +667,7 @@ a { text-decoration: none; color: inherit; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 0 8px 12px;
+  padding: 0 0 8px;
   margin-top: -2px;
 }
 .cat-contrib-label {

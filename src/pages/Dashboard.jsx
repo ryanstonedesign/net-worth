@@ -307,7 +307,6 @@ export default function Dashboard({
     ? data.categories.filter(c => c.type === 'liability')
         .reduce((t, c) => t + c.accounts.reduce((s, a) => s + (monthEstimates?.[a.id] || 0), 0), 0)
     : getTotalLiabilities(selectedMonth)
-  const hasLiabilities = data.categories.some(c => c.type === 'liability')
   // Derive the live category from current data so account add/delete/rename
   // inside the sheet reflect instantly — editSheet only holds the id reference.
   const editCat     = editSheet && editSheet !== 'new'
@@ -375,26 +374,20 @@ export default function Dashboard({
         </div>
       )}
 
-      {/* Asset / Liability summary */}
-      {data.categories.length > 0 && (
-        <div className="summary-row">
-          <div className="card summary-cell assets">
-            <div className="summary-cell-label">Assets</div>
-            <div className="summary-cell-amount" style={isEstimated ? { color: 'var(--c-ink-mute)' } : undefined}>{formatCurrency(assets)}</div>
-          </div>
-          {hasLiabilities && (
-            <div className="card summary-cell liabilities">
-              <div className="summary-cell-label">Liabilities</div>
-              <div className="summary-cell-amount" style={isEstimated ? { color: 'var(--c-ink-mute)' } : undefined}>{formatCurrency(liabilities)}</div>
-            </div>
-          )}
+      {/* Asset / Liability summary — always visible, $0 until data exists */}
+      <div className="summary-row">
+        <div className="card summary-cell assets">
+          <div className="summary-cell-label">Assets</div>
+          <div className="summary-cell-amount" style={isEstimated ? { color: 'var(--c-ink-mute)' } : undefined}>{formatCurrency(assets)}</div>
         </div>
-      )}
+        <div className="card summary-cell liabilities">
+          <div className="summary-cell-label">Liabilities</div>
+          <div className="summary-cell-amount" style={isEstimated ? { color: 'var(--c-ink-mute)' } : undefined}>{formatCurrency(liabilities)}</div>
+        </div>
+      </div>
 
-      {/* Categories — the summary row above normally provides the spacing;
-          without it (no categories yet) the header needs its own gap from
-          the range pills */}
-      <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 20, paddingRight: 20, marginBottom: 12, marginTop: data.categories.length === 0 ? 28 : 0 }}>
+      {/* Categories */}
+      <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 20, paddingRight: 20, marginBottom: 12 }}>
         <span className="section-title">Categories</span>
         {data.categories.length > 0 && (
           <button className="add-category-link" onClick={() => setEditSheet('new')}>Add</button>
