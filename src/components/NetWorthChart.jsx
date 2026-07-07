@@ -112,13 +112,17 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
   }, [dataSig, forecastSig])
 
   // Dots stay hidden until the line has finished drawing, then fade in. With no
-  // draw animation (later mounts) they're shown immediately.
+  // draw animation (later mounts) they're shown immediately. The same latch
+  // switches the recharts animation off entirely once the initial draw is done:
+  // only mounts animate — interactions that reshape the series (selecting a
+  // month that extends or shrinks the window) must not replay the draw.
   const [dotsVisible, setDotsVisible] = useState(!animate)
   useEffect(() => {
     if (!animate) return
     const t = setTimeout(() => setDotsVisible(true), 1200)
     return () => clearTimeout(t)
   }, [animate])
+  const drawAnimationActive = animate && !dotsVisible
 
   // First-time / empty state: no trend to draw yet, but the chart frame still
   // renders — a flat baseline in the border color stands in for the (empty)
@@ -282,7 +286,7 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
           fill={`url(#${gradId})`}
           dot={historicalDot}
           activeDot={{ r: 6, fill: color, stroke: 'white', strokeWidth: 2 }}
-          isAnimationActive={animate}
+          isAnimationActive={drawAnimationActive}
           animationBegin={0}
           animationDuration={1100}
           animationEasing="ease-out"
@@ -299,7 +303,7 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
             fill={`url(#${fGradId})`}
             dot={forecastDot}
             activeDot={{ r: 5, fill: color, fillOpacity: 0.7, stroke: 'white', strokeWidth: 2 }}
-            isAnimationActive={animate}
+            isAnimationActive={drawAnimationActive}
             animationBegin={0}
             animationDuration={1100}
             animationEasing="ease-out"
