@@ -61,11 +61,10 @@ export default function NewScenarioSheet({ scenarios, activeId, onCreate, onClos
           </label>
         </div>
         <p className="sync-explain">
-          Synced scenarios share what actually happens. When you save a
-          month's balances or contributions, every synced scenario gets the
-          same numbers — while each keeps its own growth rates and future
-          plans. Turn this off and this scenario keeps its own version of
-          the past: your monthly updates won't touch it.
+          When you save a month's balances or contributions, every synced
+          scenario gets the same numbers — while each keeps its own growth
+          rates and future plans. Turn this off and this scenario keeps its
+          own version of the past, untouched by your monthly updates.
         </p>
       </div>
 

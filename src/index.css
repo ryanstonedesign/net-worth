@@ -1356,7 +1356,7 @@ a { text-decoration: none; color: inherit; }
    scenario sheets. */
 .sync-card {
   background: var(--c-bg);
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 16px;
 }
 .sync-toggle-row {
