@@ -84,7 +84,8 @@ function AppShell({ dataHook, settingsProps }) {
         <div className="top-nav-fade" />
         <TopNav
           name={barName}
-          synced={activeForecast?.linked}
+          // Sync is only meaningful once a second scenario exists.
+          synced={forecasts.length > 1 && activeForecast?.linked}
           onMenu={() => setMenuOpen(true)}
           onSettings={() => setSettingsOpen(true)}
         />

@@ -1,6 +1,6 @@
-// Small circular-arrows glyph marking a scenario that stays in sync with
-// monthly updates. Shown beside the scenario name in the top nav and the
-// side nav list.
+// Connected-nodes glyph marking a scenario that stays in sync with monthly
+// updates. Shown beside the scenario name in the top nav and the side nav
+// list (only when there's more than one scenario to sync between).
 export default function SyncIcon({ size = 14, className = '' }) {
   return (
     <svg
@@ -16,10 +16,11 @@ export default function SyncIcon({ size = 14, className = '' }) {
       role="img"
       aria-label="Synced with monthly updates"
     >
-      <polyline points="23 4 23 10 17 10" />
-      <polyline points="1 20 1 14 7 14" />
-      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10" />
-      <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14" />
+      <circle cx="18" cy="5" r="3" />
+      <circle cx="6" cy="12" r="3" />
+      <circle cx="18" cy="19" r="3" />
+      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
     </svg>
   )
 }
