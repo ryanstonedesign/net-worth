@@ -1370,11 +1370,21 @@ a { text-decoration: none; color: inherit; }
   color: var(--c-ink-mute);
   margin: 10px 0 0;
 }
-.scenario-pick-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 4px 2px;
+/* Native select dressed as a standard input, with our own chevron. */
+.select-wrap { position: relative; }
+.select-wrap select.input {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 42px;
+  cursor: pointer;
+}
+.select-chevron {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--c-ink-mute);
+  pointer-events: none;
 }
 
 /* On/off switch (used for "Sync monthly updates"). */

@@ -28,19 +28,20 @@ export default function NewScenarioSheet({ scenarios, activeId, onCreate, onClos
 
       <div className="form-group">
         <label className="form-label">Duplicate From</label>
-        <div className="scenario-pick-list">
-          {scenarios.map(s => (
-            <label key={s.id} className="checkbox-row">
-              <input
-                type="radio"
-                name="scenario-source"
-                className="checkbox-input"
-                checked={fromId === s.id}
-                onChange={() => setFromId(s.id)}
-              />
-              <span className="checkbox-label">{s.name}</span>
-            </label>
-          ))}
+        <div className="select-wrap">
+          <select
+            className="input"
+            value={fromId}
+            onChange={e => setFromId(e.target.value)}
+            aria-label="Scenario to duplicate from"
+          >
+            {scenarios.map(s => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+          <svg className="select-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
         </div>
       </div>
 
