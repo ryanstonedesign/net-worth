@@ -31,8 +31,19 @@ the rule users already intuitively hold:
 - **Assumptions** — per-account `growth`, forward contribution behavior,
   the `goal`. These are *what a scenario is*. They never propagate.
 
+And one time gate: **only the past can contain facts.** A balance or
+contribution entered for a month up to and including the current calendar
+month is a record of reality and propagates. The same entry for a *future*
+month is a hypothesis ("what if brokerage bottoms at $20k in December") and
+stays local to the scenario it was typed in, exactly like a growth tweak.
+The check happens at write-time, so an old guess never retroactively
+propagates when its month arrives — but when the real month comes and the
+user records actuals, those fan out and overwrite any stale guess in linked
+scenarios (actuals trump hypotheses; a permanently fabricated timeline is
+what unlinking is for).
+
 This rule is what makes the feature invisible: users never choose where an
-edit goes; the kind of edit decides.
+edit goes; the kind and timing of the edit decides.
 
 ---
 
@@ -41,8 +52,12 @@ edit goes; the kind of edit decides.
 Keep the current storage model (each scenario owns a full data copy). Add
 one boolean per scenario: `linked` (default `true`; the Default scenario is
 always linked). When a **fact** edit happens in any linked scenario, apply
-the same write to every other linked scenario. Assumption edits stay local,
-as today.
+the same write to every other linked scenario. Assumption edits — and fact
+edits targeting future months — stay local, as today. The month-based fact
+mutators (`updateCategorySnapshot`, `updateContributions`,
+`clearMonthSnapshot`, `bulkImport` rows) all receive the month explicitly,
+so the fan-out helper applies the past-only gate with a single
+`month <= getCurrentMonth()` check per write.
 
 ### Data shape
 
