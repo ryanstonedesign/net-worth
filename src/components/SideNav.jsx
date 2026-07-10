@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import Popover from './Popover'
+import Modal from './Modal'
+import SyncIcon from './SyncIcon'
 
 const RenameIcon = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -15,13 +17,24 @@ const DeleteIcon = (
     <line x1="14" y1="11" x2="14" y2="17" />
   </svg>
 )
+const SyncActionIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="23 4 23 10 17 10" />
+    <polyline points="1 20 1 14 7 14" />
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10" />
+    <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14" />
+  </svg>
+)
 
 // Side navigation drawer that sits behind the page content. Lists every
 // scenario; tap one to switch to it. The "+" in the header creates a new
-// scenario. Each row carries a 3-dot action menu (rename / delete).
-export default function SideNav({ open, scenarios, activeId, onSelect, onAdd, onDelete, onRename }) {
+// scenario. Each row carries a 3-dot action menu (rename / sync / delete);
+// synced scenarios show a small sync glyph beside their name.
+export default function SideNav({ open, scenarios, activeId, onSelect, onAdd, onDelete, onRename, onToggleSync }) {
   const [editingId, setEditingId] = useState(null)
   const [draft, setDraft] = useState('')
+  // Scenario whose sync state is pending the confirm dialog, or null.
+  const [confirmSync, setConfirmSync] = useState(null)
 
   const startRename = (s) => { setEditingId(s.id); setDraft(s.name) }
   const commitRename = () => {
@@ -47,6 +60,11 @@ export default function SideNav({ open, scenarios, activeId, onSelect, onAdd, on
         {scenarios.map(s => {
           const isEditing = editingId === s.id
           const items = [{ label: 'Rename', icon: RenameIcon, onClick: () => startRename(s) }]
+          items.push({
+            label: s.linked ? 'Unsync' : 'Sync',
+            icon: SyncActionIcon,
+            onClick: () => setConfirmSync(s),
+          })
           if (scenarios.length > 1) {
             items.push({ label: 'Delete', icon: DeleteIcon, onClick: () => onDelete(s.id), danger: true })
           }
@@ -72,7 +90,8 @@ export default function SideNav({ open, scenarios, activeId, onSelect, onAdd, on
                 />
               ) : (
                 <button className="side-nav-item-name" onClick={() => onSelect(s.id)}>
-                  {s.name}
+                  <span className="side-nav-item-label">{s.name}</span>
+                  {s.linked && <SyncIcon className="sync-badge" />}
                 </button>
               )}
               {!isEditing && (
@@ -93,6 +112,47 @@ export default function SideNav({ open, scenarios, activeId, onSelect, onAdd, on
           )
         })}
       </nav>
+
+      {confirmSync && (
+        <Modal
+          title={confirmSync.linked ? 'Unsync this scenario?' : 'Sync this scenario?'}
+          onClose={() => setConfirmSync(null)}
+        >
+          <p className="sync-explain" style={{ margin: '0 0 24px', fontSize: 14 }}>
+            {confirmSync.linked ? (
+              <>
+                “{confirmSync.name}” will stop receiving your monthly updates.
+                Balances and contributions you save from now on won't copy
+                into it, and edits you make inside it stay there. Everything
+                it holds today is kept as-is.
+              </>
+            ) : (
+              <>
+                “{confirmSync.name}” will start receiving your monthly updates
+                again. Its current and past months will be replaced right now
+                with your latest saved balances and contributions. Its growth
+                rates and future plans won't change.
+              </>
+            )}
+          </p>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button
+              className="btn btn-secondary"
+              style={{ flex: 1 }}
+              onClick={() => setConfirmSync(null)}
+            >
+              Cancel
+            </button>
+            <button
+              className="btn btn-primary"
+              style={{ flex: 1 }}
+              onClick={() => { onToggleSync(confirmSync.id, !confirmSync.linked); setConfirmSync(null) }}
+            >
+              Continue
+            </button>
+          </div>
+        </Modal>
+      )}
     </aside>
   )
 }

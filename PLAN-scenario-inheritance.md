@@ -116,17 +116,22 @@ Edits are symmetric among linked scenarios: typing July's balances while
 matter which tab you typed them in. Edits made *inside an unlinked
 scenario* stay local (it opted out of the club in both directions).
 
-### UX
+### UX (as built)
 
-- Nothing new by default. Every scenario is linked; monthly updates just
+- Nothing new by default. Every scenario is synced; monthly updates just
   work everywhere.
-- One control, shown only in the scenario row's edit affordance in
-  `SideNav`: a "Follows actual balances" toggle (default on). Unlinked
-  scenarios get a subtle badge (e.g. a broken-link glyph) so divergence is
-  visible.
-- Re-linking a diverged scenario only affects *future* edits. Offer an
-  optional one-tap "Copy current balances from Default" alongside the
-  toggle rather than silently rewriting history on re-link.
+- Creating a scenario opens a sheet (`NewScenarioSheet`): name it, pick
+  which existing scenario to duplicate, and a "Sync monthly updates"
+  toggle (default on) with a plain-words explanation of what unsyncing
+  means.
+- Synced scenarios show a small circular-arrows glyph beside their name in
+  the top nav and in the side nav list; unsynced scenarios show nothing.
+- Each scenario row's action menu carries Sync/Unsync (above Delete),
+  labeled by current state. Both directions confirm before acting:
+  unsyncing explains that monthly updates stop copying in and existing
+  data is kept as-is; re-syncing explains that current-and-past months are
+  replaced right away with the latest saved balances and contributions
+  (growth rates and future plans untouched).
 
 ### Trade-offs
 
@@ -231,3 +236,7 @@ ergonomic shortcut for "Save More"-style what-ifs. Future-month
 contribution overrides already stay per-scenario under the time gate, so
 this is convenience only — one dial instead of typing amounts into each
 future month.
+
+**Status:** Phases 1–3 are implemented (sync flag + fan-out with the time
+gate, structural CRUD fan-out with pre-minted ids, creation sheet + sync
+badges + sync/unsync confirm flow). Phase 4 remains optional future work.

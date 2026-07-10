@@ -1330,6 +1330,91 @@ a { text-decoration: none; color: inherit; }
 .side-nav-item-menu:hover { background: rgba(17, 26, 74, 0.08); color: var(--c-ink); }
 .side-nav-item-menu svg { width: 18px; height: 18px; }
 
+/* ── Scenario sync ──
+   A small circular-arrows glyph marks scenarios that receive monthly
+   updates; it sits beside the name in the top nav and the side nav list. */
+.sync-badge {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--c-ink-mute);
+}
+/* The row name becomes a flex line so the badge can sit after the text;
+   ellipsis moves onto the inner label span. */
+.side-nav-item-name {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.side-nav-item-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Sync toggle row + plain-words explanation in the scenario sheets. */
+.sync-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sync-toggle-title {
+  font-size: 15px;
+  font-weight: var(--font-weight-medium);
+  color: var(--c-ink);
+}
+.sync-explain {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--c-ink-mute);
+  margin: 10px 0 0;
+}
+.scenario-pick-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 2px;
+}
+
+/* On/off switch (used for "Sync monthly updates"). */
+.switch {
+  position: relative;
+  width: 46px;
+  height: 28px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.switch input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.switch-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: var(--c-border);
+  transition: background 0.2s ease;
+  pointer-events: none;
+}
+.switch input:checked ~ .switch-track { background: var(--c-primary); }
+.switch-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(1, 24, 33, 0.25);
+  transition: transform 0.2s ease;
+  pointer-events: none;
+}
+.switch input:checked ~ .switch-thumb { transform: translateX(18px); }
+
 /* ── Popover action menu (system component) ── */
 .popover-trigger {
   display: inline-flex;

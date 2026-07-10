@@ -178,6 +178,7 @@ function buildScenarioContainer(specs, months, variants) {
   const scenarios = variants.map((v, i) => ({
     id: i === 0 ? 'default' : makeForecastId(),
     name: v.name,
+    linked: true,
     data: i === 0 ? base : applyVariant(base, v),
   }))
   return { version: 2, activeId: 'default', scenarios }
@@ -208,18 +209,20 @@ function wrapData(data) {
   return {
     version: 2,
     activeId: 'default',
-    scenarios: [{ id: 'default', name: 'Default Scenario', data: data || emptyData() }],
+    scenarios: [{ id: 'default', name: 'Default Scenario', linked: true, data: data || emptyData() }],
   }
 }
 
 function migrate(obj) {
   if (!obj) return null
   if (obj.version === 2 && Array.isArray(obj.scenarios) && obj.scenarios.length) {
+    // Stamp the sync flag on scenarios saved before it existed (default on).
+    const scenarios = obj.scenarios.map(s =>
+      typeof s.linked === 'boolean' ? s : { ...s, linked: true })
     // Guard against a dangling activeId (e.g. a deleted scenario).
-    if (!obj.scenarios.some(s => s.id === obj.activeId)) {
-      return { ...obj, activeId: obj.scenarios[0].id }
-    }
-    return obj
+    const activeId = scenarios.some(s => s.id === obj.activeId)
+      ? obj.activeId : scenarios[0].id
+    return { ...obj, scenarios, activeId }
   }
   return wrapData(obj) // legacy flat shape
 }
@@ -279,6 +282,29 @@ export function useData({ initialData = null, onChange = null } = {}) {
     })
   }, [])
 
+  // Fact edits — recorded balances/contributions for the current or past
+  // months and the account/category structure — are shared reality: applied
+  // to the active scenario and fanned out to every other synced scenario.
+  // Assumptions (growth, goal, future-month entries) go through plain setData
+  // instead and stay per-scenario. Edits made inside an unsynced scenario
+  // never fan out. See PLAN-scenario-inheritance.md. The updater also
+  // receives isActive so callers can keep parts of a write local (bulkImport
+  // uses it to hold future-month rows back from siblings).
+  const setFactData = useCallback((updater) => {
+    setContainer(c => {
+      const act = activeOf(c)
+      const fanOut = act.linked !== false
+      return {
+        ...c,
+        scenarios: c.scenarios.map(s => {
+          if (s.id === act.id) return { ...s, data: updater(s.data, true) }
+          if (fanOut && s.linked !== false) return { ...s, data: updater(s.data, false) }
+          return s
+        }),
+      }
+    })
+  }, [])
+
   // Persist the whole container to the active scenario's own slot — never crosses
   // slots. For "none" this is just an offline cache; the encrypted cloud row is
   // authoritative.
@@ -325,25 +351,57 @@ export function useData({ initialData = null, onChange = null } = {}) {
   }, [])
 
   // ── Forecast scenario controls ──
-  const forecasts = container.scenarios.map(s => ({ id: s.id, name: s.name }))
+  const forecasts = container.scenarios.map(s => ({ id: s.id, name: s.name, linked: s.linked !== false }))
 
   const setActiveForecast = useCallback((id) => {
     setContainer(c => (c.scenarios.some(s => s.id === id) ? { ...c, activeId: id } : c))
   }, [])
 
-  // New scenarios fork the currently-focused one so you can tweak a what-if
-  // without disturbing the original. Returns the new id and focuses it.
-  const addForecast = useCallback((name) => {
+  // New scenarios duplicate a chosen source (default: the focused one) so you
+  // can tweak a what-if without disturbing the original. `linked` decides
+  // whether the copy keeps receiving monthly updates (on unless opted out).
+  // Returns the new id and focuses it.
+  const addForecast = useCallback((name, { fromId, linked = true } = {}) => {
     const id = makeForecastId()
     setContainer(c => {
-      const copy = JSON.parse(JSON.stringify(activeOf(c).data))
+      const src = c.scenarios.find(s => s.id === fromId) || activeOf(c)
+      const copy = JSON.parse(JSON.stringify(src.data))
       return {
         ...c,
         activeId: id,
-        scenarios: [...c.scenarios, { id, name: (name || '').trim() || 'New Scenario', data: copy }],
+        scenarios: [...c.scenarios, { id, name: (name || '').trim() || 'New Scenario', linked, data: copy }],
       }
     })
     return id
+  }, [])
+
+  // Flip a scenario's sync state. Unsyncing just stops future propagation —
+  // the scenario's data stays exactly as it is. Re-syncing also catches the
+  // scenario up: its current-and-past months are replaced with the shared
+  // reality from an already-synced scenario, while future-month overrides,
+  // growth rates, and the goal are left alone.
+  const setForecastSynced = useCallback((id, synced) => {
+    setContainer(c => ({
+      ...c,
+      scenarios: c.scenarios.map(s => {
+        if (s.id !== id) return s
+        if (!synced) return { ...s, linked: false }
+        const src = c.scenarios.find(o => o.id !== id && o.linked !== false)
+        if (!src) return { ...s, linked: true }
+        const now = getCurrentMonth()
+        const past   = (obj) => Object.fromEntries(Object.entries(obj || {}).filter(([m]) => m <= now))
+        const future = (obj) => Object.fromEntries(Object.entries(obj || {}).filter(([m]) => m > now))
+        return {
+          ...s,
+          linked: true,
+          data: {
+            ...s.data,
+            snapshots: { ...future(s.data.snapshots), ...past(src.data.snapshots) },
+            contributions: { ...future(s.data.contributions), ...past(src.data.contributions) },
+          },
+        }
+      }),
+    }))
   }, [])
 
   const deleteForecast = useCallback((id) => {
@@ -370,22 +428,29 @@ export function useData({ initialData = null, onChange = null } = {}) {
     [container]
   )
 
+  // Ids are minted once, outside the updaters, so a fanned-out structural
+  // edit lands with the same id in every synced scenario.
   const addCategoryWithAccounts = useCallback((cat, accounts = []) => {
     const catId = `cat_${Date.now()}`
     const withIds = accounts.map((a, i) => ({ ...a, id: `acc_${Date.now()}_${i}` }))
-    setData(d => ({ ...d, categories: [...d.categories, { ...cat, id: catId, accounts: withIds }] }))
+    setFactData(d => ({ ...d, categories: [...d.categories, { ...cat, id: catId, accounts: withIds }] }))
     return catId
-  }, [])
+  }, [setFactData])
 
+  // Category identity (name/type/icon/color) is structural fact and syncs;
+  // `contributing` is a forecasting assumption and stays per-scenario.
   const updateCategory = useCallback((id, updates) => {
-    setData(d => ({
+    const { contributing, ...facts } = updates
+    const apply = (u) => (d) => ({
       ...d,
-      categories: d.categories.map(c => c.id === id ? { ...c, ...updates } : c),
-    }))
-  }, [])
+      categories: d.categories.map(c => c.id === id ? { ...c, ...u } : c),
+    })
+    if (Object.keys(facts).length) setFactData(apply(facts))
+    if (contributing !== undefined) setData(apply({ contributing }))
+  }, [setFactData, setData])
 
   const deleteCategory = useCallback((id) => {
-    setData(d => {
+    setFactData(d => {
       const cat = d.categories.find(c => c.id === id)
       const accountIds = new Set(cat ? cat.accounts.map(a => a.id) : [])
       const prune = (obj) => Object.fromEntries(
@@ -405,7 +470,7 @@ export function useData({ initialData = null, onChange = null } = {}) {
 
   const addAccount = useCallback((categoryId, account) => {
     const id = `acc_${Date.now()}`
-    setData(d => ({
+    setFactData(d => ({
       ...d,
       categories: d.categories.map(c =>
         c.id === categoryId ? { ...c, accounts: [...c.accounts, { ...account, id }] } : c
@@ -421,7 +486,7 @@ export function useData({ initialData = null, onChange = null } = {}) {
         Object.fromEntries(Object.entries(vals).filter(([k]) => k !== accountId)),
       ])
     )
-    setData(d => ({
+    setFactData(d => ({
       ...d,
       categories: d.categories.map(c =>
         c.id === categoryId
@@ -434,7 +499,7 @@ export function useData({ initialData = null, onChange = null } = {}) {
   }, [])
 
   const renameAccount = useCallback((categoryId, accountId, newName) => {
-    setData(d => ({
+    setFactData(d => ({
       ...d,
       categories: d.categories.map(c =>
         c.id === categoryId
@@ -458,29 +523,36 @@ export function useData({ initialData = null, onChange = null } = {}) {
 
   // Estimated monthly contribution ($) per account, recorded per month — like
   // balances, each month is independent. Future months use the average.
+  // Current-or-past months are facts and sync; future months are per-scenario
+  // forecasting levers and stay local.
   const updateContributions = useCallback((month, entries) => {
-    setData(d => ({
+    const write = (d) => ({
       ...d,
       contributions: {
         ...(d.contributions || {}),
         [month]: { ...((d.contributions || {})[month] || {}), ...entries },
       },
-    }))
-  }, [])
+    })
+    if (month <= getCurrentMonth()) setFactData(write)
+    else setData(write)
+  }, [setFactData, setData])
 
   const getContribution = useCallback((month) => data.contributions?.[month] || {}, [data.contributions])
 
   // Discard a month's manually-entered balances AND contributions so it reverts
-  // entirely to its estimate.
+  // entirely to its estimate. Same time gate as writing: clearing a real month
+  // syncs, clearing a future override stays local.
   const clearMonthSnapshot = useCallback((month) => {
-    setData(d => {
+    const write = (d) => {
       const snapshots = { ...d.snapshots }
       delete snapshots[month]
       const contributions = { ...(d.contributions || {}) }
       delete contributions[month]
       return { ...d, snapshots, contributions }
-    })
-  }, [])
+    }
+    if (month <= getCurrentMonth()) setFactData(write)
+    else setData(write)
+  }, [setFactData, setData])
 
   const setGoal = useCallback((amount) => {
     setData(d => ({ ...d, goal: amount }))
@@ -492,11 +564,15 @@ export function useData({ initialData = null, onChange = null } = {}) {
   // when they already exist, otherwise created. Snapshot values are written
   // for the row's month. Runs as a single state transaction so one push syncs.
   const bulkImport = useCallback((rows) => {
-    setData(d => {
+    // One timestamp for the whole import so fanned-out scenarios that walk the
+    // same creation path mint identical ids for the same new rows.
+    const stamp = Date.now()
+    const now = getCurrentMonth()
+    setFactData((d, isActive) => {
       const categories = d.categories.map(c => ({ ...c, accounts: [...c.accounts] }))
       const snapshots = { ...d.snapshots }
       let seq = 0
-      const newId = (prefix) => `${prefix}_${Date.now()}_${seq++}`
+      const newId = (prefix) => `${prefix}_${stamp}_${seq++}`
       const findCat = (name) =>
         categories.find(c => c.name.trim().toLowerCase() === name.trim().toLowerCase())
 
@@ -525,24 +601,27 @@ export function useData({ initialData = null, onChange = null } = {}) {
         }
 
         const month = row.month
-        if (month && Number.isFinite(row.value)) {
+        // Future-month rows stay local to the scenario the import ran in.
+        if (month && Number.isFinite(row.value) && (isActive || month <= now)) {
           snapshots[month] = { ...(snapshots[month] || {}), [acc.id]: row.value }
         }
       }
 
       return { ...d, categories, snapshots }
     })
-  }, [])
+  }, [setFactData])
 
   const updateCategorySnapshot = useCallback((month, entries) => {
-    setData(d => ({
+    const write = (d) => ({
       ...d,
       snapshots: {
         ...d.snapshots,
         [month]: { ...(d.snapshots[month] || {}), ...entries },
       },
-    }))
-  }, [])
+    })
+    if (month <= getCurrentMonth()) setFactData(write)
+    else setData(write)
+  }, [setFactData, setData])
 
   const getSnapshot = useCallback((month) => data.snapshots[month] || {}, [data.snapshots])
 
@@ -597,6 +676,7 @@ export function useData({ initialData = null, onChange = null } = {}) {
     addForecast,
     deleteForecast,
     renameForecast,
+    setForecastSynced,
     getForecastData,
     goal: data.goal ?? null,
     setGoal,

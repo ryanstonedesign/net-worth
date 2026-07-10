@@ -9,6 +9,7 @@ import PrototypeSettings from './components/PrototypeSettings'
 import StickerSheet from './components/StickerSheet'
 import TopNav from './components/TopNav'
 import SideNav from './components/SideNav'
+import NewScenarioSheet from './components/NewScenarioSheet'
 import { readonlyDashboardProps } from './components/readonlyDashboard'
 import AuthScreen from './components/AuthScreen'
 import LandingPage from './components/LandingPage'
@@ -30,10 +31,11 @@ function AppShell({ dataHook, settingsProps }) {
   // the push plays; it's cleared when its slide-out animation finishes.
   const [enterMode, setEnterMode] = useState('fade')
   const [outgoing, setOutgoing] = useState(null)
+  const [newOpen, setNewOpen] = useState(false)
 
   const { forecasts, activeForecastId } = dataHook
-  const nameOf = (id) => forecasts.find(f => f.id === id)?.name ?? 'Scenario'
-  const barName = nameOf(activeForecastId)
+  const activeForecast = forecasts.find(f => f.id === activeForecastId)
+  const barName = activeForecast?.name ?? 'Scenario'
 
   // Switch to a scenario from the side nav, then close the drawer.
   const handleSelect = (id) => {
@@ -42,14 +44,20 @@ function AppShell({ dataHook, settingsProps }) {
     setMenuOpen(false)
   }
 
-  // Create + open a new scenario straight away (no naming modal), then focus the
-  // name field so the default "New scenario" can be typed over. The new card
-  // slides in from the right while the previous one (frozen) is pushed out left.
+  // "+" opens the creation sheet: name the scenario, pick which one to
+  // duplicate, choose whether it stays synced with monthly updates.
   const handleAdd = () => {
+    setMenuOpen(false)
+    setNewOpen(true)
+  }
+
+  // Create + open the new scenario. The new card slides in from the right
+  // while the previous one (frozen) is pushed out left.
+  const handleCreate = ({ name, fromId, synced }) => {
+    setNewOpen(false)
     setOutgoing({ id: activeForecastId }) // freeze the card leaving to the left
     setEnterMode('push')
-    dataHook.addForecast('New scenario') // forks + opens the new scenario
-    setMenuOpen(false)
+    dataHook.addForecast(name, { fromId, linked: synced })
   }
 
   const handleDelete = (id) => {
@@ -69,12 +77,14 @@ function AppShell({ dataHook, settingsProps }) {
         onAdd={handleAdd}
         onDelete={handleDelete}
         onRename={(id, name) => dataHook.renameForecast(id, name)}
+        onToggleSync={(id, synced) => dataHook.setForecastSynced(id, synced)}
       />
 
       <div className={`app-shell${menuOpen ? ' nav-open' : ''}`} style={{ overflow: 'hidden' }}>
         <div className="top-nav-fade" />
         <TopNav
           name={barName}
+          synced={activeForecast?.linked}
           onMenu={() => setMenuOpen(true)}
           onSettings={() => setSettingsOpen(true)}
         />
@@ -134,6 +144,15 @@ function AppShell({ dataHook, settingsProps }) {
         onOpenStickerSheet={() => { setSettingsOpen(false); setStickerOpen(true) }}
         {...settingsProps}
       />
+
+      {newOpen && (
+        <NewScenarioSheet
+          scenarios={forecasts}
+          activeId={activeForecastId}
+          onCreate={handleCreate}
+          onClose={() => setNewOpen(false)}
+        />
+      )}
 
       {stickerOpen && <StickerSheet onClose={() => setStickerOpen(false)} />}
     </>
