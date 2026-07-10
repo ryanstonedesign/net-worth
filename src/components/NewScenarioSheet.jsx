@@ -20,7 +20,6 @@ export default function NewScenarioSheet({ scenarios, activeId, onCreate, onClos
           placeholder="e.g. Save More"
           value={name}
           maxLength={40}
-          autoFocus
           onChange={e => setName(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') create() }}
         />
