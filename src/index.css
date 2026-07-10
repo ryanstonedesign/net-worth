@@ -1352,7 +1352,13 @@ a { text-decoration: none; color: inherit; }
   white-space: nowrap;
 }
 
-/* Sync toggle row + plain-words explanation in the scenario sheets. */
+/* Sync toggle + plain-words explanation, grouped on a muted card in the
+   scenario sheets. */
+.sync-card {
+  background: var(--c-surface-muted);
+  border-radius: 12px;
+  padding: 16px;
+}
 .sync-toggle-row {
   display: flex;
   align-items: center;
