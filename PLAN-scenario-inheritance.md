@@ -31,30 +31,27 @@ the rule users already intuitively hold:
 - **Assumptions** — per-account `growth`, forward contribution behavior,
   the `goal`. These are *what a scenario is*. They never propagate.
 
-One time gate, for **balances only**: a balance entered for a month up to
-and including the current calendar month is a record of reality and
-propagates. A *future*-month balance is a fabricated outcome ("what if
-brokerage bottoms at $20k in December") — it hard-codes the chart, so it
-stays local to the scenario it was typed in, exactly like a growth tweak.
-The check happens at write-time, so an old guess never retroactively
-propagates when its month arrives — but when the real month comes and the
-user records actuals, those fan out and overwrite any stale guess in linked
-scenarios (actuals trump hypotheses; a permanently fabricated timeline is
-what unlinking is for).
+And one uniform time gate: **only the past can contain facts.** A balance
+or contribution entered for a month up to and including the current
+calendar month is a record of reality and propagates. The same entry for a
+*future* month is a forecasting lever and stays local to the scenario it
+was typed in — a future balance is a hypothetical outcome ("what if
+brokerage bottoms at $20k in December"), and a future contribution is a
+hypothetical plan ("what if I save $1,500/mo from January"). Keeping both
+local is what lets linked scenarios forecast genuinely different futures
+while sharing one real history: Default can plan $1,500/mo from January
+while another linked scenario plans $400/mo.
 
-**Contributions propagate regardless of date.** A contribution is a
-statement of behavior, not a measurement: "I'll save $1,500/mo from
-January" is part of the shared plan linked scenarios exist to stress-test.
-The forecast (`buildAccountModels` in `Dashboard.jsx`) derives forward
-contributions from the average of recorded months plus future-dated
-per-month overrides — so if future contribution plans stayed local, a
-linked scenario's forecast would silently keep projecting the old average
-even after those months became the past. Propagating them at write time
-also means nothing special happens when a planned month arrives: the entry
-is already everywhere it should be and simply starts counting as recorded
-history. (Consequence: a different *savings plan* — "Save More" — is an
-assumption, not a history edit; see the per-scenario contribution knob in
-the phasing section.)
+The gate is evaluated at write-time. A future entry never retroactively
+propagates just because its month arrived; instead, when the user records
+that month's actual balances/contributions, that save is now a
+current-month fact and fans out, overwriting each linked scenario's stale
+guess for that month (actuals trump hypotheses — a permanently fabricated
+timeline is what unlinking is for). From the following month onward, each
+scenario's remaining future overrides resume shaping its own forecast.
+Known consequence: a future plan typed in Default and never re-confirmed
+reaches linked scenarios only at the next current-month save — which is the
+app's natural monthly rhythm anyway.
 
 This rule is what makes the feature invisible: users never choose where an
 edit goes; the kind and timing of the edit decides.
@@ -66,13 +63,12 @@ edit goes; the kind and timing of the edit decides.
 Keep the current storage model (each scenario owns a full data copy). Add
 one boolean per scenario: `linked` (default `true`; the Default scenario is
 always linked). When a **fact** edit happens in any linked scenario, apply
-the same write to every other linked scenario. Assumption edits — and
-*balance* edits targeting future months — stay local, as today.
-Contribution edits fan out for any month. The month-based fact mutators
-(`updateCategorySnapshot`, `updateContributions`, `clearMonthSnapshot`,
-`bulkImport` rows) all receive the month explicitly, so the fan-out helper
-applies the balances-only past gate with a single
-`month <= getCurrentMonth()` check per snapshot write.
+the same write to every other linked scenario. Assumption edits — and any
+edit targeting a future month — stay local, as today. The month-based fact
+mutators (`updateCategorySnapshot`, `updateContributions`,
+`clearMonthSnapshot`, `bulkImport` rows) all receive the month explicitly,
+so the fan-out helper applies the past-only gate with a single
+`month <= getCurrentMonth()` check per write.
 
 ### Data shape
 
@@ -229,8 +225,9 @@ Phase 1 (core): `linked` flag + `setFactData` fan-out for snapshots,
 contributions, `clearMonthSnapshot`, `bulkImport`; migration stamp.
 Phase 2 (structure): fan out category/account CRUD with pre-minted ids.
 Phase 3 (UI): SideNav toggle + unlinked badge + "copy balances" helper.
-Phase 4 (optional, later): a per-scenario contribution *assumption* knob —
-a multiplier or per-account override applied on top of the shared recorded
-contributions (what `applyVariant`'s `contribMult` already does for demo
-variants). This restores "Save More"-style what-ifs as linked scenarios,
-since shared contribution facts now make fudging history the wrong tool.
+Phase 4 (optional, later): a per-scenario contribution *multiplier* knob
+(what `applyVariant`'s `contribMult` does for demo variants) as an
+ergonomic shortcut for "Save More"-style what-ifs. Future-month
+contribution overrides already stay per-scenario under the time gate, so
+this is convenience only — one dial instead of typing amounts into each
+future month.
