@@ -1355,7 +1355,7 @@ a { text-decoration: none; color: inherit; }
 /* Sync toggle + plain-words explanation, grouped on a muted card in the
    scenario sheets. */
 .sync-card {
-  background: var(--c-surface-muted);
+  background: var(--c-bg);
   border-radius: 12px;
   padding: 16px;
 }
