@@ -84,8 +84,9 @@ function AppShell({ dataHook, settingsProps }) {
         <div className="top-nav-fade" />
         <TopNav
           name={barName}
-          // Sync is only meaningful once a second scenario exists.
-          synced={forecasts.length > 1 && activeForecast?.linked}
+          // Sync is only meaningful once a second scenario exists;
+          // undefined hides the badge entirely.
+          synced={forecasts.length > 1 ? !!activeForecast?.linked : undefined}
           onMenu={() => setMenuOpen(true)}
           onSettings={() => setSettingsOpen(true)}
         />

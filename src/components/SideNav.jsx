@@ -92,7 +92,8 @@ export default function SideNav({ open, scenarios, activeId, onSelect, onAdd, on
               ) : (
                 <button className="side-nav-item-name" onClick={() => onSelect(s.id)}>
                   <span className="side-nav-item-label">{s.name}</span>
-                  {scenarios.length > 1 && s.linked && <SyncIcon className="sync-badge" />}
+                  {/* Synced is the norm — only flag the exception. */}
+                  {scenarios.length > 1 && !s.linked && <SyncIcon className="sync-badge sync-badge--off" />}
                 </button>
               )}
               {!isEditing && (

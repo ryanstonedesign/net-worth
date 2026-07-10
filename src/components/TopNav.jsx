@@ -1,10 +1,10 @@
-import SyncIcon from './SyncIcon'
-
 // Floating top nav, modern style: a circular menu button (top left) that opens
-// the side nav, the active scenario name beside it (with a sync glyph when the
-// scenario receives monthly updates), and a circular settings button (top
-// right). No surface of its own — the buttons float over the page content.
-// Renaming lives in the side nav's per-scenario action menu.
+// the side nav, the active scenario name beside it (with a Synced/Unsynced
+// badge once there's more than one scenario), and a circular settings button
+// (top right). No surface of its own — the buttons float over the page
+// content. Renaming lives in the side nav's per-scenario action menu.
+// `synced` is tri-state: true/false renders the badge, undefined hides it
+// (single scenario — sync isn't meaningful yet).
 export default function TopNav({ name, synced, onMenu, onSettings }) {
   return (
     <div className="top-nav">
@@ -17,7 +17,11 @@ export default function TopNav({ name, synced, onMenu, onSettings }) {
           </svg>
         </button>
         <span className="top-nav-name">{name}</span>
-        {synced && <SyncIcon className="sync-badge" />}
+        {synced !== undefined && (
+          <span className={`badge ${synced ? 'badge-synced' : 'badge-unsynced'}`}>
+            {synced ? 'Synced' : 'Unsynced'}
+          </span>
+        )}
       </div>
 
       {onSettings && (

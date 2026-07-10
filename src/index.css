@@ -1051,6 +1051,9 @@ a { text-decoration: none; color: inherit; }
 }
 .badge-asset { background: rgba(22, 126, 108, 0.1); color: var(--color-seafoam-700); }
 .badge-liability { background: rgba(220, 38, 38, 0.1); color: var(--c-danger); }
+/* Scenario sync state in the top nav. */
+.badge-synced { background: rgba(22, 126, 108, 0.1); color: var(--color-seafoam-700); }
+.badge-unsynced { background: rgba(202, 138, 4, 0.14); color: #a16207; }
 
 /* ── Form ── */
 .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
@@ -1331,13 +1334,16 @@ a { text-decoration: none; color: inherit; }
 .side-nav-item-menu svg { width: 18px; height: 18px; }
 
 /* ── Scenario sync ──
-   A small circular-arrows glyph marks scenarios that receive monthly
-   updates; it sits beside the name in the top nav and the side nav list. */
+   The top nav shows a Synced/Unsynced text badge for the active scenario;
+   in the side nav list, only unsynced scenarios are flagged, with a yellow
+   connected-nodes glyph beside their name. */
 .sync-badge {
   display: inline-flex;
   flex-shrink: 0;
   color: var(--c-ink-mute);
 }
+.sync-badge--off { color: #a16207; }
+.top-nav-left .badge { flex-shrink: 0; }
 /* The row name becomes a flex line so the badge can sit after the text;
    ellipsis moves onto the inner label span. */
 .side-nav-item-name {

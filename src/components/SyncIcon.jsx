@@ -1,6 +1,6 @@
-// Connected-nodes glyph marking a scenario that stays in sync with monthly
-// updates. Shown beside the scenario name in the top nav and the side nav
-// list (only when there's more than one scenario to sync between).
+// Connected-nodes glyph. In the side nav list it flags scenarios that have
+// opted OUT of monthly-update sync (rendered yellow via .sync-badge--off);
+// synced scenarios are the norm and carry no mark.
 export default function SyncIcon({ size = 14, className = '' }) {
   return (
     <svg
@@ -14,7 +14,7 @@ export default function SyncIcon({ size = 14, className = '' }) {
       strokeLinecap="round"
       strokeLinejoin="round"
       role="img"
-      aria-label="Synced with monthly updates"
+      aria-label="Not synced with monthly updates"
     >
       <circle cx="18" cy="5" r="3" />
       <circle cx="6" cy="12" r="3" />
