@@ -45,7 +45,8 @@ export default function NewScenarioSheet({ scenarios, activeId, onCreate, onClos
         </div>
       </div>
 
-      <div className="form-group" style={{ marginBottom: 24 }}>
+      {/* 32 collapses with the form-group's 16 bottom margin → 32px gap. */}
+      <div className="form-group" style={{ marginTop: 32, marginBottom: 24 }}>
         <div className="sync-toggle-row">
           <span className="sync-toggle-title">Sync monthly updates</span>
           <label className="switch">
