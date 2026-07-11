@@ -3,6 +3,7 @@ import { useState } from 'react'
 const noop = () => {}
 import { useData } from './hooks/useData'
 import { useVault } from './hooks/useVault'
+import { useMediaQuery, DESKTOP_QUERY } from './hooks/useMediaQuery'
 import { getCurrentMonth } from './utils'
 import Dashboard from './pages/Dashboard'
 import PrototypeSettings from './components/PrototypeSettings'
@@ -17,13 +18,17 @@ import LockScreen from './components/LockScreen'
 import RecoveryPhraseSetup from './components/RecoveryPhraseSetup'
 import RestoreAccessScreen from './components/RestoreAccessScreen'
 
-// Shared shell for both vaulted and legacy modes: a side nav drawer behind the
-// page content, a floating top nav (menu + scenario name + settings), and the
-// scenario "push" entrance when a new scenario is created.
-function AppShell({ dataHook, settingsProps }) {
+// Shared shell for both vaulted and legacy modes: a side nav (drawer on
+// mobile, fixed sidebar on desktop), a floating top nav (menu + scenario name
+// + settings on mobile; just the name on desktop), and the scenario "push"
+// entrance when a new scenario is created.
+function AppShell({ dataHook, settingsProps, userName }) {
+  const isDesktop = useMediaQuery(DESKTOP_QUERY)
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
+  // Which settings view is open in the modal sheet: null (closed), 'main'
+  // (full list, mobile), or a specific flow launched from the desktop popover.
+  const [settingsView, setSettingsView] = useState(null)
   const [stickerOpen, setStickerOpen] = useState(false)
   // How the live stage enters when activeForecastId changes: 'push' (slide in
   // from the right) right after creating a scenario, 'fade' for ordinary
@@ -71,6 +76,7 @@ function AppShell({ dataHook, settingsProps }) {
 
       <SideNav
         open={menuOpen}
+        desktop={isDesktop}
         scenarios={forecasts}
         activeId={activeForecastId}
         onSelect={handleSelect}
@@ -78,6 +84,19 @@ function AppShell({ dataHook, settingsProps }) {
         onDelete={handleDelete}
         onRename={(id, name) => dataHook.renameForecast(id, name)}
         onToggleSync={(id, synced) => dataHook.setForecastSynced(id, synced)}
+        userName={userName}
+        onOpenSettings={() => { setMenuOpen(false); setSettingsView('main') }}
+        settingsMenu={{
+          scenario: dataHook.scenario,
+          onScenarioChange: dataHook.setScenario,
+          importDisabled: dataHook.scenario !== 'none',
+          onImport: () => setSettingsView('import'),
+          onOpenStickerSheet: () => setStickerOpen(true),
+          onChangePassword: settingsProps.onChangePassword && (() => setSettingsView('change-password')),
+          onShowRecovery: settingsProps.onGenerateRecovery && (() => setSettingsView('recovery-confirm')),
+          onSignOut: settingsProps.onSignOut,
+          onDeleteAccount: settingsProps.onDeleteAccount && (() => setSettingsView('delete')),
+        }}
       />
 
       <div className={`app-shell${menuOpen ? ' nav-open' : ''}`} style={{ overflow: 'hidden' }}>
@@ -88,7 +107,7 @@ function AppShell({ dataHook, settingsProps }) {
           // undefined hides the badge entirely.
           synced={forecasts.length > 1 ? !!activeForecast?.linked : undefined}
           onMenu={() => setMenuOpen(true)}
-          onSettings={() => setSettingsOpen(true)}
+          onSettings={() => setSettingsView('main')}
         />
         <div className="page-content">
           <div className="scenario-stage-track">
@@ -136,14 +155,18 @@ function AppShell({ dataHook, settingsProps }) {
       </div>
 
       <PrototypeSettings
-        open={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
+        // Remount per view so a flow opened directly from the desktop popover
+        // starts clean at that view.
+        key={settingsView || 'closed'}
+        open={!!settingsView}
+        initialView={settingsView || 'main'}
+        onClose={() => setSettingsView(null)}
         scenario={dataHook.scenario}
         onScenarioChange={dataHook.setScenario}
         categories={dataHook.data.categories}
         selectedMonth={selectedMonth}
         onImport={dataHook.bulkImport}
-        onOpenStickerSheet={() => { setSettingsOpen(false); setStickerOpen(true) }}
+        onOpenStickerSheet={() => { setSettingsView(null); setStickerOpen(true) }}
         {...settingsProps}
       />
 
@@ -162,12 +185,18 @@ function AppShell({ dataHook, settingsProps }) {
 }
 
 function VaultedApp({
-  initialData, onChange, onSignOut, onChangePassword, onGenerateRecovery, onDeleteAccount,
+  user, initialData, onChange, onSignOut, onChangePassword, onGenerateRecovery, onDeleteAccount,
 }) {
   const dataHook = useData({ initialData, onChange })
+  // Accounts created before the sign-up flow captured a name fall back to
+  // the email's local part.
+  const userName = user?.user_metadata?.display_name
+    || user?.email?.split('@')[0]
+    || 'Account'
   return (
     <AppShell
       dataHook={dataHook}
+      userName={userName}
       settingsProps={{ onSignOut, onChangePassword, onGenerateRecovery, onDeleteAccount }}
     />
   )
@@ -175,7 +204,7 @@ function VaultedApp({
 
 function LegacyApp() {
   const dataHook = useData()
-  return <AppShell dataHook={dataHook} settingsProps={{}} />
+  return <AppShell dataHook={dataHook} userName="Guest" settingsProps={{}} />
 }
 
 export default function App() {
@@ -249,6 +278,7 @@ export default function App() {
   }
   return (
     <VaultedApp
+      user={vault.user}
       initialData={vault.initialData}
       onChange={vault.pushData}
       onSignOut={vault.signOut}

@@ -1338,6 +1338,91 @@ a { text-decoration: none; color: inherit; }
 }
 .side-nav-item-menu:hover { background: rgba(17, 26, 74, 0.08); color: var(--c-ink); }
 .side-nav-item-menu svg { width: 18px; height: 18px; }
+/* On pointer devices the 3-dot trigger stays hidden until the row is hovered
+   or focused (or its menu is open); on touch it's always visible. */
+@media (hover: hover) and (pointer: fine) {
+  .side-nav-item-menu { opacity: 0; transition: opacity 0.14s, background 0.16s, color 0.16s; }
+  .side-nav-item:hover .side-nav-item-menu,
+  .side-nav-item:focus-within .side-nav-item-menu,
+  .side-nav-item-menu[aria-expanded="true"] { opacity: 1; }
+}
+
+/* ── Side nav footer — the signed-in user, pinned to the bottom. Settings
+   live behind it: a popover above the name on desktop, the settings sheet
+   on mobile. ── */
+.side-nav-footer {
+  margin-top: auto;
+  padding-top: 12px;
+}
+.user-menu { position: relative; }
+.side-nav-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: var(--r-btn);
+  font-family: var(--font);
+  text-align: left;
+  transition: background 0.16s;
+}
+.side-nav-user:hover { background: rgba(17, 26, 74, 0.05); }
+.side-nav-user:active,
+.side-nav-user[aria-expanded="true"] { background: rgba(17, 26, 74, 0.08); }
+.side-nav-user-avatar {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--c-primary);
+  color: #fff;
+  font-size: 13px;
+  font-weight: var(--font-weight-semibold);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.side-nav-user-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+  color: var(--c-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Settings popover — anchored above the user row inside the sidebar (the
+   sidebar is fixed, so no portal needed), left-aligned with the name. The
+   compound selector outweighs .popover-menu's own position: fixed, which is
+   declared later in the cascade. */
+.popover-menu.popover-menu--anchored {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 60;
+}
+.popover-divider {
+  height: 1px;
+  background: var(--c-surface-muted);
+  margin: 6px 4px;
+}
+.popover-item:disabled { opacity: 0.45; cursor: default; }
+.popover-item:disabled:hover { background: none; }
+/* Compact "Mock data" select at the top of the settings popover. */
+.settings-pop-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 8px 6px;
+}
+.settings-pop-field .select { padding: 9px 36px 9px 12px; font-size: 14px; }
+.settings-pop-field .select-chevron { right: 12px; width: 14px; height: 14px; }
 
 /* ── Scenario sync ──
    The top nav shows a Synced/Unsynced text badge for the active scenario;
@@ -1597,6 +1682,37 @@ a { text-decoration: none; color: inherit; }
 .scenario-stage--out .month-float,
 .scenario-stage--transitioning .month-float {
   display: none;
+}
+
+/* ── Desktop layout ──
+   The scenario sidebar is permanently visible on the left; the shell sits
+   beside it instead of sliding over it. The mobile menu/settings buttons
+   disappear — scenarios are always in view and settings live behind the
+   user row at the bottom of the sidebar. Keep the 900px breakpoint in sync
+   with DESKTOP_QUERY in src/hooks/useMediaQuery.js. */
+@media (min-width: 900px) {
+  :root { --sidebar-w: 280px; }
+  .side-nav {
+    width: var(--sidebar-w);
+    max-width: none;
+    visibility: visible;
+    pointer-events: auto;
+    transition: none;
+    border-right: 1px solid var(--c-border);
+  }
+  .app-shell { margin-left: var(--sidebar-w); }
+  /* Neutralise the drawer slide if the viewport crosses the breakpoint while
+     the drawer is open. */
+  .app-shell.nav-open {
+    transform: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .nav-scrim { display: none; }
+  .top-nav-menu-btn,
+  .top-nav-settings-btn { display: none; }
+  /* Re-center the floating month selector over the content area. */
+  .month-float { left: calc(50% + var(--sidebar-w) / 2); }
 }
 
 /* ── Misc ── */

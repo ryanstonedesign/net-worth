@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Popover from './Popover'
 import Modal from './Modal'
 import SyncIcon from './SyncIcon'
+import UserMenu from './UserMenu'
 
 const RenameIcon = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -27,15 +28,23 @@ const SyncActionIcon = (
   </svg>
 )
 
-// Side navigation drawer that sits behind the page content. Lists every
-// scenario; tap one to switch to it. The "+" in the header creates a new
-// scenario. Each row carries a 3-dot action menu (rename / sync / delete);
-// synced scenarios show a small sync glyph beside their name.
-export default function SideNav({ open, scenarios, activeId, onSelect, onAdd, onDelete, onRename, onToggleSync }) {
+// Side navigation that lists every scenario; tap one to switch to it. The
+// "+" in the header creates a new scenario. Each row carries a 3-dot action
+// menu (rename / sync / delete); synced scenarios show a small sync glyph
+// beside their name. On mobile it's a drawer behind the page content; on
+// desktop (`desktop`) it's a fixed, always-visible sidebar. The signed-in
+// user's name is pinned to the bottom and hosts settings — a popover on
+// desktop (via `settingsMenu`), the full settings sheet on mobile (via
+// `onOpenSettings`).
+export default function SideNav({
+  open, desktop, scenarios, activeId, onSelect, onAdd, onDelete, onRename, onToggleSync,
+  userName, onOpenSettings, settingsMenu,
+}) {
   const [editingId, setEditingId] = useState(null)
   const [draft, setDraft] = useState('')
   // Scenario whose sync state is pending the confirm dialog, or null.
   const [confirmSync, setConfirmSync] = useState(null)
+  const tabbable = open || desktop
 
   const startRename = (s) => { setEditingId(s.id); setDraft(s.name) }
   const commitRename = () => {
@@ -46,7 +55,7 @@ export default function SideNav({ open, scenarios, activeId, onSelect, onAdd, on
   }
 
   return (
-    <aside className={`side-nav${open ? ' open' : ''}`} aria-hidden={!open}>
+    <aside className={`side-nav${open ? ' open' : ''}`} aria-hidden={desktop ? undefined : !open}>
       <div className="side-nav-header">
         <span className="side-nav-title">Worthfolio</span>
         <button className="fab fab-sm" onClick={onAdd} aria-label="Create a new scenario">
@@ -100,7 +109,7 @@ export default function SideNav({ open, scenarios, activeId, onSelect, onAdd, on
                 <Popover
                   ariaLabel={`Actions for ${s.name}`}
                   triggerClassName="side-nav-item-menu"
-                  tabIndex={open ? 0 : -1}
+                  tabIndex={tabbable ? 0 : -1}
                   items={items}
                 >
                   <svg viewBox="0 0 24 24" fill="currentColor">
@@ -114,6 +123,16 @@ export default function SideNav({ open, scenarios, activeId, onSelect, onAdd, on
           )
         })}
       </nav>
+
+      <div className="side-nav-footer">
+        <UserMenu
+          name={userName}
+          desktop={desktop}
+          tabIndex={tabbable ? 0 : -1}
+          onOpenSettings={onOpenSettings}
+          menu={settingsMenu}
+        />
+      </div>
 
       {confirmSync && (
         <Modal

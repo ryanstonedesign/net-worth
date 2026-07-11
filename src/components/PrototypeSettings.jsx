@@ -3,7 +3,7 @@ import Modal from './Modal'
 import ImportSheet from './ImportSheet'
 import { formatRecoveryPhrase } from '../lib/crypto'
 
-const SCENARIOS = [
+export const SCENARIOS = [
   { value: 'none', label: 'None' },
   { value: 'firsttime', label: 'First time' },
   { value: '6month', label: '6 month' },
@@ -127,22 +127,27 @@ function DeleteAccountForm({ onSubmit, onCancel }) {
   )
 }
 
+// `initialView` lets the desktop settings popover jump straight to a single
+// flow ('import', 'change-password', 'recovery-confirm', 'delete') without
+// going through the full settings list. Cancelling from a directly-opened
+// flow closes the sheet instead of falling back to the list.
 export default function PrototypeSettings({
-  open, onClose,
+  open, onClose, initialView = 'main',
   scenario, onScenarioChange, onSignOut, onChangePassword,
   onGenerateRecovery, onDeleteAccount,
   categories, selectedMonth, onImport, onOpenStickerSheet,
 }) {
-  const [view, setView] = useState('main')
+  const [view, setView] = useState(initialView)
   const [recoveryPhrase, setRecoveryPhrase] = useState(null)
   const [recoveryError, setRecoveryError] = useState(null)
   const [busy, setBusy] = useState(false)
 
   const close = () => {
-    setView('main')
+    setView(initialView)
     setRecoveryPhrase(null); setRecoveryError(null)
     onClose?.()
   }
+  const goBack = initialView === 'main' ? () => setView('main') : close
 
   const regenerateRecovery = async () => {
     setBusy(true); setRecoveryError(null)
@@ -171,6 +176,7 @@ export default function PrototypeSettings({
             view === 'change-password' ? 'Change Password'
             : view === 'changed' ? 'Password Changed'
             : view === 'delete' ? 'Delete Account'
+            : view === 'recovery-confirm' || view === 'recovery-shown' ? 'Recovery Phrase'
             : 'Settings'
           }
           onClose={close}
@@ -178,7 +184,7 @@ export default function PrototypeSettings({
           {view === 'main' && (
             <>
               <div className="form-group">
-                <label className="form-label" htmlFor="scenario-select">Scenario</label>
+                <label className="form-label" htmlFor="scenario-select">Mock data</label>
                 <div className="select-wrap">
                   <select
                     id="scenario-select"
@@ -194,10 +200,6 @@ export default function PrototypeSettings({
                     <polyline points="6 9 12 15 18 9" />
                   </svg>
                 </div>
-                <p style={{ fontSize: 13, color: 'var(--c-ink-mute)', marginTop: 10, lineHeight: 1.5 }}>
-                  Preview demo datasets. <strong style={{ color: 'var(--c-ink)' }}>None</strong> always
-                  shows your own saved data and is never overwritten.
-                </p>
               </div>
 
               {onImport && (
@@ -212,7 +214,7 @@ export default function PrototypeSettings({
                   </button>
                   {scenario !== 'none' && (
                     <p style={{ fontSize: 13, color: 'var(--c-ink-mute)', marginTop: 8, lineHeight: 1.5 }}>
-                      Switch the scenario to <strong style={{ color: 'var(--c-ink)' }}>None</strong> to
+                      Switch Mock data to <strong style={{ color: 'var(--c-ink)' }}>None</strong> to
                       import into your own data.
                     </p>
                   )}
@@ -282,7 +284,7 @@ export default function PrototypeSettings({
           {view === 'delete' && (
             <DeleteAccountForm
               onSubmit={onDeleteAccount}
-              onCancel={() => setView('main')}
+              onCancel={goBack}
             />
           )}
 
@@ -293,7 +295,7 @@ export default function PrototypeSettings({
                 if (result.ok) setView('changed')
                 return result
               }}
-              onCancel={() => setView('main')}
+              onCancel={goBack}
             />
           )}
 
@@ -321,7 +323,7 @@ export default function PrototypeSettings({
               >
                 {busy ? 'Working…' : 'Generate New Phrase'}
               </button>
-              <button className="auth-switch" onClick={() => setView('main')}>Cancel</button>
+              <button className="auth-switch" onClick={goBack}>Cancel</button>
             </>
           )}
 

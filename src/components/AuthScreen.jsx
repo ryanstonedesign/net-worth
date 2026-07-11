@@ -76,6 +76,7 @@ function ForgotPasswordView({ defaultEmail, onSubmit, onBack }) {
 
 export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, onBack, error, initialMode = 'signin' }) {
   const [mode, setMode] = useState(initialMode) // 'signin' | 'signup' | 'forgot'
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -88,11 +89,11 @@ export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, onBac
   const submit = async (e) => {
     e.preventDefault()
     if (!email.trim() || !password) return
-    if (mode === 'signup' && (!ack || !passwordsMatch)) return
+    if (mode === 'signup' && (!name.trim() || !ack || !passwordsMatch)) return
     setBusy(true)
     try {
       if (mode === 'signin') await onSignIn(email.trim(), password)
-      else await onSignUp(email.trim(), password)
+      else await onSignUp(email.trim(), password, name.trim())
     } finally { setBusy(false) }
   }
 
@@ -120,6 +121,20 @@ export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, onBac
         </p>
 
         <form onSubmit={submit}>
+          {mode === 'signup' && (
+            <div className="form-group">
+              <label className="form-label">Name</label>
+              <input
+                className="input"
+                type="text"
+                autoComplete="name"
+                maxLength={60}
+                value={name}
+                onChange={e => setName(e.target.value)}
+                required
+              />
+            </div>
+          )}
           <div className="form-group">
             <label className="form-label">Email</label>
             <input
@@ -177,7 +192,7 @@ export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, onBac
           <button
             type="submit"
             className="btn btn-primary btn-full"
-            disabled={busy || !email.trim() || !password || (mode === 'signup' && (!ack || !passwordsMatch))}
+            disabled={busy || !email.trim() || !password || (mode === 'signup' && (!name.trim() || !ack || !passwordsMatch))}
           >
             {busy ? 'Working…' : mode === 'signin' ? 'Sign In' : 'Create Account'}
           </button>
