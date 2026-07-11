@@ -101,9 +101,14 @@ export default function SideNav({
                 />
               ) : (
                 <button className="side-nav-item-name" onClick={() => onSelect(s.id)}>
+                  {/* Fixed leading slot keeps names left-aligned with the
+                      "New scenario" label; it carries the unsynced glyph
+                      when applicable (synced is the norm — only flag the
+                      exception). */}
+                  <span className="side-nav-item-lead">
+                    {scenarios.length > 1 && !s.linked && <SyncIcon className="sync-badge sync-badge--off" />}
+                  </span>
                   <span className="side-nav-item-label">{s.name}</span>
-                  {/* Synced is the norm — only flag the exception. */}
-                  {scenarios.length > 1 && !s.linked && <SyncIcon className="sync-badge sync-badge--off" />}
                 </button>
               )}
               {!isEditing && (

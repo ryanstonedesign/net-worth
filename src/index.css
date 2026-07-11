@@ -1478,12 +1478,20 @@ a { text-decoration: none; color: inherit; }
   padding-right: 16px;
 }
 
-/* The row name becomes a flex line so the badge can sit after the text;
-   ellipsis moves onto the inner label span. */
+/* The row name is a flex line: a fixed leading icon slot (sized to mirror
+   the "New scenario" row's icon + gap, so names align left with its label),
+   then the name with ellipsis on the inner span. */
 .side-nav-item-name {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 10px;
+}
+.side-nav-item-lead {
+  flex-shrink: 0;
+  width: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .side-nav-item-label {
   min-width: 0;
@@ -1749,7 +1757,8 @@ a { text-decoration: none; color: inherit; }
   .side-nav-title { font-size: var(--text-body); letter-spacing: -0.01em; } /* 20 → 16 */
   .side-nav-new { font-size: 14px; padding: 9px 12px; gap: 8px; }
   .side-nav-new svg { width: 16px; height: 16px; }
-  .side-nav-item-name { font-size: 14px; padding: 9px 12px; gap: 6px; } /* 16 → 14 */
+  .side-nav-item-name { font-size: 14px; padding: 9px 12px; gap: 8px; } /* 16 → 14 */
+  .side-nav-item-lead { width: 16px; }
   .side-nav-item-input { font-size: 14px; padding: 6px 10px; margin: 3px 6px 3px 6px; }
   .side-nav-item-menu { width: 30px; height: 30px; }
   .side-nav-item-menu svg { width: 16px; height: 16px; }
