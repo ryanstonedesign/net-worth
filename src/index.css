@@ -1275,8 +1275,7 @@ a { text-decoration: none; color: inherit; }
 .side-nav-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 8px 8px 4px 12px;
+  padding: 8px 12px 0;
 }
 .side-nav-title {
   font-size: var(--text-subheading-sm);
@@ -1284,8 +1283,31 @@ a { text-decoration: none; color: inherit; }
   letter-spacing: var(--tracking-subheading-sm);
   color: var(--c-ink);
 }
+/* "New scenario" action row under the title — same icon + label treatment
+   as the scenario rows. */
+.side-nav-new {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  padding: 13px 14px;
+  width: 100%;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: var(--r-btn);
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: var(--font-weight-medium);
+  color: var(--c-ink);
+  text-align: left;
+  transition: background 0.16s;
+}
+.side-nav-new:hover { background: rgba(17, 26, 74, 0.05); }
+.side-nav-new:active { background: rgba(17, 26, 74, 0.08); }
+.side-nav-new svg { width: 18px; height: 18px; flex-shrink: 0; }
 .side-nav-list {
-  margin-top: 12px;
+  margin-top: 10px;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -1724,9 +1746,9 @@ a { text-decoration: none; color: inherit; }
   /* Sidebar content steps down one level of the type scale on desktop —
      drawer sizing was tuned for touch and reads oversized next to a
      pointer-driven page. */
-  .side-nav-title { font-size: var(--text-body-lg); letter-spacing: -0.01em; } /* 20 → 18 */
-  .side-nav-header .fab-sm { width: 30px; height: 30px; }
-  .side-nav-header .fab-sm svg { width: 15px; height: 15px; }
+  .side-nav-title { font-size: var(--text-body); letter-spacing: -0.01em; } /* 20 → 16 */
+  .side-nav-new { font-size: 14px; padding: 9px 12px; gap: 8px; }
+  .side-nav-new svg { width: 16px; height: 16px; }
   .side-nav-item-name { font-size: 14px; padding: 9px 12px; gap: 6px; } /* 16 → 14 */
   .side-nav-item-input { font-size: 14px; padding: 6px 10px; margin: 3px 6px 3px 6px; }
   .side-nav-item-menu { width: 30px; height: 30px; }
