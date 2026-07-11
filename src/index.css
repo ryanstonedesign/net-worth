@@ -1063,6 +1063,13 @@ a { text-decoration: none; color: inherit; }
 
 /* ── Form ── */
 .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+/* Field pair (e.g. first/last name) — stacked on mobile, side by side on
+   desktop. */
+.form-row { display: flex; flex-direction: column; }
+@media (min-width: 900px) {
+  .form-row { flex-direction: row; gap: 12px; }
+  .form-row .form-group { flex: 1; min-width: 0; }
+}
 .form-label {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -1713,6 +1720,21 @@ a { text-decoration: none; color: inherit; }
   .top-nav-settings-btn { display: none; }
   /* Re-center the floating month selector over the content area. */
   .month-float { left: calc(50% + var(--sidebar-w) / 2); }
+
+  /* Sidebar content steps down one level of the type scale on desktop —
+     drawer sizing was tuned for touch and reads oversized next to a
+     pointer-driven page. */
+  .side-nav-title { font-size: var(--text-body-lg); letter-spacing: -0.01em; } /* 20 → 18 */
+  .side-nav-header .fab-sm { width: 30px; height: 30px; }
+  .side-nav-header .fab-sm svg { width: 15px; height: 15px; }
+  .side-nav-item-name { font-size: 14px; padding: 9px 12px; gap: 6px; } /* 16 → 14 */
+  .side-nav-item-input { font-size: 14px; padding: 6px 10px; margin: 3px 6px 3px 6px; }
+  .side-nav-item-menu { width: 30px; height: 30px; }
+  .side-nav-item-menu svg { width: 16px; height: 16px; }
+  .side-nav-item .sync-badge { width: 12px; height: 12px; }
+  .side-nav-user { padding: 6px 8px; gap: 8px; }
+  .side-nav-user-avatar { width: 26px; height: 26px; font-size: 11px; }
+  .side-nav-user-name { font-size: 13px; } /* 14 → 13 */
 }
 
 /* ── Misc ── */

@@ -76,7 +76,8 @@ function ForgotPasswordView({ defaultEmail, onSubmit, onBack }) {
 
 export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, onBack, error, initialMode = 'signin' }) {
   const [mode, setMode] = useState(initialMode) // 'signin' | 'signup' | 'forgot'
-  const [name, setName] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -85,15 +86,16 @@ export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, onBac
 
   const passwordsMatch = password === confirmPassword
   const showMismatch = mode === 'signup' && confirmPassword.length > 0 && !passwordsMatch
+  const nameComplete = Boolean(firstName.trim() && lastName.trim())
 
   const submit = async (e) => {
     e.preventDefault()
     if (!email.trim() || !password) return
-    if (mode === 'signup' && (!name.trim() || !ack || !passwordsMatch)) return
+    if (mode === 'signup' && (!nameComplete || !ack || !passwordsMatch)) return
     setBusy(true)
     try {
       if (mode === 'signin') await onSignIn(email.trim(), password)
-      else await onSignUp(email.trim(), password, name.trim())
+      else await onSignUp(email.trim(), password, { firstName: firstName.trim(), lastName: lastName.trim() })
     } finally { setBusy(false) }
   }
 
@@ -122,17 +124,31 @@ export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, onBac
 
         <form onSubmit={submit}>
           {mode === 'signup' && (
-            <div className="form-group">
-              <label className="form-label">Name</label>
-              <input
-                className="input"
-                type="text"
-                autoComplete="name"
-                maxLength={60}
-                value={name}
-                onChange={e => setName(e.target.value)}
-                required
-              />
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">First name</label>
+                <input
+                  className="input"
+                  type="text"
+                  autoComplete="given-name"
+                  maxLength={40}
+                  value={firstName}
+                  onChange={e => setFirstName(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Last name</label>
+                <input
+                  className="input"
+                  type="text"
+                  autoComplete="family-name"
+                  maxLength={40}
+                  value={lastName}
+                  onChange={e => setLastName(e.target.value)}
+                  required
+                />
+              </div>
             </div>
           )}
           <div className="form-group">
@@ -192,7 +208,7 @@ export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, onBac
           <button
             type="submit"
             className="btn btn-primary btn-full"
-            disabled={busy || !email.trim() || !password || (mode === 'signup' && (!name.trim() || !ack || !passwordsMatch))}
+            disabled={busy || !email.trim() || !password || (mode === 'signup' && (!nameComplete || !ack || !passwordsMatch))}
           >
             {busy ? 'Working…' : mode === 'signin' ? 'Sign In' : 'Create Account'}
           </button>

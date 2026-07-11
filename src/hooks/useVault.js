@@ -115,14 +115,17 @@ export function useVault() {
     return { dek, data }
   }
 
-  const signUp = useCallback(async (email, password, name) => {
+  const signUp = useCallback(async (email, password, { firstName, lastName } = {}) => {
     setError(null)
-    // The display name rides along in auth user metadata — it's the one piece
-    // of profile data that lives outside the encrypted vault, so the UI can
+    // The name rides along in auth user metadata — it's the one piece of
+    // profile data that lives outside the encrypted vault, so the UI can
     // show it before unlock.
+    const displayName = [firstName, lastName].filter(Boolean).join(' ')
     const { data, error } = await supabase.auth.signUp({
       email, password,
-      options: name ? { data: { display_name: name } } : undefined,
+      options: displayName
+        ? { data: { display_name: displayName, first_name: firstName, last_name: lastName } }
+        : undefined,
     })
     if (error) { setError(error.message); return }
     if (!data.user) { setError('Confirm your email, then sign in.'); return }
