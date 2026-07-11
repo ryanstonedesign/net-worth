@@ -279,6 +279,16 @@ a { text-decoration: none; color: inherit; }
 }
 .btn-accent:hover { background: color-mix(in srgb, var(--c-accent) 90%, #000); }
 .btn-accent:active { background: color-mix(in srgb, var(--c-accent) 81%, #000); }
+/* Destructive — the secondary (bordered, transparent) treatment in danger
+   red, for delete/clear actions that sit beside a primary CTA. */
+.btn-destructive {
+  background: transparent;
+  color: var(--c-danger);
+  border: 1px solid var(--c-danger);
+  padding: 11px 31px;
+}
+.btn-destructive:hover { background: color-mix(in srgb, var(--c-danger) 5%, transparent); }
+.btn-destructive:active { background: color-mix(in srgb, var(--c-danger) 10%, transparent); }
 .btn-sm { padding: 8px 14px; font-size: 13px; }
 .btn-sm.btn-secondary { padding: 7px 15px; }
 .btn-full { width: 100%; }
@@ -424,6 +434,17 @@ a { text-decoration: none; color: inherit; }
   letter-spacing: var(--tracking-subheading-sm);
   margin-bottom: 20px;
 }
+/* Dialog footer actions. DOM order is [destructive?, primary]; the mobile
+   column reverses it so the primary CTA stacks on top, while the desktop
+   override lays them out in one right-aligned row with the destructive
+   action to the primary's left. */
+.modal-actions {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 12px;
+  margin-top: 16px;
+}
+.modal-actions .btn { width: 100%; }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -1782,6 +1803,15 @@ a { text-decoration: none; color: inherit; }
   .confirm-actions {
     display: flex;
     justify-content: flex-end;
+  }
+  .modal-actions {
+    flex-direction: row;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+  .modal-actions .btn {
+    width: fit-content;
+    margin-left: 0;
   }
 }
 @keyframes dialogIn {

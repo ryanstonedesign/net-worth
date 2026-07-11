@@ -202,32 +202,28 @@ export default function EditCategorySheet({
         </div>
       </div>
 
-      <button
-        className="btn btn-primary btn-full"
-        onClick={handleSave}
-        disabled={!name.trim()}
-      >
-        {isNew ? 'Create Category' : 'Save Changes'}
-      </button>
-
-      {!isNew && (
+      <div className="modal-actions">
+        {!isNew && (
+          <button
+            className="btn btn-destructive"
+            onClick={() => {
+              if (confirm(`Delete "${category.name}" and all its accounts?`)) {
+                onDelete()
+                onClose()
+              }
+            }}
+          >
+            Delete Category
+          </button>
+        )}
         <button
-          style={{
-            display: 'block', width: '100%', marginTop: 12, padding: '12px',
-            background: 'none', border: 'none', cursor: 'pointer',
-            fontSize: 13, fontWeight: 600, color: 'var(--c-danger)',
-            fontFamily: 'var(--font)',
-          }}
-          onClick={() => {
-            if (confirm(`Delete "${category.name}" and all its accounts?`)) {
-              onDelete()
-              onClose()
-            }
-          }}
+          className="btn btn-primary"
+          onClick={handleSave}
+          disabled={!name.trim()}
         >
-          Delete Category
+          {isNew ? 'Create Category' : 'Save Changes'}
         </button>
-      )}
+      </div>
     </Modal>
   )
 }

@@ -139,27 +139,20 @@ function GoalEditor({ goal, onSave, onClose }) {
           />
         </div>
       </div>
-      <button
-        className="btn btn-primary btn-full"
-        style={{ marginTop: 8 }}
-        onClick={() => { if (valid) onSave(parsed) }}
-        disabled={!valid}
-      >
-        Save Goal
-      </button>
-      {goal != null && (
+      <div className="modal-actions">
+        {goal != null && (
+          <button className="btn btn-destructive" onClick={() => onSave(null)}>
+            Clear Goal
+          </button>
+        )}
         <button
-          style={{
-            display: 'block', width: '100%', marginTop: 12, padding: '12px',
-            background: 'none', border: 'none', cursor: 'pointer',
-            fontSize: 13, fontWeight: 600, color: 'var(--c-danger)',
-            fontFamily: 'var(--font)',
-          }}
-          onClick={() => onSave(null)}
+          className="btn btn-primary"
+          onClick={() => { if (valid) onSave(parsed) }}
+          disabled={!valid}
         >
-          Clear Goal
+          Save Goal
         </button>
-      )}
+      </div>
     </>
   )
 }
