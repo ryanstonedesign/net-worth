@@ -107,6 +107,7 @@
 
   /* ── Semantic aliases (legacy names, driven by Column tokens) ── */
   --c-primary: var(--color-indigo-navy);
+  --c-accent: var(--color-signal-orange);
   --c-secondary: var(--color-seafoam-600);   /* data accent — charts, forecast */
   --c-tertiary: var(--color-seafoam-700);    /* positive / growth values */
   --c-surface: var(--color-pure-white);
@@ -137,6 +138,11 @@
   --nav-height: 76px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
+
+  /* Drawer width — shared by the side nav and the shell's slide-aside
+     offset so the revealed drawer always meets the content edge exactly
+     (no dead gap at in-between viewport widths). */
+  --drawer-w: min(82vw, 360px);
 }
 
 /* ── Reset ── */
@@ -235,41 +241,44 @@ a { text-decoration: none; color: inherit; }
   border: none;
   outline: none;
 }
+/* Button colors reference the semantic tokens (--c-primary / --c-accent),
+   never raw palette values, so token edits in the Design System propagate.
+   Hover/active states derive from the token via color-mix. */
 .btn-primary {
-  background: var(--color-indigo-navy);
+  background: var(--c-primary);
   color: #fff;
   box-shadow: var(--shadow-btn-primary);
 }
-.btn-primary:hover { background: #1a2560; }
-.btn-primary:active { background: #0c1338; }
+.btn-primary:hover { background: color-mix(in srgb, var(--c-primary) 88%, #fff); }
+.btn-primary:active { background: color-mix(in srgb, var(--c-primary) 82%, #000); }
 .btn-primary:disabled {
-  background: var(--color-indigo-navy);
+  background: var(--c-primary);
   opacity: 0.35;
   box-shadow: none;
   cursor: default;
 }
 .btn-secondary {
   background: transparent;
-  color: var(--color-indigo-navy);
-  border: 1px solid var(--color-indigo-navy);
+  color: var(--c-primary);
+  border: 1px solid var(--c-primary);
   padding: 11px 31px;
 }
-.btn-secondary:hover { background: rgba(17, 26, 74, 0.05); }
-.btn-secondary:active { background: rgba(17, 26, 74, 0.1); }
+.btn-secondary:hover { background: color-mix(in srgb, var(--c-primary) 5%, transparent); }
+.btn-secondary:active { background: color-mix(in srgb, var(--c-primary) 10%, transparent); }
 .btn-tertiary {
   background: transparent;
-  color: var(--color-indigo-navy);
+  color: var(--c-primary);
   border: none;
 }
-.btn-tertiary:hover { background: rgba(17, 26, 74, 0.05); }
-.btn-tertiary:active { background: rgba(17, 26, 74, 0.1); }
-/* Accent — Signal Orange, at most one surface per page. */
+.btn-tertiary:hover { background: color-mix(in srgb, var(--c-primary) 5%, transparent); }
+.btn-tertiary:active { background: color-mix(in srgb, var(--c-primary) 10%, transparent); }
+/* Accent — at most one surface per page. */
 .btn-accent {
-  background: var(--color-signal-orange);
+  background: var(--c-accent);
   color: #fff;
 }
-.btn-accent:hover { background: #d95a24; }
-.btn-accent:active { background: #c4501e; }
+.btn-accent:hover { background: color-mix(in srgb, var(--c-accent) 90%, #000); }
+.btn-accent:active { background: color-mix(in srgb, var(--c-accent) 81%, #000); }
 .btn-sm { padding: 8px 14px; font-size: 13px; }
 .btn-sm.btn-secondary { padding: 7px 15px; }
 .btn-full { width: 100%; }
@@ -1256,8 +1265,7 @@ a { text-decoration: none; color: inherit; }
 .side-nav {
   position: fixed;
   top: 0; left: 0; bottom: 0;
-  width: 82vw;
-  max-width: 360px;
+  width: var(--drawer-w);
   z-index: 1; /* behind the shell (z-index 2); revealed when it slides aside */
   display: flex;
   flex-direction: column;
@@ -1278,9 +1286,9 @@ a { text-decoration: none; color: inherit; }
   padding: 8px 12px 0;
 }
 .side-nav-title {
-  font-size: var(--text-subheading-sm);
+  font-size: var(--text-body);
   font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--tracking-subheading-sm);
+  letter-spacing: -0.01em;
   color: var(--c-ink);
 }
 /* "New scenario" action row under the title — same icon + label treatment
@@ -1288,16 +1296,16 @@ a { text-decoration: none; color: inherit; }
 .side-nav-new {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   margin-top: 24px;
-  padding: 13px 14px;
+  padding: 9px 12px;
   width: 100%;
   border: none;
   background: none;
   cursor: pointer;
   border-radius: var(--r-btn);
   font-family: var(--font);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: var(--font-weight-medium);
   color: var(--c-ink);
   text-align: left;
@@ -1305,7 +1313,7 @@ a { text-decoration: none; color: inherit; }
 }
 .side-nav-new:hover { background: rgba(17, 26, 74, 0.05); }
 .side-nav-new:active { background: rgba(17, 26, 74, 0.08); }
-.side-nav-new svg { width: 18px; height: 18px; flex-shrink: 0; }
+.side-nav-new svg { width: 16px; height: 16px; flex-shrink: 0; }
 .side-nav-list {
   margin-top: 10px;
   display: flex;
@@ -1329,9 +1337,9 @@ a { text-decoration: none; color: inherit; }
   background: none;
   border: none;
   cursor: pointer;
-  padding: 13px 14px;
+  padding: 9px 12px;
   font-family: var(--font);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: var(--font-weight-medium);
   color: var(--c-ink);
   white-space: nowrap;
@@ -1344,14 +1352,14 @@ a { text-decoration: none; color: inherit; }
 .side-nav-item-input {
   flex: 1;
   min-width: 0;
-  margin: 4px 6px 4px 8px;
-  padding: 9px 12px;
+  margin: 3px 6px;
+  padding: 6px 10px;
   border: none;
   border-radius: var(--r-btn);
   background: var(--c-surface);
   box-shadow: inset 0 0 0 1px var(--c-primary);
   font-family: var(--font);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: var(--font-weight-medium);
   color: var(--c-ink);
   outline: none;
@@ -1359,14 +1367,14 @@ a { text-decoration: none; color: inherit; }
 /* 3-dot action-menu trigger on each row. */
 .side-nav-item-menu {
   flex-shrink: 0;
-  width: 36px; height: 36px;
+  width: 30px; height: 30px;
   margin-right: 6px;
   border-radius: var(--r-btn);
   color: var(--c-ink-mute);
   transition: background 0.16s, color 0.16s;
 }
 .side-nav-item-menu:hover { background: rgba(17, 26, 74, 0.08); color: var(--c-ink); }
-.side-nav-item-menu svg { width: 18px; height: 18px; }
+.side-nav-item-menu svg { width: 16px; height: 16px; }
 /* On pointer devices the 3-dot trigger stays hidden until the row is hovered
    or focused (or its menu is open); on touch it's always visible. */
 @media (hover: hover) and (pointer: fine) {
@@ -1387,9 +1395,9 @@ a { text-decoration: none; color: inherit; }
 .side-nav-user {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  padding: 8px 10px;
+  padding: 6px 8px;
   border: none;
   background: none;
   cursor: pointer;
@@ -1403,12 +1411,12 @@ a { text-decoration: none; color: inherit; }
 .side-nav-user[aria-expanded="true"] { background: rgba(17, 26, 74, 0.08); }
 .side-nav-user-avatar {
   flex-shrink: 0;
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: var(--c-primary);
   color: #fff;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: var(--font-weight-semibold);
   display: inline-flex;
   align-items: center;
@@ -1417,7 +1425,7 @@ a { text-decoration: none; color: inherit; }
 .side-nav-user-name {
   flex: 1;
   min-width: 0;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: var(--font-weight-medium);
   color: var(--c-ink);
   white-space: nowrap;
@@ -1463,6 +1471,7 @@ a { text-decoration: none; color: inherit; }
   color: var(--c-ink-mute);
 }
 .sync-badge--off { color: #a16207; }
+.side-nav-item .sync-badge { width: 12px; height: 12px; }
 .top-nav-left .badge { flex-shrink: 0; }
 
 /* Cancel/Continue pair in confirm dialogs — grid columns stay equal-width
@@ -1484,11 +1493,11 @@ a { text-decoration: none; color: inherit; }
 .side-nav-item-name {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 .side-nav-item-lead {
   flex-shrink: 0;
-  width: 18px;
+  width: 16px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1638,7 +1647,7 @@ a { text-decoration: none; color: inherit; }
               box-shadow 0.42s ease;
 }
 .app-shell.nav-open {
-  transform: translateX(82vw);
+  transform: translateX(var(--drawer-w));
   border-radius: var(--radius-xl);
   box-shadow: rgba(30, 30, 44, 0.15) -24px 0 64px, rgba(17, 26, 74, 0.05) 0 0 0 1px;
 }
@@ -1751,21 +1760,33 @@ a { text-decoration: none; color: inherit; }
   /* Re-center the floating month selector over the content area. */
   .month-float { left: calc(50% + var(--sidebar-w) / 2); }
 
-  /* Sidebar content steps down one level of the type scale on desktop —
-     drawer sizing was tuned for touch and reads oversized next to a
-     pointer-driven page. */
-  .side-nav-title { font-size: var(--text-body); letter-spacing: -0.01em; } /* 20 → 16 */
-  .side-nav-new { font-size: 14px; padding: 9px 12px; gap: 8px; }
-  .side-nav-new svg { width: 16px; height: 16px; }
-  .side-nav-item-name { font-size: 14px; padding: 9px 12px; gap: 8px; } /* 16 → 14 */
-  .side-nav-item-lead { width: 16px; }
-  .side-nav-item-input { font-size: 14px; padding: 6px 10px; margin: 3px 6px 3px 6px; }
-  .side-nav-item-menu { width: 30px; height: 30px; }
-  .side-nav-item-menu svg { width: 16px; height: 16px; }
-  .side-nav-item .sync-badge { width: 12px; height: 12px; }
-  .side-nav-user { padding: 6px 8px; gap: 8px; }
-  .side-nav-user-avatar { width: 26px; height: 26px; font-size: 11px; }
-  .side-nav-user-name { font-size: 13px; } /* 14 → 13 */
+  /* Dialogs: bottom sheets become centered dialogs — 24px corners, no
+     drag handle, and primary/footer buttons hug their content on the
+     right instead of going full-width. */
+  .modal-overlay {
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+  }
+  .modal-sheet {
+    border-radius: 24px;
+    max-height: calc(100vh - 48px);
+    animation: dialogIn 0.22s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .modal-handle { visibility: hidden; }
+  .modal-sheet .btn-full {
+    display: flex;
+    width: fit-content;
+    margin-left: auto;
+  }
+  .confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+@keyframes dialogIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
 }
 
 /* ── Misc ── */

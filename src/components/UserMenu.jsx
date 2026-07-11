@@ -43,13 +43,13 @@ const TrashIcon = (
 )
 
 // The signed-in user's name, pinned to the bottom of the scenario sidebar.
-// On desktop it opens the settings popover above itself (left-aligned with
-// the name); on mobile it opens the full settings sheet instead.
+// Pressing it opens the settings popover above itself (left-aligned with
+// the name) on every layout; flows chosen from it open in focused modals.
 //
 // `menu` — { scenario, onScenarioChange, importDisabled, onImport,
 //   onOpenStickerSheet, onChangePassword, onShowRecovery, onSignOut,
 //   onDeleteAccount }; absent callbacks hide their item.
-export default function UserMenu({ name, desktop, tabIndex = 0, onOpenSettings, menu }) {
+export default function UserMenu({ name, tabIndex = 0, menu }) {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef(null)
 
@@ -72,8 +72,6 @@ export default function UserMenu({ name, desktop, tabIndex = 0, onOpenSettings, 
       <span className="side-nav-user-name">{name}</span>
     </button>
   )
-
-  if (!desktop) return trigger({ onClick: onOpenSettings, 'aria-label': 'Settings' })
 
   const pick = (fn) => () => { setOpen(false); fn?.() }
   const items = []

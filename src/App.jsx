@@ -85,7 +85,6 @@ function AppShell({ dataHook, settingsProps, userName }) {
         onRename={(id, name) => dataHook.renameForecast(id, name)}
         onToggleSync={(id, synced) => dataHook.setForecastSynced(id, synced)}
         userName={userName}
-        onOpenSettings={() => { setMenuOpen(false); setSettingsView('main') }}
         settingsMenu={{
           scenario: dataHook.scenario,
           onScenarioChange: dataHook.setScenario,

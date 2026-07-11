@@ -29,16 +29,15 @@ const SyncActionIcon = (
 )
 
 // Side navigation that lists every scenario; tap one to switch to it. The
-// "+" in the header creates a new scenario. Each row carries a 3-dot action
-// menu (rename / sync / delete); synced scenarios show a small sync glyph
-// beside their name. On mobile it's a drawer behind the page content; on
-// desktop (`desktop`) it's a fixed, always-visible sidebar. The signed-in
-// user's name is pinned to the bottom and hosts settings — a popover on
-// desktop (via `settingsMenu`), the full settings sheet on mobile (via
-// `onOpenSettings`).
+// "New scenario" row under the title creates one. Each row carries a 3-dot
+// action menu (rename / sync / delete); unsynced scenarios show a small sync
+// glyph in their leading slot. On mobile it's a drawer behind the page
+// content; on desktop (`desktop`) it's a fixed, always-visible sidebar. The
+// signed-in user's name is pinned to the bottom and opens the settings
+// popover (via `settingsMenu`) on every layout.
 export default function SideNav({
   open, desktop, scenarios, activeId, onSelect, onAdd, onDelete, onRename, onToggleSync,
-  userName, onOpenSettings, settingsMenu,
+  userName, settingsMenu,
 }) {
   const [editingId, setEditingId] = useState(null)
   const [draft, setDraft] = useState('')
@@ -133,9 +132,7 @@ export default function SideNav({
       <div className="side-nav-footer">
         <UserMenu
           name={userName}
-          desktop={desktop}
           tabIndex={tabbable ? 0 : -1}
-          onOpenSettings={onOpenSettings}
           menu={settingsMenu}
         />
       </div>
