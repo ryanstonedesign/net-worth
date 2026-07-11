@@ -48,7 +48,7 @@ export default function SideNav({ open, scenarios, activeId, onSelect, onAdd, on
   return (
     <aside className={`side-nav${open ? ' open' : ''}`} aria-hidden={!open}>
       <div className="side-nav-header">
-        <span className="side-nav-title">Scenarios</span>
+        <span className="side-nav-title">Worthfolio</span>
         <button className="fab fab-sm" onClick={onAdd} aria-label="Create a new scenario">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="12" y1="5" x2="12" y2="19" />
