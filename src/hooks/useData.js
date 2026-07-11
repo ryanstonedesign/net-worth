@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { getCurrentMonth, getAdjacentMonth } from '../utils'
+import { subscribeTheme, applyOverrides, getOverrides } from '../lib/theme'
 
 // "None" holds the user's real data and is never overwritten by a scenario.
 // Each prototype scenario lives in its own slot so real data is always safe.
@@ -305,6 +306,18 @@ export function useData({ initialData = null, onChange = null } = {}) {
     })
   }, [])
 
+  // ── Design-system theme sync ──
+  // The container carries the token override map so it syncs with the vault
+  // and follows the account across devices. On first load, the container's
+  // copy (if it has one) wins over this device's local cache; afterwards,
+  // every edit in the Design System is stamped back onto the container,
+  // which triggers the normal persistence + cloud push below.
+  const initialThemeRef = useRef(container.theme)
+  useEffect(() => {
+    if (initialThemeRef.current) applyOverrides(initialThemeRef.current)
+    return subscribeTheme((map) => setContainer(c => ({ ...c, theme: map })))
+  }, [])
+
   // Persist the whole container to the active scenario's own slot — never crosses
   // slots. For "none" this is just an offline cache; the encrypted cloud row is
   // authoritative.
@@ -338,7 +351,9 @@ export function useData({ initialData = null, onChange = null } = {}) {
       skipPushRef.current = false
       return
     }
-    const t = setTimeout(() => { onChangeRef.current(container) }, 600)
+    // Stamp the live override map at push time — the cached container from a
+    // demo-slot switch could be carrying a stale copy.
+    const t = setTimeout(() => { onChangeRef.current({ ...container, theme: getOverrides() }) }, 600)
     return () => clearTimeout(t)
   }, [container, scenario])
 

@@ -297,8 +297,8 @@ export default function StickerSheet({ onClose }) {
       <div className="ds-body">
         <p className="ds-intro">
           Edit a token below and it propagates live through every component in
-          the app. Changes are saved on this device — use <strong>Reset</strong> to
-          restore the originals.
+          the app, on every device you're signed in on — use{' '}
+          <strong>Reset</strong> to restore the originals.
         </p>
 
         <section className="ds-section">

@@ -6,6 +6,11 @@
 // value straight onto document.documentElement, so it propagates through every
 // component instantly. Overrides are persisted to localStorage and re-applied
 // on the next load; "reset" restores the original stylesheet values.
+//
+// localStorage is only the device-local cache. The override map also rides in
+// the synced data container (useData subscribes via subscribeTheme and stamps
+// it onto every cloud push; applyOverrides installs the copy that arrives from
+// the vault on load), so a token edit follows the account to every device.
 
 export const TOKEN_GROUPS = [
   {
@@ -98,6 +103,39 @@ export function initTheme() {
   )
 }
 
+// ── Cross-device sync hooks ──
+const listeners = new Set()
+function notify() {
+  const map = readStored()
+  listeners.forEach(fn => fn({ ...map }))
+}
+
+// Called with the full override map after every edit/reset.
+export function subscribeTheme(fn) {
+  listeners.add(fn)
+  return () => listeners.delete(fn)
+}
+
+export function getOverrides() {
+  return { ...readStored() }
+}
+
+// Install a full override map (the copy synced from another device): apply
+// listed tokens, clear the rest, and mirror to the local cache. Does not
+// notify — the caller is the sync layer itself.
+export function applyOverrides(map) {
+  const clean = {}
+  ALL_VARS.forEach(v => {
+    if (map && Object.prototype.hasOwnProperty.call(map, v)) {
+      clean[v] = map[v]
+      document.documentElement.style.setProperty(v, map[v])
+    } else {
+      document.documentElement.style.removeProperty(v)
+    }
+  })
+  writeStored(clean)
+}
+
 export function getDefaultValue(v) {
   return defaults[v] || ''
 }
@@ -113,6 +151,7 @@ export function setTokenValue(v, val) {
   const stored = readStored()
   stored[v] = val
   writeStored(stored)
+  notify()
 }
 
 export function resetToken(v) {
@@ -120,11 +159,13 @@ export function resetToken(v) {
   const stored = readStored()
   delete stored[v]
   writeStored(stored)
+  notify()
 }
 
 export function resetAllTokens() {
   ALL_VARS.forEach(v => document.documentElement.style.removeProperty(v))
   writeStored({})
+  notify()
 }
 
 export function isTokenOverridden(v) {
