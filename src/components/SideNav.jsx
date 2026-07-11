@@ -137,17 +137,12 @@ export default function SideNav({ open, scenarios, activeId, onSelect, onAdd, on
               </>
             )}
           </p>
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button
-              className="btn btn-secondary"
-              style={{ flex: 1 }}
-              onClick={() => setConfirmSync(null)}
-            >
+          <div className="confirm-actions">
+            <button className="btn btn-secondary" onClick={() => setConfirmSync(null)}>
               Cancel
             </button>
             <button
               className="btn btn-primary"
-              style={{ flex: 1 }}
               onClick={() => { onToggleSync(confirmSync.id, !confirmSync.linked); setConfirmSync(null) }}
             >
               Continue

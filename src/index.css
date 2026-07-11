@@ -1344,6 +1344,20 @@ a { text-decoration: none; color: inherit; }
 }
 .sync-badge--off { color: #a16207; }
 .top-nav-left .badge { flex-shrink: 0; }
+
+/* Cancel/Continue pair in confirm dialogs — grid columns stay equal-width
+   regardless of each button's own padding or text length. */
+.confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.confirm-actions .btn {
+  min-width: 0;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
 /* The row name becomes a flex line so the badge can sit after the text;
    ellipsis moves onto the inner label span. */
 .side-nav-item-name {
