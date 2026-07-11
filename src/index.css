@@ -242,6 +242,12 @@ a { text-decoration: none; color: inherit; }
 }
 .btn-primary:hover { background: #1a2560; }
 .btn-primary:active { background: #0c1338; }
+.btn-primary:disabled {
+  background: var(--color-indigo-navy);
+  opacity: 0.35;
+  box-shadow: none;
+  cursor: default;
+}
 .btn-secondary {
   background: transparent;
   color: var(--color-indigo-navy);

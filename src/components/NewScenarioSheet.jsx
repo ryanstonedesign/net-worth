@@ -9,7 +9,8 @@ export default function NewScenarioSheet({ scenarios, activeId, onCreate, onClos
   const [fromId, setFromId] = useState(activeId)
   const [synced, setSynced] = useState(true)
 
-  const create = () => onCreate({ name: name.trim() || 'New scenario', fromId, synced })
+  const canCreate = name.trim().length > 0
+  const create = () => { if (canCreate) onCreate({ name: name.trim(), fromId, synced }) }
 
   return (
     <Modal title="New Scenario" onClose={onClose}>
@@ -67,7 +68,7 @@ export default function NewScenarioSheet({ scenarios, activeId, onCreate, onClos
         </p>
       </div>
 
-      <button className="btn btn-primary btn-full" onClick={create}>
+      <button className="btn btn-primary btn-full" onClick={create} disabled={!canCreate}>
         Create Scenario
       </button>
     </Modal>
