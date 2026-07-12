@@ -176,7 +176,7 @@ function AddCategoryModal({ onClose, onSave }) {
             Cancel
           </button>
           <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={!name.trim()}>
-            Add Category
+            Add category
           </button>
         </div>
       </form>

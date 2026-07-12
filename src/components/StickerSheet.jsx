@@ -177,11 +177,11 @@ function Gallery() {
     <>
       <div className="ds-group-title">Buttons</div>
       <div className="ds-gallery">
-        <Specimen label="btn-primary"><button className="btn btn-primary">Save Changes</button></Specimen>
+        <Specimen label="btn-primary"><button className="btn btn-primary">Save changes</button></Specimen>
         <Specimen label="btn-secondary"><button className="btn btn-secondary">Import data</button></Specimen>
         <Specimen label="btn-tertiary"><button className="btn btn-tertiary">Cancel</button></Specimen>
         <Specimen label="btn-sm"><button className="btn btn-secondary btn-sm">Add</button></Specimen>
-        <Specimen label="btn-primary · disabled"><button className="btn btn-primary" disabled>Save Changes</button></Specimen>
+        <Specimen label="btn-primary · disabled"><button className="btn btn-primary" disabled>Save changes</button></Specimen>
         <Specimen label="btn-icon"><button className="btn-icon">+</button></Specimen>
       </div>
 

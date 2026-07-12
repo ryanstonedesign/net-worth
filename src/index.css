@@ -289,10 +289,6 @@ a { text-decoration: none; color: inherit; }
 }
 .btn-destructive:hover { background: color-mix(in srgb, var(--c-danger) 5%, transparent); }
 .btn-destructive:active { background: color-mix(in srgb, var(--c-danger) 10%, transparent); }
-/* On mobile the destructive action drops its border — tertiary treatment. */
-@media (max-width: 899.98px) {
-  .btn-destructive { border: none; padding: 12px 20px; }
-}
 .btn-sm { padding: 8px 14px; font-size: 13px; }
 .btn-sm.btn-secondary { padding: 7px 15px; }
 .btn-full { width: 100%; }
@@ -434,17 +430,28 @@ a { text-decoration: none; color: inherit; }
   letter-spacing: var(--tracking-subheading-sm);
   min-width: 0;
 }
-/* Dialog footer actions. DOM order is [destructive?, primary]; the mobile
-   column reverses it so the primary CTA stacks on top, while the desktop
-   override lays them out in one right-aligned row with the destructive
-   action to the primary's left. */
+/* Fixed footer strip below the scrollable body (Modal's `footer` prop) —
+   action rows placed here stay visible while long content scrolls. */
+.modal-foot {
+  flex-shrink: 0;
+  padding: 12px 20px 20px;
+}
+.modal-foot .modal-actions { margin-top: 0; }
+/* Dialog footer actions, side by side on every layout. DOM order is
+   [destructive?, primary] so the primary lands on the right. Buttons split
+   the row on mobile; the desktop override right-aligns them hugging their
+   content instead. */
 .modal-actions {
   display: flex;
-  flex-direction: column-reverse;
   gap: 12px;
   margin-top: 16px;
 }
-.modal-actions .btn { width: 100%; }
+.modal-actions .btn {
+  flex: 1;
+  min-width: 0;
+  padding-left: 16px;
+  padding-right: 16px;
+}
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -1802,11 +1809,11 @@ a { text-decoration: none; color: inherit; }
     justify-content: flex-end;
   }
   .modal-actions {
-    flex-direction: row;
     justify-content: flex-end;
     gap: 10px;
   }
   .modal-actions .btn {
+    flex: none;
     width: fit-content;
     margin-left: 0;
   }

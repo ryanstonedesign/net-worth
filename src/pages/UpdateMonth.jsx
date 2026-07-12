@@ -149,7 +149,7 @@ export default function UpdateMonth({
               </svg>
               Saved
             </>
-          ) : 'Save Changes'}
+          ) : 'Save changes'}
         </button>
       </div>
     </div>

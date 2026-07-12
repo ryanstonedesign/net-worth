@@ -37,7 +37,7 @@ function ForgotPasswordView({ defaultEmail, onSubmit, onBack }) {
             <li>Set a new password.</li>
           </ol>
           <button className="btn btn-primary btn-full" style={{ marginTop: 16 }} onClick={onBack}>
-            Back to Sign In
+            Back to sign in
           </button>
         </div>
       </div>
@@ -65,10 +65,10 @@ function ForgotPasswordView({ defaultEmail, onSubmit, onBack }) {
           </div>
           {error && <div className="auth-error">{error}</div>}
           <button type="submit" className="btn btn-primary btn-full" disabled={busy || !email.trim()}>
-            {busy ? 'Sending…' : 'Send Reset Link'}
+            {busy ? 'Sending…' : 'Send reset link'}
           </button>
         </form>
-        <button className="auth-switch" onClick={onBack}>Back to Sign In</button>
+        <button className="auth-switch" onClick={onBack}>Back to sign in</button>
       </div>
     </div>
   )
@@ -210,7 +210,7 @@ export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, onBac
             className="btn btn-primary btn-full"
             disabled={busy || !email.trim() || !password || (mode === 'signup' && (!nameComplete || !ack || !passwordsMatch))}
           >
-            {busy ? 'Working…' : mode === 'signin' ? 'Sign In' : 'Create Account'}
+            {busy ? 'Working…' : mode === 'signin' ? 'Sign in' : 'Create account'}
           </button>
         </form>
 

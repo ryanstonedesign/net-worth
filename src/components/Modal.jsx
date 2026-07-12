@@ -1,7 +1,9 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 
-export default function Modal({ title, onClose, children }) {
+// `footer` renders in a fixed strip below the scrollable body — for action
+// rows that must stay visible while long content scrolls.
+export default function Modal({ title, onClose, children, footer }) {
   useEffect(() => {
     const handleKey = (e) => { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', handleKey)
@@ -29,6 +31,7 @@ export default function Modal({ title, onClose, children }) {
         </div>
         {/* Scrollable content */}
         <div className="modal-body">{children}</div>
+        {footer && <div className="modal-foot">{footer}</div>}
       </div>
     </div>,
     document.body,

@@ -69,7 +69,7 @@ export default function NewScenarioSheet({ scenarios, activeId, onCreate, onClos
       </div>
 
       <button className="btn btn-primary btn-full" onClick={create} disabled={!canCreate}>
-        Create Scenario
+        Create scenario
       </button>
     </Modal>
   )

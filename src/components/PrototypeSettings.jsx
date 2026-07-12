@@ -63,7 +63,7 @@ function ChangePasswordForm({ onSubmit, onCancel }) {
         type="submit" className="btn btn-primary btn-full"
         disabled={busy || !current || !next || !confirm}
       >
-        {busy ? 'Changing…' : 'Change Password'}
+        {busy ? 'Changing…' : 'Change password'}
       </button>
       <button
         type="button" className="auth-switch" onClick={onCancel}
@@ -120,7 +120,7 @@ function DeleteAccountForm({ onSubmit, onCancel }) {
         style={{ background: 'var(--c-danger)', color: '#fff' }}
         disabled={busy || !canSubmit}
       >
-        {busy ? 'Deleting…' : 'Delete Account'}
+        {busy ? 'Deleting…' : 'Delete account'}
       </button>
       <button type="button" className="auth-switch" onClick={onCancel}>Cancel</button>
     </form>
@@ -227,7 +227,7 @@ export default function PrototypeSettings({
                   style={{ marginTop: 16 }}
                   onClick={() => { onOpenStickerSheet(); close() }}
                 >
-                  Design System
+                  Design system
                 </button>
               )}
 
@@ -237,7 +237,7 @@ export default function PrototypeSettings({
                   style={{ marginTop: 16 }}
                   onClick={() => setView('change-password')}
                 >
-                  Change Password
+                  Change password
                 </button>
               )}
 
@@ -247,7 +247,7 @@ export default function PrototypeSettings({
                   style={{ marginTop: 8 }}
                   onClick={() => setView('recovery-confirm')}
                 >
-                  Show Recovery Phrase
+                  Show recovery phrase
                 </button>
               )}
 
@@ -261,7 +261,7 @@ export default function PrototypeSettings({
                   }}
                   onClick={() => { onSignOut(); close() }}
                 >
-                  Sign Out
+                  Sign out
                 </button>
               )}
 
@@ -275,7 +275,7 @@ export default function PrototypeSettings({
                   }}
                   onClick={() => setView('delete')}
                 >
-                  Delete Account
+                  Delete account
                 </button>
               )}
             </>
@@ -321,7 +321,7 @@ export default function PrototypeSettings({
                 className="btn btn-primary btn-full" style={{ marginTop: 16 }}
                 disabled={busy} onClick={regenerateRecovery}
               >
-                {busy ? 'Working…' : 'Generate New Phrase'}
+                {busy ? 'Working…' : 'Generate new phrase'}
               </button>
               <button className="auth-switch" onClick={goBack}>Cancel</button>
             </>
@@ -343,7 +343,7 @@ export default function PrototypeSettings({
                 className="btn btn-primary btn-full" style={{ marginTop: 8 }}
                 onClick={close}
               >
-                I've Saved It
+                I've saved it
               </button>
             </>
           )}

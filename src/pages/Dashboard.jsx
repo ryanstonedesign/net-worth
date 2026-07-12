@@ -142,7 +142,7 @@ function GoalEditor({ goal, onSave, onClose }) {
       <div className="modal-actions">
         {goal != null && (
           <button className="btn btn-destructive" onClick={() => onSave(null)}>
-            Clear Goal
+            Clear goal
           </button>
         )}
         <button
@@ -150,7 +150,7 @@ function GoalEditor({ goal, onSave, onClose }) {
           onClick={() => { if (valid) onSave(parsed) }}
           disabled={!valid}
         >
-          Save Goal
+          Save goal
         </button>
       </div>
     </>
@@ -412,7 +412,7 @@ export default function Dashboard({
               </svg>
             </div>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-primary)' }}>
-              Add Category
+              Add category
             </div>
           </button>
         )}

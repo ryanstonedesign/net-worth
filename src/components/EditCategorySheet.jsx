@@ -59,7 +59,34 @@ export default function EditCategorySheet({
   const accounts = isNew ? localAccounts : (category?.accounts ?? [])
 
   return (
-    <Modal title={isNew ? 'New Category' : 'Edit Category'} onClose={onClose}>
+    <Modal
+      title={isNew ? 'New Category' : 'Edit Category'}
+      onClose={onClose}
+      footer={
+        <div className="modal-actions">
+          {!isNew && (
+            <button
+              className="btn btn-destructive"
+              onClick={() => {
+                if (confirm(`Delete "${category.name}" and all its accounts?`)) {
+                  onDelete()
+                  onClose()
+                }
+              }}
+            >
+              Delete category
+            </button>
+          )}
+          <button
+            className="btn btn-primary"
+            onClick={handleSave}
+            disabled={!name.trim()}
+          >
+            {isNew ? 'Create category' : 'Save changes'}
+          </button>
+        </div>
+      }
+    >
       <div className="form-group">
         <label className="form-label">Name</label>
         <input
@@ -200,29 +227,6 @@ export default function EditCategorySheet({
             Add
           </button>
         </div>
-      </div>
-
-      <div className="modal-actions">
-        {!isNew && (
-          <button
-            className="btn btn-destructive"
-            onClick={() => {
-              if (confirm(`Delete "${category.name}" and all its accounts?`)) {
-                onDelete()
-                onClose()
-              }
-            }}
-          >
-            Delete Category
-          </button>
-        )}
-        <button
-          className="btn btn-primary"
-          onClick={handleSave}
-          disabled={!name.trim()}
-        >
-          {isNew ? 'Create Category' : 'Save Changes'}
-        </button>
       </div>
     </Modal>
   )

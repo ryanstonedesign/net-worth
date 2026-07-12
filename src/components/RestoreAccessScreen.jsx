@@ -92,7 +92,7 @@ export default function RestoreAccessScreen({ email, onRestore, onSignOut }) {
             className="btn btn-primary btn-full"
             disabled={busy || !newPassword || !confirm || (mode === 'password' ? !oldPassword : !phrase)}
           >
-            {busy ? 'Restoring…' : 'Set Password and Unlock'}
+            {busy ? 'Restoring…' : 'Set password and unlock'}
           </button>
         </form>
 

@@ -82,11 +82,11 @@ export default function UserMenu({ name, tabIndex = 0, menu }) {
       title: menu.importDisabled ? 'Switch Mock data to None to import into your own data' : undefined,
     })
   }
-  if (menu.onOpenStickerSheet) items.push({ label: 'Design System', icon: DesignIcon, onClick: menu.onOpenStickerSheet })
-  if (menu.onChangePassword) items.push({ label: 'Change Password', icon: KeyIcon, onClick: menu.onChangePassword })
-  if (menu.onShowRecovery) items.push({ label: 'Recovery Phrase', icon: ShieldIcon, onClick: menu.onShowRecovery })
-  if (menu.onSignOut) items.push({ label: 'Sign Out', icon: SignOutIcon, onClick: menu.onSignOut })
-  if (menu.onDeleteAccount) items.push({ label: 'Delete Account', icon: TrashIcon, onClick: menu.onDeleteAccount, danger: true })
+  if (menu.onOpenStickerSheet) items.push({ label: 'Design system', icon: DesignIcon, onClick: menu.onOpenStickerSheet })
+  if (menu.onChangePassword) items.push({ label: 'Change password', icon: KeyIcon, onClick: menu.onChangePassword })
+  if (menu.onShowRecovery) items.push({ label: 'Recovery phrase', icon: ShieldIcon, onClick: menu.onShowRecovery })
+  if (menu.onSignOut) items.push({ label: 'Sign out', icon: SignOutIcon, onClick: menu.onSignOut })
+  if (menu.onDeleteAccount) items.push({ label: 'Delete account', icon: TrashIcon, onClick: menu.onDeleteAccount, danger: true })
 
   return (
     <div className="user-menu" ref={wrapRef}>
