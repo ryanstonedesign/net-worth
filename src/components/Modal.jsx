@@ -21,7 +21,7 @@ export default function Modal({ title, onClose, children }) {
         {/* Fixed header — title top-left, bare ✕ top-right, never scrolls away */}
         <div className="modal-head">
           {title ? <div className="modal-title">{title}</div> : <div aria-hidden="true" />}
-          <button className="modal-close-btn" onClick={onClose} aria-label="Close">
+          <button className="btn-icon modal-close-btn" onClick={onClose} aria-label="Close">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>

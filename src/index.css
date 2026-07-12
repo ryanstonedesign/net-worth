@@ -413,23 +413,13 @@ a { text-decoration: none; color: inherit; }
   gap: 12px;
   padding: 24px 20px 8px;
 }
+/* Layout-only hook — the close button IS the system .btn-icon component;
+   this just anchors it in the header and pulls the 40px circle toward the
+   corner so it doesn't inflate the perceived padding. */
 .modal-close-btn {
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px; height: 32px;
-  /* Nudge up-right so the circle's top lines up with the title's cap line
-     without pushing the header taller. */
-  margin: -3px -4px 0 0;
-  border-radius: 50%;
-  background: var(--c-bg);
-  border: none;
-  color: var(--c-ink-mute);
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  margin: -6px -8px 0 0;
 }
-.modal-close-btn:hover { background: var(--c-surface-muted); color: var(--c-ink); }
 .modal-body {
   flex: 1;
   overflow-y: auto;
