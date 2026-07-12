@@ -6,28 +6,56 @@ import Modal from './Modal'
 // available before the vault unlocks — that only works if they stay tiny,
 // hence the hard 128px cap.
 const AVATAR_SIZE = 128
-function fileToAvatarDataURL(file) {
+
+// Formats every browser can decode. Deliberately NOT image/* — when the
+// accept list excludes HEIC, iOS transcodes High Efficiency photos (the
+// camera default, including Live Photos) to JPEG at pick time. With
+// image/* it hands over the raw HEIC, which most browsers can't decode.
+const AVATAR_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif'
+
+// Prefer createImageBitmap (applies EXIF orientation, so portrait iPhone
+// shots come out upright); fall back to an <img> element where it's missing
+// or rejects the file.
+async function decodeImage(file) {
+  if (typeof createImageBitmap === 'function') {
+    try {
+      return await createImageBitmap(file, { imageOrientation: 'from-image' })
+    } catch {}
+    try {
+      return await createImageBitmap(file)
+    } catch {}
+  }
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file)
     const img = new Image()
-    img.onload = () => {
-      const canvas = document.createElement('canvas')
-      canvas.width = AVATAR_SIZE
-      canvas.height = AVATAR_SIZE
-      const ctx = canvas.getContext('2d')
-      // Center-crop the shorter side so any aspect ratio fills the circle.
-      const side = Math.min(img.width, img.height)
-      const sx = (img.width - side) / 2
-      const sy = (img.height - side) / 2
-      ctx.fillStyle = '#fff' // JPEG has no alpha — transparent PNGs get white
-      ctx.fillRect(0, 0, AVATAR_SIZE, AVATAR_SIZE)
-      ctx.drawImage(img, sx, sy, side, side, 0, 0, AVATAR_SIZE, AVATAR_SIZE)
-      URL.revokeObjectURL(url)
-      resolve(canvas.toDataURL('image/jpeg', 0.85))
-    }
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not read that image.')) }
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img) }
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('undecodable')) }
     img.src = url
   })
+}
+
+async function fileToAvatarDataURL(file) {
+  let source
+  try {
+    source = await decodeImage(file)
+  } catch {
+    throw new Error('That photo format isn’t supported here — try a JPEG or PNG.')
+  }
+  const width = source.naturalWidth || source.width
+  const height = source.naturalHeight || source.height
+  const canvas = document.createElement('canvas')
+  canvas.width = AVATAR_SIZE
+  canvas.height = AVATAR_SIZE
+  const ctx = canvas.getContext('2d')
+  // Center-crop the shorter side so any aspect ratio fills the circle.
+  const side = Math.min(width, height)
+  const sx = (width - side) / 2
+  const sy = (height - side) / 2
+  ctx.fillStyle = '#fff' // JPEG has no alpha — transparent PNGs get white
+  ctx.fillRect(0, 0, AVATAR_SIZE, AVATAR_SIZE)
+  ctx.drawImage(source, sx, sy, side, side, 0, 0, AVATAR_SIZE, AVATAR_SIZE)
+  source.close?.()
+  return canvas.toDataURL('image/jpeg', 0.85)
 }
 
 function ChangePasswordView({ onSubmit, onDone, onCancel }) {
@@ -205,7 +233,7 @@ export default function AccountModal({
               <input
                 ref={fileRef}
                 type="file"
-                accept="image/*"
+                accept={AVATAR_ACCEPT}
                 hidden
                 onChange={e => { pickPhoto(e.target.files?.[0]); e.target.value = '' }}
               />
