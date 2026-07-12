@@ -97,6 +97,10 @@ export default function CategoryCard({ category, snapshot, contributions = {}, c
                       onChange={e => {
                         const raw = e.target.value.replace(/[^0-9.]/g, '')
                         setValues(v => ({ ...v, [acc.id]: raw }))
+                        // Commit live, not just on blur — iOS's keyboard-dismiss
+                        // key hides the keyboard without blurring, which would
+                        // leave the edit unsaved until a stray tap elsewhere.
+                        if (raw !== '') onUpdate({ [acc.id]: parseAmount(raw) })
                       }}
                       onBlur={handleBlur}
                     />
@@ -131,6 +135,8 @@ export default function CategoryCard({ category, snapshot, contributions = {}, c
                           onChange={e => {
                             const raw = e.target.value.replace(/[^0-9.]/g, '')
                             setContribs(v => ({ ...v, [acc.id]: raw }))
+                            // Same live commit as balances — see above.
+                            if (raw !== '') onContributionChange?.({ [acc.id]: parseAmount(raw) })
                           }}
                           onBlur={handleContribBlur}
                         />
