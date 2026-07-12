@@ -683,7 +683,7 @@ a { text-decoration: none; color: inherit; }
   border: none;
   border-bottom: 1px solid transparent;
   font-family: var(--font);
-  font-size: 16px;
+  font-size: 13px; /* matches .cat-account-name */
   font-weight: var(--font-weight-medium);
   color: var(--c-ink);
   padding: 4px 0;
@@ -693,6 +693,14 @@ a { text-decoration: none; color: inherit; }
   font-variant-numeric: tabular-nums;
 }
 .cat-account-input:focus { border-bottom-color: var(--c-primary); }
+/* iOS Safari auto-zooms the page when a focused input is under 16px. On
+   touch devices the value inputs grow to 16px only while being edited,
+   which suppresses the zoom; at rest they match their 13px labels. */
+@media (pointer: coarse) {
+  .cat-account-input:focus,
+  .update-amount-input:focus,
+  .growth-input:focus { font-size: 16px; }
+}
 .cat-account-input::placeholder { color: var(--color-fog); }
 /* Read-only projected value shown on future (estimated) months.
    The compound selector ensures the muted color also wins on contribution
@@ -971,7 +979,7 @@ a { text-decoration: none; color: inherit; }
   border-radius: var(--r-btn);
   padding: 8px 12px 8px 20px;
   font-family: var(--font);
-  font-size: 16px;
+  font-size: 13px; /* matches the account name beside it */
   font-weight: var(--font-weight-medium);
   color: var(--c-ink);
   outline: none;
@@ -1054,7 +1062,7 @@ a { text-decoration: none; color: inherit; }
 .growth-input {
   width: 42px;
   text-align: right;
-  font-size: 16px;
+  font-size: 13px; /* matches the account name beside it */
   font-weight: var(--font-weight-regular);
   color: var(--c-ink);
   font-family: var(--font);
