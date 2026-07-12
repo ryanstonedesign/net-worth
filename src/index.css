@@ -411,14 +411,14 @@ a { text-decoration: none; color: inherit; }
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  padding: 24px 20px 8px;
+  padding: 20px 20px 8px;
 }
 /* Layout-only hook — the close button IS the system .btn-icon component;
    this just anchors it in the header, pulled toward the corner for an
    equal 12px gap to the modal's top and right edges. */
 .modal-close-btn {
   flex-shrink: 0;
-  margin: -12px -8px 0 0;
+  margin: -8px -8px 0 0;
 }
 .modal-body {
   flex: 1;
