@@ -37,7 +37,7 @@ const SyncActionIcon = (
 // popover (via `settingsMenu`) on every layout.
 export default function SideNav({
   open, desktop, scenarios, activeId, onSelect, onAdd, onDelete, onRename, onToggleSync,
-  userName, settingsMenu,
+  userName, userAvatar, settingsMenu,
 }) {
   const [editingId, setEditingId] = useState(null)
   const [draft, setDraft] = useState('')
@@ -132,6 +132,7 @@ export default function SideNav({
       <div className="side-nav-footer">
         <UserMenu
           name={userName}
+          avatar={userAvatar}
           tabIndex={tabbable ? 0 : -1}
           menu={settingsMenu}
         />

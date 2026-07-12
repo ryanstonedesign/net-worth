@@ -1458,6 +1458,13 @@ a { text-decoration: none; color: inherit; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+}
+.side-nav-user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .side-nav-user-name {
   flex: 1;
@@ -1497,6 +1504,53 @@ a { text-decoration: none; color: inherit; }
 }
 .settings-pop-field .select { padding: 9px 36px 9px 12px; font-size: 14px; }
 .settings-pop-field .select-chevron { right: 12px; width: 14px; height: 14px; }
+
+/* ── Account modal ──
+   Avatar preview + actions at the top of the Account modal. The preview is
+   the side-nav avatar scaled up: uploaded photo when set, initials on the
+   primary fill otherwise. */
+.account-avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 4px 0 8px;
+}
+.account-avatar {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--c-primary);
+  color: #fff;
+  font-size: 22px;
+  font-weight: var(--font-weight-semibold);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.account-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.account-avatar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.account-avatar-remove {
+  padding: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: var(--font-weight-medium);
+  color: var(--c-ink-mute);
+}
+.account-avatar-remove:hover { color: var(--c-danger); }
 
 /* ── Scenario sync ──
    The top nav shows a Synced/Unsynced text badge for the active scenario;

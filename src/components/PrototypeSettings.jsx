@@ -10,70 +10,6 @@ export const SCENARIOS = [
   { value: '1year', label: '1 year' },
 ]
 
-function ChangePasswordForm({ onSubmit, onCancel }) {
-  const [current, setCurrent] = useState('')
-  const [next, setNext] = useState('')
-  const [confirm, setConfirm] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState(null)
-
-  const submit = async (e) => {
-    e.preventDefault()
-    if (!current || !next || !confirm) return
-    if (next !== confirm) { setError('New passwords don\'t match.'); return }
-    if (next.length < 8) { setError('New password must be at least 8 characters.'); return }
-    setBusy(true)
-    setError(null)
-    const result = await onSubmit({ currentPassword: current, newPassword: next })
-    setBusy(false)
-    if (!result.ok) setError(result.error)
-  }
-
-  return (
-    <form onSubmit={submit}>
-      <p style={{ fontSize: 13, color: 'var(--c-ink-mute)', marginBottom: 16, lineHeight: 1.5 }}>
-        Your vault will be re-encrypted with the new password. There is still no
-        recovery if you forget — save it somewhere safe.
-      </p>
-      <div className="form-group">
-        <label className="form-label">Current password</label>
-        <input
-          className="input" type="password" autoComplete="current-password"
-          value={current} onChange={e => setCurrent(e.target.value)} required
-        />
-      </div>
-      <div className="form-group">
-        <label className="form-label">New password</label>
-        <input
-          className="input" type="password" autoComplete="new-password"
-          minLength={8}
-          value={next} onChange={e => setNext(e.target.value)} required
-        />
-      </div>
-      <div className="form-group">
-        <label className="form-label">Confirm new password</label>
-        <input
-          className="input" type="password" autoComplete="new-password"
-          minLength={8}
-          value={confirm} onChange={e => setConfirm(e.target.value)} required
-        />
-      </div>
-      {error && <div className="auth-error">{error}</div>}
-      <button
-        type="submit" className="btn btn-primary btn-full"
-        disabled={busy || !current || !next || !confirm}
-      >
-        {busy ? 'Changing…' : 'Change password'}
-      </button>
-      <button
-        type="button" className="auth-switch" onClick={onCancel}
-      >
-        Cancel
-      </button>
-    </form>
-  )
-}
-
 function DeleteAccountForm({ onSubmit, onCancel }) {
   const [password, setPassword] = useState('')
   const [confirmText, setConfirmText] = useState('')
@@ -128,12 +64,13 @@ function DeleteAccountForm({ onSubmit, onCancel }) {
 }
 
 // `initialView` lets the desktop settings popover jump straight to a single
-// flow ('import', 'change-password', 'recovery-confirm', 'delete') without
-// going through the full settings list. Cancelling from a directly-opened
-// flow closes the sheet instead of falling back to the list.
+// flow ('import', 'recovery-confirm', 'delete') without going through the
+// full settings list. Cancelling from a directly-opened flow closes the
+// sheet instead of falling back to the list. (Password changes live in the
+// Account modal, opened from the user popover.)
 export default function PrototypeSettings({
   open, onClose, initialView = 'main',
-  scenario, onScenarioChange, onSignOut, onChangePassword,
+  scenario, onScenarioChange, onSignOut,
   onGenerateRecovery, onDeleteAccount,
   categories, selectedMonth, onImport, onOpenStickerSheet,
 }) {
@@ -173,9 +110,7 @@ export default function PrototypeSettings({
       {open && view !== 'import' && (
         <Modal
           title={
-            view === 'change-password' ? 'Change Password'
-            : view === 'changed' ? 'Password Changed'
-            : view === 'delete' ? 'Delete Account'
+            view === 'delete' ? 'Delete Account'
             : view === 'recovery-confirm' || view === 'recovery-shown' ? 'Recovery Phrase'
             : 'Settings'
           }
@@ -231,16 +166,6 @@ export default function PrototypeSettings({
                 </button>
               )}
 
-              {onChangePassword && (
-                <button
-                  className="btn btn-secondary btn-full"
-                  style={{ marginTop: 16 }}
-                  onClick={() => setView('change-password')}
-                >
-                  Change password
-                </button>
-              )}
-
               {onGenerateRecovery && (
                 <button
                   className="btn btn-secondary btn-full"
@@ -286,28 +211,6 @@ export default function PrototypeSettings({
               onSubmit={onDeleteAccount}
               onCancel={goBack}
             />
-          )}
-
-          {view === 'change-password' && (
-            <ChangePasswordForm
-              onSubmit={async (args) => {
-                const result = await onChangePassword(args)
-                if (result.ok) setView('changed')
-                return result
-              }}
-              onCancel={goBack}
-            />
-          )}
-
-          {view === 'changed' && (
-            <>
-              <p style={{ fontSize: 14, lineHeight: 1.5, color: 'var(--c-ink)' }}>
-                Your password has been changed. Save the new one somewhere safe.
-              </p>
-              <button className="btn btn-primary btn-full" style={{ marginTop: 16 }} onClick={close}>
-                Done
-              </button>
-            </>
           )}
 
           {view === 'recovery-confirm' && (

@@ -16,9 +16,10 @@ const DesignIcon = (
     <rect x="3" y="14" width="7" height="7" />
   </svg>
 )
-const KeyIcon = (
+const AccountIcon = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3-3.5 3.5" />
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
   </svg>
 )
 const ShieldIcon = (
@@ -42,14 +43,15 @@ const TrashIcon = (
   </svg>
 )
 
-// The signed-in user's name, pinned to the bottom of the scenario sidebar.
-// Pressing it opens the settings popover above itself (left-aligned with
-// the name) on every layout; flows chosen from it open in focused modals.
+// The signed-in user's name and avatar (uploaded photo, or their initial),
+// pinned to the bottom of the scenario sidebar. Pressing it opens the
+// settings popover above itself (left-aligned with the name) on every
+// layout; flows chosen from it open in focused modals.
 //
 // `menu` — { scenario, onScenarioChange, importDisabled, onImport,
-//   onOpenStickerSheet, onChangePassword, onShowRecovery, onSignOut,
+//   onOpenStickerSheet, onAccount, onShowRecovery, onSignOut,
 //   onDeleteAccount }; absent callbacks hide their item.
-export default function UserMenu({ name, tabIndex = 0, menu }) {
+export default function UserMenu({ name, avatar, tabIndex = 0, menu }) {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef(null)
 
@@ -68,7 +70,9 @@ export default function UserMenu({ name, tabIndex = 0, menu }) {
   const initial = (name || '?').trim().charAt(0).toUpperCase()
   const trigger = (attrs) => (
     <button type="button" className="side-nav-user" tabIndex={tabIndex} {...attrs}>
-      <span className="side-nav-user-avatar" aria-hidden="true">{initial}</span>
+      <span className="side-nav-user-avatar" aria-hidden="true">
+        {avatar ? <img src={avatar} alt="" /> : initial}
+      </span>
       <span className="side-nav-user-name">{name}</span>
     </button>
   )
@@ -83,7 +87,7 @@ export default function UserMenu({ name, tabIndex = 0, menu }) {
     })
   }
   if (menu.onOpenStickerSheet) items.push({ label: 'Design system', icon: DesignIcon, onClick: menu.onOpenStickerSheet })
-  if (menu.onChangePassword) items.push({ label: 'Change password', icon: KeyIcon, onClick: menu.onChangePassword })
+  if (menu.onAccount) items.push({ label: 'Account', icon: AccountIcon, onClick: menu.onAccount })
   if (menu.onShowRecovery) items.push({ label: 'Recovery phrase', icon: ShieldIcon, onClick: menu.onShowRecovery })
   if (menu.onSignOut) items.push({ label: 'Sign out', icon: SignOutIcon, onClick: menu.onSignOut })
   if (menu.onDeleteAccount) items.push({ label: 'Delete account', icon: TrashIcon, onClick: menu.onDeleteAccount, danger: true })

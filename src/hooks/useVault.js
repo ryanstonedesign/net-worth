@@ -81,7 +81,11 @@ export function useVault() {
         setInitialData(null)
         setStage('auth')
       } else {
-        setUser(prev => prev?.id === session.user.id ? prev : session.user)
+        // USER_UPDATED carries fresh metadata (name/avatar/email changes) —
+        // always take the new object then. Otherwise keep the previous
+        // reference for same-user events (e.g. TOKEN_REFRESHED) to avoid
+        // re-render churn.
+        setUser(prev => (prev?.id === session.user.id && event !== 'USER_UPDATED') ? prev : session.user)
         // If we're mid-reset, the SIGNED_IN event for that session also fires
         // here. Stay on the Restore Access screen.
         if (arrivedFromPasswordReset || recoveryModeActive()) {
@@ -425,6 +429,39 @@ export function useVault() {
     }
   }, [user])
 
+  // Update the profile pieces that live in auth user metadata (outside the
+  // encrypted vault, so the UI can show them before unlock): name and the
+  // small avatar data URL. No crypto involved.
+  const updateProfile = useCallback(async ({ firstName, lastName, avatar }) => {
+    if (!user) return { ok: false, error: 'Not signed in.' }
+    const displayName = [firstName, lastName].filter(Boolean).join(' ')
+    const { data, error } = await supabase.auth.updateUser({
+      data: {
+        display_name: displayName,
+        first_name: firstName,
+        last_name: lastName,
+        avatar: avatar || null,
+      },
+    })
+    if (error) return { ok: false, error: error.message }
+    // The USER_UPDATED auth event also lands here, but apply the fresh user
+    // object immediately so the UI doesn't wait on the event loop.
+    if (data?.user) setUser(data.user)
+    return { ok: true }
+  }, [user])
+
+  // Change the sign-in email. Supabase (with secure email change on) sends
+  // confirmation links to BOTH addresses; user.email only flips after both
+  // are clicked, so callers should message "check your inbox" rather than
+  // assume the change is live. The vault is untouched — email is only an
+  // auth identifier, not key material.
+  const updateEmail = useCallback(async (newEmail) => {
+    if (!user) return { ok: false, error: 'Not signed in.' }
+    const { error } = await supabase.auth.updateUser({ email: newEmail })
+    if (error) return { ok: false, error: error.message }
+    return { ok: true }
+  }, [user])
+
   // Generate (or regenerate) a recovery phrase. Wraps the existing DEK with
   // a key derived from a freshly random phrase and saves wrapped_dek_recovery.
   // Returns the phrase ONCE — caller must show it to the user immediately.
@@ -503,6 +540,7 @@ export function useVault() {
     stage, user, error, initialData,
     pendingRecoveryPhrase, clearPendingRecoveryPhrase,
     signUp, signIn, unlock, signOut, resetVault, deleteAccount, changePassword,
+    updateProfile, updateEmail,
     generateRecovery, unlockWithRecovery,
     requestPasswordReset, restoreAccess,
     pushData,

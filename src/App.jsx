@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import AccountModal from './components/AccountModal'
 
 const noop = () => {}
 import { useData } from './hooks/useData'
@@ -22,7 +23,7 @@ import RestoreAccessScreen from './components/RestoreAccessScreen'
 // mobile, fixed sidebar on desktop), a floating top nav (menu + scenario name
 // + settings on mobile; just the name on desktop), and the scenario "push"
 // entrance when a new scenario is created.
-function AppShell({ dataHook, settingsProps, userName }) {
+function AppShell({ dataHook, settingsProps, userName, account }) {
   const isDesktop = useMediaQuery(DESKTOP_QUERY)
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -30,6 +31,32 @@ function AppShell({ dataHook, settingsProps, userName }) {
   // (full list, mobile), or a specific flow launched from the desktop popover.
   const [settingsView, setSettingsView] = useState(null)
   const [stickerOpen, setStickerOpen] = useState(false)
+  // Account modal (avatar / name / email / password). Landing on the app
+  // with #account in the URL deep-links straight into it; opening and
+  // closing keep the hash in sync so the state stays shareable. replaceState
+  // (not pushState) — the modal shouldn't add Back-button stops.
+  const [accountOpen, setAccountOpen] = useState(
+    () => !!account && window.location.hash === '#account',
+  )
+  // Also honor #account arriving after load (e.g. an in-app link), not just
+  // on landing.
+  const hasAccount = !!account
+  useEffect(() => {
+    if (!hasAccount) return
+    const onHash = () => { if (window.location.hash === '#account') setAccountOpen(true) }
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [hasAccount])
+  const openAccount = () => {
+    setAccountOpen(true)
+    try { window.history.replaceState(null, '', '#account') } catch {}
+  }
+  const closeAccount = () => {
+    setAccountOpen(false)
+    try {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search)
+    } catch {}
+  }
   // How the live stage enters when activeForecastId changes: 'push' (slide in
   // from the right) right after creating a scenario, 'fade' for ordinary
   // switches. `outgoing` holds the scenario being pushed out to the left while
@@ -85,13 +112,14 @@ function AppShell({ dataHook, settingsProps, userName }) {
         onRename={(id, name) => dataHook.renameForecast(id, name)}
         onToggleSync={(id, synced) => dataHook.setForecastSynced(id, synced)}
         userName={userName}
+        userAvatar={account?.user?.user_metadata?.avatar || null}
         settingsMenu={{
           scenario: dataHook.scenario,
           onScenarioChange: dataHook.setScenario,
           importDisabled: dataHook.scenario !== 'none',
           onImport: () => setSettingsView('import'),
           onOpenStickerSheet: () => setStickerOpen(true),
-          onChangePassword: settingsProps.onChangePassword && (() => setSettingsView('change-password')),
+          onAccount: account && openAccount,
           onShowRecovery: settingsProps.onGenerateRecovery && (() => setSettingsView('recovery-confirm')),
           onSignOut: settingsProps.onSignOut,
           onDeleteAccount: settingsProps.onDeleteAccount && (() => setSettingsView('delete')),
@@ -179,12 +207,23 @@ function AppShell({ dataHook, settingsProps, userName }) {
       )}
 
       {stickerOpen && <StickerSheet onClose={() => setStickerOpen(false)} />}
+
+      {accountOpen && account && (
+        <AccountModal
+          user={account.user}
+          onClose={closeAccount}
+          onUpdateProfile={account.onUpdateProfile}
+          onUpdateEmail={account.onUpdateEmail}
+          onChangePassword={account.onChangePassword}
+        />
+      )}
     </>
   )
 }
 
 function VaultedApp({
   user, initialData, onChange, onSignOut, onChangePassword, onGenerateRecovery, onDeleteAccount,
+  onUpdateProfile, onUpdateEmail,
 }) {
   const dataHook = useData({ initialData, onChange })
   // Accounts created before the sign-up flow captured a name fall back to
@@ -196,7 +235,8 @@ function VaultedApp({
     <AppShell
       dataHook={dataHook}
       userName={userName}
-      settingsProps={{ onSignOut, onChangePassword, onGenerateRecovery, onDeleteAccount }}
+      account={{ user, onUpdateProfile, onUpdateEmail, onChangePassword }}
+      settingsProps={{ onSignOut, onGenerateRecovery, onDeleteAccount }}
     />
   )
 }
@@ -284,6 +324,8 @@ export default function App() {
       onChangePassword={vault.changePassword}
       onGenerateRecovery={vault.generateRecovery}
       onDeleteAccount={vault.deleteAccount}
+      onUpdateProfile={vault.updateProfile}
+      onUpdateEmail={vault.updateEmail}
     />
   )
 }
