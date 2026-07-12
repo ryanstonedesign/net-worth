@@ -699,6 +699,7 @@ a { text-decoration: none; color: inherit; }
 @media (pointer: coarse) {
   .cat-account-input:focus,
   .update-amount-input:focus,
+  .manage-account-input:focus,
   .growth-input:focus { font-size: 16px; }
 }
 .cat-account-input::placeholder { color: var(--color-fog); }
@@ -1024,7 +1025,7 @@ a { text-decoration: none; color: inherit; }
 .manage-account-input {
   flex: 1;
   min-width: 0;
-  font-size: 16px;
+  font-size: 13px;
   font-weight: var(--font-weight-regular);
   color: var(--c-ink);
   font-family: var(--font);
