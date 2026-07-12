@@ -117,7 +117,7 @@ export default function EditCategorySheet({
 
       {/* Accounts */}
       <div style={{ marginBottom: 24 }}>
-        <div className="form-label" style={{ marginBottom: 8 }}>Accounts</div>
+        <div className="form-label" style={{ marginBottom: 8, fontSize: 13 }}>Accounts</div>
 
         {accounts.length > 0 && (
           <div style={{ borderTop: '1px solid var(--c-border)', marginBottom: 8 }}>
