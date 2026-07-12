@@ -297,7 +297,7 @@ a { text-decoration: none; color: inherit; }
 .btn-sm.btn-secondary { padding: 7px 15px; }
 .btn-full { width: 100%; }
 .btn-icon {
-  width: 40px; height: 40px; padding: 0; border-radius: var(--r-btn);
+  width: 40px; height: 40px; padding: 0; border-radius: 50%;
   display: inline-flex; align-items: center; justify-content: center;
   background: var(--c-surface);
   box-shadow: var(--shadow-btn-secondary);
@@ -418,17 +418,18 @@ a { text-decoration: none; color: inherit; }
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px; height: 28px;
-  /* Pull the 28px hit target back so the 16px glyph sits flush with the
-     title's cap line and the content edge. */
-  margin: -4px -6px 0 0;
-  background: none;
+  width: 32px; height: 32px;
+  /* Nudge up-right so the circle's top lines up with the title's cap line
+     without pushing the header taller. */
+  margin: -3px -4px 0 0;
+  border-radius: 50%;
+  background: var(--c-bg);
   border: none;
   color: var(--c-ink-mute);
   cursor: pointer;
-  transition: color 0.15s;
+  transition: background 0.15s, color 0.15s;
 }
-.modal-close-btn:hover { color: var(--c-ink); }
+.modal-close-btn:hover { background: var(--c-surface-muted); color: var(--c-ink); }
 .modal-body {
   flex: 1;
   overflow-y: auto;
