@@ -289,6 +289,10 @@ a { text-decoration: none; color: inherit; }
 }
 .btn-destructive:hover { background: color-mix(in srgb, var(--c-danger) 5%, transparent); }
 .btn-destructive:active { background: color-mix(in srgb, var(--c-danger) 10%, transparent); }
+/* On mobile the destructive action drops its border — tertiary treatment. */
+@media (max-width: 899.98px) {
+  .btn-destructive { border: none; padding: 12px 20px; }
+}
 .btn-sm { padding: 8px 14px; font-size: 13px; }
 .btn-sm.btn-secondary { padding: 7px 15px; }
 .btn-full { width: 100%; }
@@ -370,7 +374,10 @@ a { text-decoration: none; color: inherit; }
 .nav-item.active { color: var(--c-primary); }
 .nav-item svg { width: 24px; height: 24px; }
 
-/* ── Modal ── */
+/* ── Modal ──
+   Mobile: a floating bottom sheet — 16px off the left/right/bottom edges,
+   24px corners, no drag handle. Desktop (media query below) recenters the
+   same sheet as a dialog. The header row pairs the title with a bare ✕. */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -382,57 +389,59 @@ a { text-decoration: none; color: inherit; }
   flex-direction: column;
   justify-content: flex-end;
   align-items: center;
-  padding-top: 64px;
+  padding: calc(var(--safe-top) + 64px) 16px calc(var(--safe-bottom) + 16px);
   animation: fadeIn 0.2s ease;
 }
 .modal-sheet {
   background: var(--c-surface);
   box-shadow: rgba(30, 30, 44, 0.15) 0px -24px 64px 0px, rgba(17, 26, 74, 0.05) 0px 0px 0px 1px;
-  border-radius: var(--r-card) var(--r-card) 0 0;
+  border-radius: 24px;
   width: 100%;
   max-width: 600px;
-  max-height: calc(100vh - 64px - env(safe-area-inset-top, 0px));
+  max-height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   animation: slideUp 0.32s cubic-bezier(0.32, 0.72, 0, 1);
 }
-.modal-top {
+/* Fixed header row: title left, ✕ right, tops aligned. */
+.modal-head {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 24px 20px 8px;
+}
+.modal-close-btn {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 20px 8px;
-}
-.modal-handle {
-  width: 36px; height: 4px;
-  background: var(--c-border);
-  border-radius: 2px;
-}
-.modal-close-btn {
+  justify-content: center;
   width: 28px; height: 28px;
-  border-radius: var(--r-btn);
-  background: var(--c-bg);
+  /* Pull the 28px hit target back so the 16px glyph sits flush with the
+     title's cap line and the content edge. */
+  margin: -4px -6px 0 0;
+  background: none;
   border: none;
-  display: flex; align-items: center; justify-content: center;
   color: var(--c-ink-mute);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: color 0.15s;
 }
-.modal-close-btn:hover { background: var(--c-surface-muted); color: var(--c-ink); }
+.modal-close-btn:hover { color: var(--c-ink); }
 .modal-body {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
-  padding: 8px 20px calc(var(--safe-bottom) + 32px);
+  padding: 4px 20px 24px;
 }
 .modal-title {
   font-family: var(--font-title);
   font-size: var(--text-subheading-sm);
   font-weight: var(--font-weight-semibold);
   letter-spacing: var(--tracking-subheading-sm);
-  margin-bottom: 20px;
+  min-width: 0;
 }
 /* Dialog footer actions. DOM order is [destructive?, primary]; the mobile
    column reverses it so the primary CTA stacks on top, while the desktop
@@ -1781,20 +1790,17 @@ a { text-decoration: none; color: inherit; }
   /* Re-center the floating month selector over the content area. */
   .month-float { left: calc(50% + var(--sidebar-w) / 2); }
 
-  /* Dialogs: bottom sheets become centered dialogs — 24px corners, no
-     drag handle, and primary/footer buttons hug their content on the
-     right instead of going full-width. */
+  /* Dialogs: the floating bottom sheet recenters as a dialog, and
+     primary/footer buttons hug their content on the right instead of
+     going full-width. */
   .modal-overlay {
     justify-content: center;
     align-items: center;
     padding: 24px;
   }
   .modal-sheet {
-    border-radius: 24px;
-    max-height: calc(100vh - 48px);
     animation: dialogIn 0.22s cubic-bezier(0.32, 0.72, 0, 1);
   }
-  .modal-handle { visibility: hidden; }
   .modal-sheet .btn-full {
     display: flex;
     width: fit-content;
