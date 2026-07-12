@@ -1,10 +1,10 @@
 import { useRef, useState } from 'react'
 import Modal from './Modal'
 
-// Downscale a picked image to a small square JPEG data URL. Avatars ride
-// along in Supabase auth user metadata (like the display name) so they're
-// available before the vault unlocks — that only works if they stay tiny,
-// hence the hard 128px cap.
+// Downscale a picked image to a small square JPEG data URL. The avatar is
+// stored (plaintext, like the display name) in the user's vaults row —
+// NEVER in auth user metadata, which is embedded in every access token and
+// would bloat the JWT past gateway header limits.
 const AVATAR_SIZE = 128
 
 // Formats every browser can decode. Deliberately NOT image/* — when the
@@ -144,7 +144,7 @@ function ChangePasswordView({ onSubmit, onDone, onCancel }) {
 // emails — the address only actually switches once both links are clicked,
 // so we show a "check your inbox" view instead of closing.
 export default function AccountModal({
-  user, onClose, onUpdateProfile, onUpdateEmail, onChangePassword,
+  user, avatar: savedAvatar, onClose, onUpdateProfile, onUpdateEmail, onChangePassword,
 }) {
   const meta = user?.user_metadata || {}
   // Older accounts may only carry display_name (or nothing) — split it as a
@@ -153,7 +153,7 @@ export default function AccountModal({
   const [firstName, setFirstName] = useState(meta.first_name ?? fallbackFirst ?? '')
   const [lastName, setLastName] = useState(meta.last_name ?? fallbackRest.join(' '))
   const [email, setEmail] = useState(user?.email || '')
-  const [avatar, setAvatar] = useState(meta.avatar || null)
+  const [avatar, setAvatar] = useState(savedAvatar || null)
   const [view, setView] = useState('main') // 'main' | 'password' | 'email-sent'
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
@@ -161,7 +161,7 @@ export default function AccountModal({
 
   const profileDirty = firstName.trim() !== (meta.first_name ?? fallbackFirst ?? '')
     || lastName.trim() !== (meta.last_name ?? fallbackRest.join(' '))
-    || (avatar || null) !== (meta.avatar || null)
+    || (avatar || null) !== (savedAvatar || null)
   const emailDirty = email.trim().toLowerCase() !== (user?.email || '').toLowerCase()
   const canSave = (profileDirty || emailDirty) && firstName.trim() && email.trim()
 

@@ -5,7 +5,7 @@ import {
   generateDEK, wrapDEK, unwrapDEK,
   generateRecoveryPhrase, normalizeRecoveryPhrase,
 } from '../lib/crypto'
-import { fetchSalt, fetchVault, pushVault, pushWrappingChange } from '../lib/sync'
+import { fetchSalt, fetchVault, pushVault, pushWrappingChange, pushAvatar } from '../lib/sync'
 
 // Stages:
 //   'legacy'         – no backend configured, app runs local-only
@@ -40,6 +40,11 @@ export function useVault() {
   const saltRef = useRef(null)
   const versionRef = useRef(0)
   const [initialData, setInitialData] = useState(null)
+  // Avatar photo from the vaults row (loaded at unlock). Kept OUT of auth
+  // user metadata on purpose: metadata is embedded in every access token,
+  // and a data-URL photo there bloats the JWT past gateway header limits —
+  // fresh sign-ins hang on their first database request.
+  const [avatar, setAvatar] = useState(null)
   // After signup, hold the recovery phrase here so the UI can show it once.
   const [pendingRecoveryPhrase, setPendingRecoveryPhrase] = useState(null)
 
@@ -79,6 +84,7 @@ export function useVault() {
         saltRef.current = null
         setUser(null)
         setInitialData(null)
+        setAvatar(null)
         setStage('auth')
       } else {
         // USER_UPDATED carries fresh metadata (name/avatar/email changes) —
@@ -161,6 +167,7 @@ export function useVault() {
       // Network errors during initial push — first edit will retry.
     }
     setInitialData(emptyData)
+    setAvatar(null)
     setPendingRecoveryPhrase(phrase)
     setStage('unlock')
   }, [saveCachedSalt])
@@ -183,6 +190,7 @@ export function useVault() {
         dekRef.current = dek
         versionRef.current = 0
         setInitialData(null)
+        setAvatar(null)
         setStage('unlock')
         return
       }
@@ -197,6 +205,7 @@ export function useVault() {
       }
       dekRef.current = dek
       setInitialData(data)
+      setAvatar(row.avatar ?? null)
       setStage('unlock')
     } catch {
       dekRef.current = null
@@ -296,6 +305,7 @@ export function useVault() {
       dekRef.current = dek
       const data = await decryptJSON(dek, { ciphertext: row.ciphertext, iv: row.iv })
       setInitialData(data)
+      setAvatar(row.avatar ?? null)
       try { window.history.replaceState(null, '', window.location.pathname) } catch {}
       setRecoveryMode(false)
       setStage('unlock')
@@ -429,10 +439,13 @@ export function useVault() {
     }
   }, [user])
 
-  // Update the profile pieces that live in auth user metadata (outside the
-  // encrypted vault, so the UI can show them before unlock): name and the
-  // small avatar data URL. No crypto involved.
-  const updateProfile = useCallback(async ({ firstName, lastName, avatar }) => {
+  // Update the profile: the name lives in auth user metadata (tiny, and the
+  // UI can show it before unlock); the avatar photo goes to the vaults row
+  // via pushAvatar. Never put the photo in metadata — metadata is embedded
+  // in every access token, and a data-URL there bloats the JWT past gateway
+  // header limits, hanging fresh sign-ins. `avatar: null` in the metadata
+  // write also scrubs any copy left by builds that got this wrong.
+  const updateProfile = useCallback(async ({ firstName, lastName, avatar: nextAvatar }) => {
     if (!user) return { ok: false, error: 'Not signed in.' }
     const displayName = [firstName, lastName].filter(Boolean).join(' ')
     const { data, error } = await supabase.auth.updateUser({
@@ -440,13 +453,19 @@ export function useVault() {
         display_name: displayName,
         first_name: firstName,
         last_name: lastName,
-        avatar: avatar || null,
+        avatar: null,
       },
     })
     if (error) return { ok: false, error: error.message }
     // The USER_UPDATED auth event also lands here, but apply the fresh user
     // object immediately so the UI doesn't wait on the event loop.
     if (data?.user) setUser(data.user)
+    try {
+      await pushAvatar(user.id, nextAvatar)
+    } catch (e) {
+      return { ok: false, error: 'Could not save the photo: ' + (e?.message || 'try again.') }
+    }
+    setAvatar(nextAvatar || null)
     return { ok: true }
   }, [user])
 
@@ -527,6 +546,7 @@ export function useVault() {
       dekRef.current = dek
       const data = await decryptJSON(dek, { ciphertext: row.ciphertext, iv: row.iv })
       setInitialData(data)
+      setAvatar(row.avatar ?? null)
       setStage('unlock')
       return { ok: true }
     } catch {
@@ -534,10 +554,35 @@ export function useVault() {
     }
   }, [user])
 
+  // One-time repair for accounts whose avatar was saved into auth user
+  // metadata by earlier builds: once unlocked (i.e. this session's token
+  // still works), copy the photo into the vaults row and scrub it from
+  // metadata so freshly issued tokens shrink back to normal and new
+  // sign-ins stop hanging on oversized JWTs.
+  const migratedAvatarRef = useRef(false)
+  useEffect(() => {
+    const metaAvatar = user?.user_metadata?.avatar
+    if (stage !== 'unlock' || !metaAvatar || migratedAvatarRef.current) return
+    migratedAvatarRef.current = true
+    ;(async () => {
+      try {
+        await pushAvatar(user.id, metaAvatar)
+        setAvatar(metaAvatar)
+      } catch {
+        // Column not migrated yet — still scrub the metadata below; a lost
+        // photo is recoverable, a bricked sign-in is worse.
+      }
+      try {
+        const { data } = await supabase.auth.updateUser({ data: { avatar: null } })
+        if (data?.user) setUser(data.user)
+      } catch {}
+    })()
+  }, [stage, user])
+
   const clearPendingRecoveryPhrase = useCallback(() => setPendingRecoveryPhrase(null), [])
 
   return {
-    stage, user, error, initialData,
+    stage, user, error, initialData, avatar,
     pendingRecoveryPhrase, clearPendingRecoveryPhrase,
     signUp, signIn, unlock, signOut, resetVault, deleteAccount, changePassword,
     updateProfile, updateEmail,

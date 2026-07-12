@@ -4,17 +4,23 @@ import { encryptJSON, decryptJSON } from './crypto'
 // One row per user holds the entire encrypted vault. Last-write-wins via version.
 const TABLE = 'vaults'
 
-const COLUMNS = [
-  'ciphertext', 'iv', 'salt', 'version',
-  'wrapped_dek', 'wrapped_dek_iv',
-  'wrapped_dek_recovery', 'wrapped_dek_recovery_iv', 'recovery_salt',
-].join(', ')
-
+// select('*') rather than an explicit column list so unlock keeps working
+// on projects that haven't run the latest schema.sql migration yet (a named
+// missing column would error the whole select).
 export async function fetchVault(userId) {
   const { data, error } = await supabase
-    .from(TABLE).select(COLUMNS).eq('user_id', userId).maybeSingle()
+    .from(TABLE).select('*').eq('user_id', userId).maybeSingle()
   if (error) throw error
   return data
+}
+
+// The avatar lives in this row (not auth user metadata) so it never rides
+// inside access tokens. Plain update, not upsert: a missing row means a
+// brand-new account whose first data push will create it.
+export async function pushAvatar(userId, avatar) {
+  const { error } = await supabase
+    .from(TABLE).update({ avatar: avatar || null }).eq('user_id', userId)
+  if (error) throw error
 }
 
 export async function fetchSalt(userId) {

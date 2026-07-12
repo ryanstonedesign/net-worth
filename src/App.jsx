@@ -112,7 +112,7 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
         onRename={(id, name) => dataHook.renameForecast(id, name)}
         onToggleSync={(id, synced) => dataHook.setForecastSynced(id, synced)}
         userName={userName}
-        userAvatar={account?.user?.user_metadata?.avatar || null}
+        userAvatar={account?.avatar || null}
         settingsMenu={{
           scenario: dataHook.scenario,
           onScenarioChange: dataHook.setScenario,
@@ -211,6 +211,7 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
       {accountOpen && account && (
         <AccountModal
           user={account.user}
+          avatar={account.avatar}
           onClose={closeAccount}
           onUpdateProfile={account.onUpdateProfile}
           onUpdateEmail={account.onUpdateEmail}
@@ -222,7 +223,7 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
 }
 
 function VaultedApp({
-  user, initialData, onChange, onSignOut, onChangePassword, onGenerateRecovery, onDeleteAccount,
+  user, avatar, initialData, onChange, onSignOut, onChangePassword, onGenerateRecovery, onDeleteAccount,
   onUpdateProfile, onUpdateEmail,
 }) {
   const dataHook = useData({ initialData, onChange })
@@ -235,7 +236,7 @@ function VaultedApp({
     <AppShell
       dataHook={dataHook}
       userName={userName}
-      account={{ user, onUpdateProfile, onUpdateEmail, onChangePassword }}
+      account={{ user, avatar, onUpdateProfile, onUpdateEmail, onChangePassword }}
       settingsProps={{ onSignOut, onGenerateRecovery, onDeleteAccount }}
     />
   )
@@ -318,6 +319,7 @@ export default function App() {
   return (
     <VaultedApp
       user={vault.user}
+      avatar={vault.avatar}
       initialData={vault.initialData}
       onChange={vault.pushData}
       onSignOut={vault.signOut}

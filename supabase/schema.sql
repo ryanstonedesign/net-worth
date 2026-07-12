@@ -25,6 +25,11 @@ alter table public.vaults add column if not exists wrapped_dek_iv text;
 alter table public.vaults add column if not exists wrapped_dek_recovery text;
 alter table public.vaults add column if not exists wrapped_dek_recovery_iv text;
 alter table public.vaults add column if not exists recovery_salt text;
+-- Small avatar image (base64 data URL, ~128px JPEG). Plaintext like the
+-- display name, but deliberately NOT in auth user metadata: metadata is
+-- embedded in every access token, and a photo there bloats the JWT past
+-- gateway header limits, hanging fresh sign-ins.
+alter table public.vaults add column if not exists avatar text;
 
 alter table public.vaults enable row level security;
 
