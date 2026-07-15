@@ -479,7 +479,6 @@ a { text-decoration: none; color: inherit; }
   font-size: 11px;
   font-weight: var(--font-weight-regular);
   letter-spacing: 0.12em;
-  text-transform: uppercase;
   color: var(--c-ink-mute);
   margin-bottom: 6px;
 }
@@ -608,7 +607,6 @@ a { text-decoration: none; color: inherit; }
   font-size: 12px;
   font-weight: var(--font-weight-regular);
   letter-spacing: 0.09em;
-  text-transform: uppercase;
   color: var(--c-ink-mute);
   flex: 1;
 }
@@ -620,7 +618,6 @@ a { text-decoration: none; color: inherit; }
   font-size: 12px;
   font-weight: var(--font-weight-regular);
   letter-spacing: 0.09em;
-  text-transform: uppercase;
   color: var(--c-primary);
   padding: 0;
   opacity: 0.85;
@@ -795,7 +792,6 @@ a { text-decoration: none; color: inherit; }
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: var(--font-weight-regular);
-  text-transform: uppercase;
   letter-spacing: 0.07em;
   color: var(--c-ink-mute);
 }
@@ -862,7 +858,6 @@ a { text-decoration: none; color: inherit; }
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: var(--font-weight-regular);
-  text-transform: uppercase;
   letter-spacing: 0.09em;
   margin-bottom: 4px;
 }
@@ -2084,7 +2079,6 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
   font-size: 11px;
   font-weight: var(--font-weight-regular);
   letter-spacing: 0.09em;
-  text-transform: uppercase;
   color: var(--c-ink-mute);
   margin-bottom: 8px;
 }
@@ -2207,7 +2201,6 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: var(--font-weight-regular);
-  text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--c-ink-mute);
   background: var(--c-surface-muted);
@@ -2301,13 +2294,12 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
 .ds-t-subhead { font-family: var(--font-title); font-size: 15px; font-weight: var(--font-weight-medium); letter-spacing: -0.01em; }
 .ds-t-body    { font-family: var(--font); font-size: 15px; font-weight: var(--font-weight-regular); line-height: 1.5; }
 .ds-t-small   { font-family: var(--font); font-size: 13px; font-weight: var(--font-weight-regular); line-height: 1.5; }
-.ds-t-label   { font-family: var(--font-mono); font-size: 11px; font-weight: var(--font-weight-regular); text-transform: uppercase; letter-spacing: 0.07em; color: var(--c-ink-mute); }
+.ds-t-label   { font-family: var(--font-mono); font-size: 11px; font-weight: var(--font-weight-regular); letter-spacing: 0.07em; color: var(--c-ink-mute); }
 .ds-t-caption { font-family: var(--font); font-size: 11px; font-weight: var(--font-weight-regular); letter-spacing: 0.03em; color: var(--c-ink-mute); }
 .ds-group-title {
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: var(--font-weight-regular);
-  text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--c-ink-mute);
   margin: 20px 0 10px;
@@ -2524,7 +2516,6 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
   font-size: 12px;
   font-weight: var(--font-weight-medium);
   letter-spacing: 0.1em;
-  text-transform: uppercase;
   color: var(--color-indigo-navy);
 }
 .lp-tag i {
@@ -2623,7 +2614,7 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
 .lp-mock-eyebrow {
   font-family: var(--font-mono);
   font-size: 10px; font-weight: var(--font-weight-regular); letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--color-steel); margin-bottom: 4px;
+  color: var(--color-steel); margin-bottom: 4px;
 }
 .lp-mock-amount {
   font-family: var(--font-title);
@@ -2646,7 +2637,7 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
   display: block;
   font-family: var(--font-mono);
   font-size: 9px; font-weight: var(--font-weight-regular); letter-spacing: 0.09em;
-  text-transform: uppercase; margin-bottom: 3px;
+  margin-bottom: 3px;
 }
 .lp-mock-summary-label.assets { color: var(--color-seafoam-700); }
 .lp-mock-summary-label.liab { color: var(--c-danger); }
@@ -2714,7 +2705,7 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
   gap: 8px;
   font-family: var(--font-mono);
   font-size: 12px; font-weight: var(--font-weight-medium); letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--color-indigo-navy); margin-bottom: 16px;
+  color: var(--color-indigo-navy); margin-bottom: 16px;
 }
 .lp-kicker::before {
   content: '';
@@ -2772,7 +2763,7 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
 .lp-tv-eyebrow {
   font-family: var(--font-mono);
   font-size: 10px; font-weight: var(--font-weight-regular); letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--color-steel);
+  color: var(--color-steel);
 }
 .lp-tv-amount {
   font-family: var(--font-title);
@@ -2863,7 +2854,7 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
 .lp-enc-tag {
   font-family: var(--font-mono);
   font-size: 11px; font-weight: var(--font-weight-regular); letter-spacing: 0.06em;
-  text-transform: uppercase; color: var(--color-seafoam-700);
+  color: var(--color-seafoam-700);
 }
 .lp-tv-sync {
   position: relative; display: flex; align-items: center; justify-content: center;
