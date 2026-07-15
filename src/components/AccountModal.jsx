@@ -406,7 +406,7 @@ export default function AccountModal({
                 <button type="button" className="settings-row" onClick={() => setView('recovery-confirm')}>
                   <span className="settings-row-lead">
                     {rowIcons.recovery}
-                    Recovery phrase
+                    Generate recovery phrase
                   </span>
                   {rowChevron}
                 </button>
