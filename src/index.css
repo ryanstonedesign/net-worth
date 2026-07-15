@@ -15,6 +15,7 @@
   --color-fog: #a9acb6;
   --color-mist: #cbcccf;
   --color-silver-lining: #e3e4e8;
+  --color-porcelain: #f1f1f1;
   --color-cloud-canvas: #f6f6f8;
   --color-pure-white: #ffffff;
   --color-charcoal: #232730;
@@ -121,7 +122,7 @@
   --c-danger: #dc2626;
 
   /* Surface / card customisation */
-  --card-border-color: var(--color-silver-lining);
+  --card-border-color: var(--color-porcelain);
 
   --r-card: 8px;
   --r-btn: 8px;
@@ -131,7 +132,8 @@
   --font-code: var(--font-sfmono);
 
   /* Component shadow roles */
-  --shadow-card: var(--shadow-sm);              /* bordered content card */
+  /* Bordered content card — 1px porcelain hairline + 0 4 20 black@6%. */
+  --shadow-card: rgba(0, 0, 0, 0.06) 0px 4px 20px 0px, var(--card-border-color) 0px 0px 0px 1px;
   --shadow-btn-primary: var(--shadow-subtle);   /* primary filled button */
   --shadow-btn-secondary: var(--shadow-subtle-9); /* raised light chrome */
 
@@ -1526,9 +1528,9 @@ a { text-decoration: none; color: inherit; }
    chevron right) or a static row holding a small action button on the
    right. */
 .settings-card {
-  border: 1px solid var(--c-border);
   border-radius: var(--r-card);
   background: var(--c-surface);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
 }
 .settings-row {
@@ -1545,7 +1547,7 @@ a { text-decoration: none; color: inherit; }
   color: var(--c-ink);
   text-align: left;
 }
-.settings-row + .settings-row { border-top: 1px solid var(--c-border); }
+.settings-row + .settings-row { border-top: 1px solid var(--card-border-color); }
 button.settings-row {
   background: none;
   border: 0;
