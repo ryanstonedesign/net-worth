@@ -475,7 +475,7 @@ a { text-decoration: none; color: inherit; }
   padding: 36px 20px 0;
 }
 .hero-eyebrow {
-  font-family: var(--font-mono);
+  font-family: var(--font);
   font-size: 11px;
   font-weight: var(--font-weight-regular);
   letter-spacing: 0.12em;
@@ -603,7 +603,7 @@ a { text-decoration: none; color: inherit; }
   margin-bottom: 12px;
 }
 .section-title {
-  font-family: var(--font-mono);
+  font-family: var(--font);
   font-size: 12px;
   font-weight: var(--font-weight-regular);
   letter-spacing: 0.09em;
@@ -614,7 +614,7 @@ a { text-decoration: none; color: inherit; }
   background: none;
   border: none;
   cursor: pointer;
-  font-family: var(--font-mono);
+  font-family: var(--font);
   font-size: 12px;
   font-weight: var(--font-weight-regular);
   letter-spacing: 0.09em;
@@ -789,7 +789,7 @@ a { text-decoration: none; color: inherit; }
   margin-top: 4px;
 }
 .cat-total-label {
-  font-family: var(--font-mono);
+  font-family: var(--font);
   font-size: 11px;
   font-weight: var(--font-weight-regular);
   letter-spacing: 0.07em;
@@ -855,7 +855,7 @@ a { text-decoration: none; color: inherit; }
   padding: 16px;
 }
 .summary-cell-label {
-  font-family: var(--font-mono);
+  font-family: var(--font);
   font-size: 10px;
   font-weight: var(--font-weight-regular);
   letter-spacing: 0.09em;
@@ -1126,7 +1126,7 @@ a { text-decoration: none; color: inherit; }
   .form-row .form-group { flex: 1; min-width: 0; }
 }
 .form-label {
-  font-family: var(--font-mono);
+  font-family: var(--font);
   font-size: 11px;
   font-weight: var(--font-weight-regular);
   color: var(--c-ink-mute);
@@ -2075,7 +2075,7 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
   padding: 28px 24px;
 }
 .auth-eyebrow {
-  font-family: var(--font-mono);
+  font-family: var(--font);
   font-size: 11px;
   font-weight: var(--font-weight-regular);
   letter-spacing: 0.09em;
@@ -2198,7 +2198,7 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
 }
 .import-note {
   flex-shrink: 0;
-  font-family: var(--font-mono);
+  font-family: var(--font);
   font-size: 10px;
   font-weight: var(--font-weight-regular);
   letter-spacing: 0.04em;
@@ -2294,10 +2294,10 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
 .ds-t-subhead { font-family: var(--font-title); font-size: 15px; font-weight: var(--font-weight-medium); letter-spacing: -0.01em; }
 .ds-t-body    { font-family: var(--font); font-size: 15px; font-weight: var(--font-weight-regular); line-height: 1.5; }
 .ds-t-small   { font-family: var(--font); font-size: 13px; font-weight: var(--font-weight-regular); line-height: 1.5; }
-.ds-t-label   { font-family: var(--font-mono); font-size: 11px; font-weight: var(--font-weight-regular); letter-spacing: 0.07em; color: var(--c-ink-mute); }
+.ds-t-label   { font-family: var(--font); font-size: 11px; font-weight: var(--font-weight-regular); letter-spacing: 0.07em; color: var(--c-ink-mute); }
 .ds-t-caption { font-family: var(--font); font-size: 11px; font-weight: var(--font-weight-regular); letter-spacing: 0.03em; color: var(--c-ink-mute); }
 .ds-group-title {
-  font-family: var(--font-mono);
+  font-family: var(--font);
   font-size: 11px;
   font-weight: var(--font-weight-regular);
   letter-spacing: 0.08em;
@@ -2512,7 +2512,7 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--font-mono);
+  font-family: var(--font);
   font-size: 12px;
   font-weight: var(--font-weight-medium);
   letter-spacing: 0.1em;
@@ -2612,7 +2612,7 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
 }
 .lp-mock-hero { padding: 0 4px; }
 .lp-mock-eyebrow {
-  font-family: var(--font-mono);
+  font-family: var(--font);
   font-size: 10px; font-weight: var(--font-weight-regular); letter-spacing: 0.12em;
   color: var(--color-steel); margin-bottom: 4px;
 }
@@ -2635,7 +2635,7 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
 }
 .lp-mock-summary-label {
   display: block;
-  font-family: var(--font-mono);
+  font-family: var(--font);
   font-size: 9px; font-weight: var(--font-weight-regular); letter-spacing: 0.09em;
   margin-bottom: 3px;
 }
@@ -2703,7 +2703,7 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--font-mono);
+  font-family: var(--font);
   font-size: 12px; font-weight: var(--font-weight-medium); letter-spacing: 0.1em;
   color: var(--color-indigo-navy); margin-bottom: 16px;
 }
@@ -2761,7 +2761,7 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
 .lp-tv { margin-top: auto; padding-top: 18px; }
 .lp-tv-networth { padding-bottom: var(--card-padding); }
 .lp-tv-eyebrow {
-  font-family: var(--font-mono);
+  font-family: var(--font);
   font-size: 10px; font-weight: var(--font-weight-regular); letter-spacing: 0.12em;
   color: var(--color-steel);
 }
@@ -2852,7 +2852,7 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
   white-space: nowrap; text-overflow: ellipsis;
 }
 .lp-enc-tag {
-  font-family: var(--font-mono);
+  font-family: var(--font);
   font-size: 11px; font-weight: var(--font-weight-regular); letter-spacing: 0.06em;
   color: var(--color-seafoam-700);
 }
