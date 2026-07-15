@@ -1528,9 +1528,9 @@ a { text-decoration: none; color: inherit; }
    chevron right) or a static row holding a small action button on the
    right. */
 .settings-card {
+  border: 1px solid var(--card-border-color);
   border-radius: var(--r-card);
   background: var(--c-surface);
-  box-shadow: var(--shadow-card);
   overflow: hidden;
 }
 .settings-row {
