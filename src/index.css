@@ -1561,21 +1561,27 @@ button.settings-row:hover { background: var(--c-bg); }
   height: 16px;
   color: var(--c-ink-mute);
 }
+/* Danger variant (Delete account): red border, label, and chevron. */
+.settings-card--danger { border-color: var(--c-danger); }
+.settings-row--danger,
+.settings-row--danger .settings-row-chevron { color: var(--c-danger); }
+button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-danger) 5%, transparent); }
 
 .account-avatar-row {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 16px;
-  margin: 4px 0 8px;
+  gap: 12px;
+  margin: 4px 0 20px;
 }
 .account-avatar {
   flex-shrink: 0;
-  width: 64px;
-  height: 64px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
   background: var(--c-primary);
   color: #fff;
-  font-size: 22px;
+  font-size: 28px;
   font-weight: var(--font-weight-semibold);
   display: inline-flex;
   align-items: center;
@@ -1591,19 +1597,9 @@ button.settings-row:hover { background: var(--c-bg); }
 .account-avatar-actions {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 12px;
 }
-.account-avatar-remove {
-  padding: 12px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: var(--font);
-  font-size: 13px;
-  font-weight: var(--font-weight-medium);
-  color: var(--c-ink-mute);
-}
-.account-avatar-remove:hover { color: var(--c-danger); }
+.account-avatar-actions .btn-icon { color: var(--c-primary); }
 
 /* ── Scenario sync ──
    The top nav shows a Synced/Unsynced text badge for the active scenario;
