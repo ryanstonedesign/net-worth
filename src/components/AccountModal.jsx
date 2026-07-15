@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import Modal from './Modal'
+import { formatRecoveryPhrase } from '../lib/crypto'
 
 // Downscale a picked image to a small square JPEG data URL. The avatar is
 // stored (plaintext, like the display name) in the user's vaults row —
@@ -58,7 +59,7 @@ async function fileToAvatarDataURL(file) {
   return canvas.toDataURL('image/jpeg', 0.85)
 }
 
-function ChangePasswordView({ onSubmit, onDone, onCancel }) {
+function ChangePasswordView({ onSubmit, onDone }) {
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -94,10 +95,6 @@ function ChangePasswordView({ onSubmit, onDone, onCancel }) {
 
   return (
     <form onSubmit={submit}>
-      <p style={{ fontSize: 13, color: 'var(--c-ink-mute)', marginBottom: 16, lineHeight: 1.5 }}>
-        Your vault will be re-encrypted with the new password. There is still no
-        recovery if you forget — save it somewhere safe.
-      </p>
       <div className="form-group">
         <label className="form-label">Current password</label>
         <input
@@ -128,23 +125,76 @@ function ChangePasswordView({ onSubmit, onDone, onCancel }) {
       >
         {busy ? 'Changing…' : 'Change password'}
       </button>
-      <button type="button" className="auth-switch" onClick={onCancel}>
-        Cancel
+    </form>
+  )
+}
+
+function DeleteAccountForm({ onSubmit }) {
+  const [password, setPassword] = useState('')
+  const [confirmText, setConfirmText] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+  const canSubmit = password && confirmText === 'DELETE'
+
+  const submit = async (e) => {
+    e.preventDefault()
+    if (!canSubmit) return
+    setBusy(true); setError(null)
+    const result = await onSubmit(password)
+    setBusy(false)
+    if (!result.ok) setError(result.error)
+  }
+
+  return (
+    <form onSubmit={submit}>
+      <p style={{
+        fontSize: 13, color: 'var(--c-ink)', lineHeight: 1.5, marginBottom: 14,
+      }}>
+        This <strong style={{ color: 'var(--c-danger)' }}>permanently deletes</strong>{' '}
+        your account: email, password, encrypted data — everything. The email
+        becomes available to sign up again as a fresh account. There is no undo.
+      </p>
+      <div className="form-group">
+        <label className="form-label">Confirm with your password</label>
+        <input
+          className="input" type="password" autoComplete="current-password"
+          value={password} onChange={e => setPassword(e.target.value)} required
+        />
+      </div>
+      <div className="form-group">
+        <label className="form-label">Type DELETE to confirm</label>
+        <input
+          className="input" type="text" autoCapitalize="characters" autoCorrect="off"
+          spellCheck={false} value={confirmText}
+          onChange={e => setConfirmText(e.target.value.toUpperCase())} required
+        />
+      </div>
+      {error && <div className="auth-error">{error}</div>}
+      <button
+        type="submit" className="btn btn-full"
+        style={{ background: 'var(--c-danger)', color: '#fff' }}
+        disabled={busy || !canSubmit}
+      >
+        {busy ? 'Deleting…' : 'Delete account'}
       </button>
     </form>
   )
 }
 
-// Account settings: avatar (uploaded photo or initials), name, email, and
-// password. Opened only from the user popover in the side nav footer;
-// landing on the app with #account in the URL deep-links straight here.
+// Account settings: avatar (uploaded photo or initials), name, email,
+// password, recovery phrase, and account deletion. Opened only from the user
+// popover in the side nav footer; landing on the app with #account in the
+// URL deep-links straight here.
 //
 // Name + avatar changes apply on Save via `onUpdateProfile`. An email change
 // goes through `onUpdateEmail`, which triggers Supabase's double-confirmation
 // emails — the address only actually switches once both links are clicked,
-// so we show a "check your inbox" view instead of closing.
+// so we show a "check your inbox" view instead of closing. Sub-views
+// (password, recovery, delete) get a back arrow in the header returning to
+// the main view.
 export default function AccountModal({
   user, avatar: savedAvatar, onClose, onUpdateProfile, onUpdateEmail, onChangePassword,
+  onGenerateRecovery, onDeleteAccount,
 }) {
   const meta = user?.user_metadata || {}
   // Older accounts may only carry display_name (or nothing) — split it as a
@@ -154,9 +204,13 @@ export default function AccountModal({
   const [lastName, setLastName] = useState(meta.last_name ?? fallbackRest.join(' '))
   const [email, setEmail] = useState(user?.email || '')
   const [avatar, setAvatar] = useState(savedAvatar || null)
-  const [view, setView] = useState('main') // 'main' | 'password' | 'email-sent'
+  // 'main' | 'password' | 'email-sent' | 'recovery-confirm' | 'recovery-shown' | 'delete'
+  const [view, setView] = useState('main')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
+  const [recoveryPhrase, setRecoveryPhrase] = useState(null)
+  const [recoveryError, setRecoveryError] = useState(null)
+  const [recoveryBusy, setRecoveryBusy] = useState(false)
   const fileRef = useRef(null)
 
   const profileDirty = firstName.trim() !== (meta.first_name ?? fallbackFirst ?? '')
@@ -199,9 +253,31 @@ export default function AccountModal({
     onClose()
   }
 
+  const backToMain = () => {
+    setRecoveryPhrase(null)
+    setRecoveryError(null)
+    setView('main')
+  }
+
+  const regenerateRecovery = async () => {
+    setRecoveryBusy(true); setRecoveryError(null)
+    const result = await onGenerateRecovery()
+    setRecoveryBusy(false)
+    if (result.ok) { setRecoveryPhrase(result.phrase); setView('recovery-shown') }
+    else { setRecoveryError(result.error) }
+  }
+
+  const isSubView = view !== 'main' && view !== 'email-sent'
+
   return (
     <Modal
-      title={view === 'password' ? 'Change Password' : 'Account'}
+      title={
+        view === 'password' ? 'Change Password'
+        : view === 'recovery-confirm' || view === 'recovery-shown' ? 'Recovery Phrase'
+        : view === 'delete' ? 'Delete Account'
+        : 'Account'
+      }
+      onBack={isSubView ? backToMain : undefined}
       onClose={onClose}
       footer={view === 'main' ? (
         <div className="modal-actions">
@@ -239,9 +315,6 @@ export default function AccountModal({
               />
             </div>
           </div>
-          <p style={{ fontSize: 13, color: 'var(--c-ink-mute)', margin: '0 0 20px', lineHeight: 1.5 }}>
-            Without a photo, your initials are shown.
-          </p>
 
           <div className="form-row">
             <div className="form-group">
@@ -281,10 +354,35 @@ export default function AccountModal({
             <div className="form-group" style={{ marginTop: 20 }}>
               <label className="form-label">Password</label>
               <button
-                type="button" className="btn btn-secondary btn-full"
+                type="button" className="btn btn-secondary btn-full btn-full--start"
                 onClick={() => setView('password')}
               >
                 Change password
+              </button>
+            </div>
+          )}
+
+          {onGenerateRecovery && (
+            <div className="form-group" style={{ marginTop: 20 }}>
+              <label className="form-label">Recovery phrase</label>
+              <button
+                type="button" className="btn btn-secondary btn-full btn-full--start"
+                onClick={() => setView('recovery-confirm')}
+              >
+                Show recovery phrase
+              </button>
+            </div>
+          )}
+
+          {onDeleteAccount && (
+            <div className="form-group" style={{ marginTop: 20 }}>
+              <label className="form-label">Delete account</label>
+              <button
+                type="button" className="btn btn-secondary btn-full btn-full--start"
+                style={{ color: 'var(--c-danger)' }}
+                onClick={() => setView('delete')}
+              >
+                Delete account
               </button>
             </div>
           )}
@@ -296,9 +394,49 @@ export default function AccountModal({
       {view === 'password' && (
         <ChangePasswordView
           onSubmit={onChangePassword}
-          onDone={() => setView('main')}
-          onCancel={() => setView('main')}
+          onDone={backToMain}
         />
+      )}
+
+      {view === 'recovery-confirm' && (
+        <>
+          <p style={{ fontSize: 13, color: 'var(--c-ink-mute)', lineHeight: 1.5 }}>
+            Generating a new recovery phrase replaces the old one. Any
+            previously saved copy will stop working. Continue?
+          </p>
+          {recoveryError && <div className="auth-error" style={{ marginTop: 10 }}>{recoveryError}</div>}
+          <button
+            className="btn btn-primary btn-full" style={{ marginTop: 16 }}
+            disabled={recoveryBusy} onClick={regenerateRecovery}
+          >
+            {recoveryBusy ? 'Working…' : 'Generate new phrase'}
+          </button>
+        </>
+      )}
+
+      {view === 'recovery-shown' && recoveryPhrase && (
+        <>
+          <p style={{ fontSize: 13, color: 'var(--c-ink-mute)', lineHeight: 1.5, marginBottom: 12 }}>
+            Save this somewhere safe. We can't show it to you again.
+          </p>
+          <div className="recovery-phrase">{formatRecoveryPhrase(recoveryPhrase)}</div>
+          <button
+            className="btn btn-secondary btn-full" style={{ marginTop: 12 }}
+            onClick={() => navigator.clipboard?.writeText(formatRecoveryPhrase(recoveryPhrase))}
+          >
+            Copy
+          </button>
+          <button
+            className="btn btn-primary btn-full" style={{ marginTop: 8 }}
+            onClick={backToMain}
+          >
+            I've saved it
+          </button>
+        </>
+      )}
+
+      {view === 'delete' && (
+        <DeleteAccountForm onSubmit={onDeleteAccount} />
       )}
 
       {view === 'email-sent' && (

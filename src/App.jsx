@@ -120,9 +120,7 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
           onImport: () => setSettingsView('import'),
           onOpenStickerSheet: () => setStickerOpen(true),
           onAccount: account && openAccount,
-          onShowRecovery: settingsProps.onGenerateRecovery && (() => setSettingsView('recovery-confirm')),
           onSignOut: settingsProps.onSignOut,
-          onDeleteAccount: settingsProps.onDeleteAccount && (() => setSettingsView('delete')),
         }}
       />
 
@@ -216,6 +214,8 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
           onUpdateProfile={account.onUpdateProfile}
           onUpdateEmail={account.onUpdateEmail}
           onChangePassword={account.onChangePassword}
+          onGenerateRecovery={settingsProps.onGenerateRecovery}
+          onDeleteAccount={settingsProps.onDeleteAccount}
         />
       )}
     </>

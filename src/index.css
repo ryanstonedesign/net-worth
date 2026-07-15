@@ -416,6 +416,17 @@ a { text-decoration: none; color: inherit; }
   flex-shrink: 0;
   margin: -8px -8px 0 0;
 }
+/* Groups the optional back arrow (Modal's `onBack`) with the title. */
+.modal-head-lead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.modal-back-btn {
+  flex-shrink: 0;
+  margin: -8px 0 -8px -8px;
+}
 .modal-body {
   flex: 1;
   overflow-y: auto;
@@ -1866,6 +1877,12 @@ a { text-decoration: none; color: inherit; }
     display: flex;
     width: fit-content;
     margin-left: auto;
+  }
+  /* Row buttons that sit under a field label (Account view) hug the left
+     edge on desktop instead of the right. */
+  .modal-sheet .btn-full.btn-full--start {
+    margin-left: 0;
+    margin-right: auto;
   }
   .confirm-actions {
     display: flex;

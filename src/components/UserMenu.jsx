@@ -22,11 +22,6 @@ const AccountIcon = (
     <circle cx="12" cy="7" r="4" />
   </svg>
 )
-const ShieldIcon = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-  </svg>
-)
 const SignOutIcon = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -34,23 +29,15 @@ const SignOutIcon = (
     <line x1="21" y1="12" x2="9" y2="12" />
   </svg>
 )
-const TrashIcon = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="3 6 5 6 21 6" />
-    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-    <line x1="10" y1="11" x2="10" y2="17" />
-    <line x1="14" y1="11" x2="14" y2="17" />
-  </svg>
-)
-
 // The signed-in user's name and avatar (uploaded photo, or their initial),
 // pinned to the bottom of the scenario sidebar. Pressing it opens the
 // settings popover above itself (left-aligned with the name) on every
-// layout; flows chosen from it open in focused modals.
+// layout; flows chosen from it open in focused modals. Recovery phrase and
+// account deletion live inside the Account modal.
 //
 // `menu` — { scenario, onScenarioChange, importDisabled, onImport,
-//   onOpenStickerSheet, onAccount, onShowRecovery, onSignOut,
-//   onDeleteAccount }; absent callbacks hide their item.
+//   onOpenStickerSheet, onAccount, onSignOut }; absent callbacks hide
+//   their item.
 export default function UserMenu({ name, avatar, tabIndex = 0, menu }) {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef(null)
@@ -88,9 +75,7 @@ export default function UserMenu({ name, avatar, tabIndex = 0, menu }) {
   }
   if (menu.onOpenStickerSheet) items.push({ label: 'Design system', icon: DesignIcon, onClick: menu.onOpenStickerSheet })
   if (menu.onAccount) items.push({ label: 'Account', icon: AccountIcon, onClick: menu.onAccount })
-  if (menu.onShowRecovery) items.push({ label: 'Recovery phrase', icon: ShieldIcon, onClick: menu.onShowRecovery })
   if (menu.onSignOut) items.push({ label: 'Sign out', icon: SignOutIcon, onClick: menu.onSignOut })
-  if (menu.onDeleteAccount) items.push({ label: 'Delete account', icon: TrashIcon, onClick: menu.onDeleteAccount, danger: true })
 
   return (
     <div className="user-menu" ref={wrapRef}>
@@ -120,7 +105,7 @@ export default function UserMenu({ name, avatar, tabIndex = 0, menu }) {
               key={it.label}
               type="button"
               role="menuitem"
-              className={`popover-item${it.danger ? ' danger' : ''}`}
+              className="popover-item"
               disabled={it.disabled}
               title={it.title}
               onClick={pick(it.onClick)}
