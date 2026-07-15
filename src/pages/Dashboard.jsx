@@ -310,7 +310,7 @@ export default function Dashboard({
     <div>
       {/* Hero — left aligned */}
       <div className="hero">
-        <div className="hero-eyebrow">Net Worth</div>
+        <div className="hero-eyebrow">Net worth</div>
         <div className={`hero-amount${isEstimated ? ' estimated' : ''}`}>
           <RollingNumber value={displayNetWorth} animateEntrance={animateEntrance} />
         </div>

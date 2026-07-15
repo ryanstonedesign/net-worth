@@ -235,8 +235,8 @@ function Gallery() {
 
       <div className="ds-group-title">Badges</div>
       <div className="ds-gallery">
-        <Specimen label="badge-asset"><span className="badge badge-asset">ASSET</span></Specimen>
-        <Specimen label="badge-liability"><span className="badge badge-liability">LIABILITY</span></Specimen>
+        <Specimen label="badge-asset"><span className="badge badge-asset">Asset</span></Specimen>
+        <Specimen label="badge-liability"><span className="badge badge-liability">Liability</span></Specimen>
       </div>
 
       <div className="ds-group-title">Type scale</div>

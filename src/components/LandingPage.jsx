@@ -135,7 +135,7 @@ function PhoneMock() {
         </div>
 
         <div className="lp-mock-hero">
-          <div className="lp-mock-eyebrow">Net Worth</div>
+          <div className="lp-mock-eyebrow">Net worth</div>
           <div className="lp-mock-amount">$284,920</div>
           <div className="lp-mock-delta">+$3,140 this month</div>
           <div className="lp-mock-goal">~2 years to goal ›</div>
@@ -234,7 +234,7 @@ function TileVisual({ k }) {
   if (k === 'networth') {
     return (
       <div className="lp-tv lp-tv-networth">
-        <div className="lp-tv-eyebrow">Net Worth</div>
+        <div className="lp-tv-eyebrow">Net worth</div>
         <div className="lp-tv-amount">$284,920</div>
         <div className="lp-tv-delta">+$3,140 this month</div>
         <div className="lp-tv-bars">
