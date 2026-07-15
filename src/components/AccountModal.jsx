@@ -59,6 +59,12 @@ async function fileToAvatarDataURL(file) {
   return canvas.toDataURL('image/jpeg', 0.85)
 }
 
+const rowChevron = (
+  <svg className="settings-row-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <polyline points="9 18 15 12 9 6" />
+  </svg>
+)
+
 function ChangePasswordView({ onSubmit, onDone }) {
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
@@ -350,40 +356,34 @@ export default function AccountModal({
             )}
           </div>
 
-          {onChangePassword && (
-            <div className="form-group" style={{ marginTop: 20 }}>
-              <label className="form-label">Password</label>
-              <button
-                type="button" className="btn btn-secondary btn-full btn-full--start"
-                onClick={() => setView('password')}
-              >
-                Change password
-              </button>
-            </div>
-          )}
-
-          {onGenerateRecovery && (
-            <div className="form-group" style={{ marginTop: 20 }}>
-              <label className="form-label">Recovery phrase</label>
-              <button
-                type="button" className="btn btn-secondary btn-full btn-full--start"
-                onClick={() => setView('recovery-confirm')}
-              >
-                Show recovery phrase
-              </button>
+          {(onChangePassword || onGenerateRecovery) && (
+            <div className="settings-card" style={{ marginTop: 24 }}>
+              {onChangePassword && (
+                <button type="button" className="settings-row" onClick={() => setView('password')}>
+                  Change password
+                  {rowChevron}
+                </button>
+              )}
+              {onGenerateRecovery && (
+                <button type="button" className="settings-row" onClick={() => setView('recovery-confirm')}>
+                  Recovery phrase
+                  {rowChevron}
+                </button>
+              )}
             </div>
           )}
 
           {onDeleteAccount && (
-            <div className="form-group" style={{ marginTop: 20 }}>
-              <label className="form-label">Delete account</label>
-              <button
-                type="button" className="btn btn-secondary btn-full btn-full--start"
-                style={{ color: 'var(--c-danger)' }}
-                onClick={() => setView('delete')}
-              >
+            <div className="settings-card" style={{ marginTop: 12 }}>
+              <div className="settings-row">
                 Delete account
-              </button>
+                <button
+                  type="button" className="btn btn-destructive btn-sm"
+                  onClick={() => setView('delete')}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           )}
 

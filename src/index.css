@@ -290,7 +290,8 @@ a { text-decoration: none; color: inherit; }
 .btn-destructive:hover { background: color-mix(in srgb, var(--c-danger) 5%, transparent); }
 .btn-destructive:active { background: color-mix(in srgb, var(--c-danger) 10%, transparent); }
 .btn-sm { padding: 8px 14px; font-size: 13px; }
-.btn-sm.btn-secondary { padding: 7px 15px; }
+.btn-sm.btn-secondary,
+.btn-sm.btn-destructive { padding: 7px 15px; }
 .btn-full { width: 100%; }
 .btn-icon {
   width: 40px; height: 40px; padding: 0; border-radius: 50%;
@@ -1520,6 +1521,45 @@ a { text-decoration: none; color: inherit; }
    Avatar preview + actions at the top of the Account modal. The preview is
    the side-nav avatar scaled up: uploaded photo when set, initials on the
    primary fill otherwise. */
+/* Settings row cards (Account modal): a bordered card of rows separated by
+   hairlines. A row is either a full-row button that navigates (label left,
+   chevron right) or a static row holding a small action button on the
+   right. */
+.settings-card {
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-card);
+  background: var(--c-surface);
+  overflow: hidden;
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 10px 16px;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+  color: var(--c-ink);
+  text-align: left;
+}
+.settings-row + .settings-row { border-top: 1px solid var(--c-border); }
+button.settings-row {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+button.settings-row:hover { background: var(--c-bg); }
+.settings-row-chevron {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: var(--c-ink-mute);
+}
+
 .account-avatar-row {
   display: flex;
   align-items: center;
@@ -1877,12 +1917,6 @@ a { text-decoration: none; color: inherit; }
     display: flex;
     width: fit-content;
     margin-left: auto;
-  }
-  /* Row buttons that sit under a field label (Account view) hug the left
-     edge on desktop instead of the right. */
-  .modal-sheet .btn-full.btn-full--start {
-    margin-left: 0;
-    margin-right: auto;
   }
   .confirm-actions {
     display: flex;
