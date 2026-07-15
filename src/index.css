@@ -1576,12 +1576,12 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
 }
 .account-avatar {
   flex-shrink: 0;
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   background: var(--c-primary);
   color: #fff;
-  font-size: 28px;
+  font-size: 34px;
   font-weight: var(--font-weight-semibold);
   display: inline-flex;
   align-items: center;
