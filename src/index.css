@@ -1561,6 +1561,19 @@ button.settings-row:hover { background: var(--c-bg); }
   height: 16px;
   color: var(--c-ink-mute);
 }
+/* Leading icon + label group; the icon inherits the row color so the
+   danger row's icon goes red with its text. */
+.settings-row-lead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.settings-row-icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
 /* Danger variant (Delete account): red border, label, and chevron. */
 .settings-card--danger { border-color: var(--c-danger); }
 .settings-row--danger,
