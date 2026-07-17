@@ -179,15 +179,17 @@ export default function EditCategorySheet({
                   onClick={() => setAccSign('-')}
                 >−</button>
               </div>
-              <input
-                className="input growth-rate-input"
-                inputMode="decimal"
-                placeholder="0"
-                value={accMag}
-                onChange={e => setAccMag(e.target.value.replace(/[^0-9.]/g, ''))}
-                onKeyDown={e => { if (e.key === 'Enter') commitAccount() }}
-              />
-              <span className="growth-suffix">%/yr</span>
+              <div className="growth-rate-wrap">
+                <input
+                  className="input growth-rate-input"
+                  inputMode="decimal"
+                  placeholder="0"
+                  value={accMag}
+                  onChange={e => setAccMag(e.target.value.replace(/[^0-9.]/g, ''))}
+                  onKeyDown={e => { if (e.key === 'Enter') commitAccount() }}
+                />
+                <span className="growth-rate-suffix" aria-hidden="true">%</span>
+              </div>
             </div>
             <p className="growth-hint">
               Estimated annual growth, used for future estimates. Choose − for
@@ -238,7 +240,14 @@ export default function EditCategorySheet({
                   onClick={() => openAccount(acc)}
                 >
                   <span className="settings-row-lead">{acc.name}</span>
-                  {rowChevron}
+                  <span className="settings-row-trail">
+                    {(acc.growth ?? 0) !== 0 && (
+                      <span className="settings-row-value">
+                        {acc.growth < 0 ? `−${Math.abs(acc.growth)}%` : `${acc.growth}%`}
+                      </span>
+                    )}
+                    {rowChevron}
+                  </span>
                 </button>
               ))}
               <button type="button" className="settings-row" onClick={openNewAccount}>
