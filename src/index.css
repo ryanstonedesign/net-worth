@@ -710,8 +710,7 @@ a { text-decoration: none; color: inherit; }
 @media (pointer: coarse) {
   .cat-account-input:focus,
   .update-amount-input:focus,
-  .manage-account-input:focus,
-  .growth-input:focus { font-size: 16px; }
+  .manage-account-input:focus { font-size: 16px; }
 }
 .cat-account-input::placeholder { color: var(--color-fog); }
 /* Read-only projected value shown on future (estimated) months.
@@ -1046,41 +1045,20 @@ a { text-decoration: none; color: inherit; }
   transition: border-bottom-color 0.2s;
 }
 .manage-account-input:focus { border-bottom-color: var(--c-primary); }
-.growth-field {
-  display: flex; align-items: center; gap: 2px;
-  flex-shrink: 0;
-  border-bottom: 1px solid transparent;
-  transition: border-bottom-color 0.2s;
-}
-.growth-field:focus-within { border-bottom-color: var(--c-primary); }
-.growth-sign {
-  width: 22px; height: 22px;
-  flex-shrink: 0;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: rgba(17, 26, 74, 0.06);
-  color: var(--c-primary);
-  font-size: 15px;
-  font-weight: var(--font-weight-medium);
-  line-height: 1;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  font-family: var(--font);
-  transition: background 0.18s;
-}
-.growth-sign:hover { background: rgba(17, 26, 74, 0.12); }
-.growth-input {
-  width: 42px;
+/* Account sub-view (Edit Category → account): sign switch + rate input +
+   unit suffix on one line. */
+.growth-editor { display: flex; align-items: center; gap: 10px; }
+.growth-editor .growth-rate-input {
+  flex: 1;
+  min-width: 0;
   text-align: right;
-  font-size: 13px; /* matches the account name beside it */
-  font-weight: var(--font-weight-regular);
-  color: var(--c-ink);
-  font-family: var(--font);
-  background: transparent;
-  border: none;
-  padding: 2px 0;
-  outline: none;
   font-variant-numeric: tabular-nums;
+}
+.growth-hint {
+  font-size: 12px;
+  color: var(--c-ink-mute);
+  line-height: 1.5;
+  margin: 0;
 }
 .growth-suffix {
   font-size: 12px;
@@ -1175,6 +1153,23 @@ a { text-decoration: none; color: inherit; }
 }
 /* Pressed feedback while held; springs back on release. */
 .type-toggle-btn:active { background: var(--c-tertiary-muted); }
+/* Compact +/− variant of the type toggle: picks the sign of an account's
+   annual growth in the account sub-view. Same sliding thumb, but it hugs
+   its two small buttons (and stretches to the input's height) instead of
+   spanning the full modal width. */
+.sign-toggle {
+  flex: none;
+  width: 104px;
+  align-self: stretch;
+}
+.sign-toggle .type-toggle-btn {
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+}
+/* "Add account" spans the modal body even on desktop, where footer
+   .btn-full buttons shrink to fit-content. */
+.add-account-btn { width: 100%; }
 
 /* ── Color swatches ── */
 .swatch-row { display: flex; gap: 8px; flex-wrap: wrap; }

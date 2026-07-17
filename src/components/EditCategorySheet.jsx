@@ -1,6 +1,12 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import Modal from './Modal'
 import { CATEGORY_COLORS, CATEGORY_ICONS } from '../hooks/useData'
+
+const rowChevron = (
+  <svg className="settings-row-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <polyline points="9 18 15 12 9 6" />
+  </svg>
+)
 
 export default function EditCategorySheet({
   category,
@@ -19,50 +25,105 @@ export default function EditCategorySheet({
   // Color/icon are no longer user-editable, but kept in the data model.
   const color = category?.color ?? CATEGORY_COLORS[0]
   const icon = category?.icon ?? CATEGORY_ICONS[0]
-  const [newAccName, setNewAccName] = useState('')
+  // New-category flow: accounts stay local until the category is created.
   const [localAccounts, setLocalAccounts] = useState([])
-  // Track edited names for existing accounts before blur-save
-  const [nameEdits, setNameEdits] = useState(() =>
-    Object.fromEntries((category?.accounts ?? []).map(a => [a.id, a.name]))
-  )
-  // Track edited annual-growth values (as strings) before blur-save
-  const [growthEdits, setGrowthEdits] = useState(() =>
-    Object.fromEntries((category?.accounts ?? []).map(a => [a.id, String(a.growth ?? 0)]))
-  )
-  const accInputRef = useRef(null)
 
-  const handleAddLocalAcc = () => {
-    const n = newAccName.trim()
-    if (!n) return
-    setLocalAccounts(a => [...a, { id: `tmp_${Date.now()}`, name: n, growth: 0 }])
-    setNewAccName('')
-    accInputRef.current?.focus()
+  // Account sub-view: null (main view), { mode: 'new' } or { mode: 'edit', id }.
+  // Name and growth edits are staged here and only written back on save.
+  const [accountView, setAccountView] = useState(null)
+  const [accName, setAccName] = useState('')
+  const [accSign, setAccSign] = useState('+')
+  const [accMag, setAccMag] = useState('')
+
+  const accounts = isNew ? localAccounts : (category?.accounts ?? [])
+  const viewedAccount = accountView?.mode === 'edit'
+    ? accounts.find(a => a.id === accountView.id)
+    : null
+
+  const openNewAccount = () => {
+    setAccName('')
+    setAccSign('+')
+    setAccMag('')
+    setAccountView({ mode: 'new' })
   }
 
-  const handleAddAcc = () => {
-    const n = newAccName.trim()
+  const openAccount = (acc) => {
+    const growth = acc.growth ?? 0
+    setAccName(acc.name)
+    setAccSign(growth < 0 ? '-' : '+')
+    setAccMag(String(Math.abs(growth)))
+    setAccountView({ mode: 'edit', id: acc.id })
+  }
+
+  const stagedGrowth = () => {
+    const num = parseFloat(accMag)
+    return (isNaN(num) ? 0 : num) * (accSign === '-' ? -1 : 1)
+  }
+
+  const commitAccount = () => {
+    const n = accName.trim()
     if (!n) return
-    addAccount(category.id, { name: n })
-    setNewAccName('')
-    accInputRef.current?.focus()
+    const growth = stagedGrowth()
+    if (accountView.mode === 'new') {
+      if (isNew) {
+        setLocalAccounts(a => [...a, { id: `tmp_${Date.now()}`, name: n, growth }])
+      } else {
+        // Growth is a per-scenario forecasting lever, so it goes through
+        // setAccountGrowth rather than riding along in the fact write.
+        const id = addAccount(category.id, { name: n })
+        if (growth !== 0) setAccountGrowth(category.id, id, growth)
+      }
+    } else if (isNew) {
+      setLocalAccounts(list => list.map(a =>
+        a.id === accountView.id ? { ...a, name: n, growth } : a
+      ))
+    } else if (viewedAccount) {
+      if (n !== viewedAccount.name) renameAccount(category.id, viewedAccount.id, n)
+      if (growth !== (viewedAccount.growth ?? 0)) setAccountGrowth(category.id, viewedAccount.id, growth)
+    }
+    setAccountView(null)
+  }
+
+  const deleteViewedAccount = () => {
+    if (isNew) {
+      setLocalAccounts(a => a.filter(x => x.id !== accountView.id))
+    } else {
+      if (viewedAccount && !confirm(`Delete "${viewedAccount.name}" and its balance history?`)) return
+      deleteAccount(category.id, accountView.id)
+    }
+    setAccountView(null)
   }
 
   const handleSave = () => {
     if (!name.trim()) return
-    const normalized = localAccounts.map(a => {
-      const num = parseFloat(a.growth)
-      return { ...a, growth: isNaN(num) ? 0 : num }
-    })
-    onSave({ name: name.trim(), type, color, icon, contributing }, normalized)
+    onSave({ name: name.trim(), type, color, icon, contributing }, localAccounts)
   }
-
-  const accounts = isNew ? localAccounts : (category?.accounts ?? [])
 
   return (
     <Modal
-      title={isNew ? 'New Category' : 'Edit Category'}
+      title={
+        accountView
+          ? (accountView.mode === 'new' ? 'Add Account' : 'Edit Account')
+          : (isNew ? 'New Category' : 'Edit Category')
+      }
+      onBack={accountView ? () => setAccountView(null) : undefined}
       onClose={onClose}
-      footer={
+      footer={accountView ? (
+        <div className="modal-actions">
+          {accountView.mode === 'edit' && (
+            <button className="btn btn-destructive" onClick={deleteViewedAccount}>
+              Delete account
+            </button>
+          )}
+          <button
+            className="btn btn-primary"
+            onClick={commitAccount}
+            disabled={!accName.trim()}
+          >
+            {accountView.mode === 'new' ? 'Add account' : 'Save changes'}
+          </button>
+        </div>
+      ) : (
         <div className="modal-actions">
           {!isNew && (
             <button
@@ -85,149 +146,114 @@ export default function EditCategorySheet({
             {isNew ? 'Create category' : 'Save changes'}
           </button>
         </div>
-      }
+      )}
     >
-      <div className="form-group">
-        <label className="form-label">Name</label>
-        <input
-          className="input"
-          placeholder="e.g. Retirement"
-          value={name}
-          onChange={e => setName(e.target.value)}
-        />
-      </div>
-
-      <div className="form-group">
-        <label className="form-label">Type</label>
-        <div className="type-toggle" data-pos={type === 'liability' ? 1 : 0}>
-          <span className="type-toggle-thumb" aria-hidden="true" />
-          <button type="button" className={`type-toggle-btn${type === 'asset' ? ' active' : ''}`} onClick={() => setType('asset')}>Asset</button>
-          <button type="button" className={`type-toggle-btn${type === 'liability' ? ' active' : ''}`} onClick={() => setType('liability')}>Liability</button>
-        </div>
-        <label className="checkbox-row" style={{ marginTop: 14 }}>
-          <input
-            type="checkbox"
-            className="checkbox-input"
-            checked={contributing}
-            onChange={e => setContributing(e.target.checked)}
-          />
-          <span className="checkbox-label">Contributing monthly</span>
-        </label>
-      </div>
-
-      {/* Accounts */}
-      <div style={{ marginBottom: 24 }}>
-        <div className="form-label" style={{ marginBottom: 8, fontSize: 13 }}>Accounts</div>
-
-        {accounts.length > 0 && (
-          <div style={{ borderTop: '1px solid var(--c-border)', marginBottom: 8 }}>
-            {accounts.map(acc => (
-              <div key={acc.id} className="manage-account-row">
-                {isNew ? (
-                  <input
-                    className="manage-account-input"
-                    value={acc.name}
-                    onChange={e => setLocalAccounts(list =>
-                      list.map(a => a.id === acc.id ? { ...a, name: e.target.value } : a)
-                    )}
-                  />
-                ) : (
-                  <input
-                    className="manage-account-input"
-                    value={nameEdits[acc.id] ?? acc.name}
-                    onChange={e => setNameEdits(n => ({ ...n, [acc.id]: e.target.value }))}
-                    onBlur={() => {
-                      const next = (nameEdits[acc.id] ?? '').trim()
-                      if (next && next !== acc.name) renameAccount(category.id, acc.id, next)
-                      else setNameEdits(n => ({ ...n, [acc.id]: acc.name }))
-                    }}
-                  />
-                )}
-                {(() => {
-                  const raw   = isNew ? String(acc.growth ?? 0) : (growthEdits[acc.id] ?? String(acc.growth ?? 0))
-                  const isNeg = raw.trim().startsWith('-')
-                  const mag   = raw.replace('-', '')
-                  const commit = (next) => {
-                    if (isNew) setLocalAccounts(list => list.map(a => a.id === acc.id ? { ...a, growth: next } : a))
-                    else setGrowthEdits(g => ({ ...g, [acc.id]: next }))
-                  }
-                  return (
-                    <div className="growth-field" title="Estimated annual growth — negative for depreciating assets. Used for future estimates.">
-                      <button
-                        type="button"
-                        className="growth-sign"
-                        aria-label={isNeg ? 'Make growth positive' : 'Make growth negative'}
-                        onClick={() => {
-                          const next = isNeg ? mag : '-' + mag
-                          commit(next)
-                          if (!isNew) {
-                            const num = parseFloat(next)
-                            setAccountGrowth(category.id, acc.id, isNaN(num) ? 0 : num)
-                          }
-                        }}
-                      >{isNeg ? '−' : '+'}</button>
-                      <input
-                        className="growth-input"
-                        inputMode="decimal"
-                        value={mag}
-                        onChange={e => {
-                          const m = e.target.value.replace(/[^0-9.]/g, '')
-                          commit((isNeg ? '-' : '') + m)
-                        }}
-                        onBlur={() => {
-                          if (isNew) {
-                            setLocalAccounts(list => list.map(a => {
-                              if (a.id !== acc.id) return a
-                              const num = parseFloat(a.growth)
-                              return { ...a, growth: isNaN(num) ? 0 : num }
-                            }))
-                          } else {
-                            const num = parseFloat(growthEdits[acc.id])
-                            const clean = isNaN(num) ? 0 : num
-                            setGrowthEdits(g => ({ ...g, [acc.id]: String(clean) }))
-                            if (clean !== (acc.growth ?? 0)) setAccountGrowth(category.id, acc.id, clean)
-                          }
-                        }}
-                      />
-                      <span className="growth-suffix">%/yr</span>
-                    </div>
-                  )
-                })()}
-                <button
-                  className="del-btn"
-                  onClick={() => {
-                    if (isNew) {
-                      setLocalAccounts(a => a.filter(x => x.id !== acc.id))
-                    } else {
-                      deleteAccount(category.id, acc.id)
-                    }
-                  }}
-                >×</button>
-              </div>
-            ))}
+      {accountView ? (
+        <>
+          <div className="form-group">
+            <label className="form-label">Name</label>
+            <input
+              className="input"
+              placeholder="e.g. Checking"
+              value={accName}
+              autoFocus={accountView.mode === 'new'}
+              onChange={e => setAccName(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') commitAccount() }}
+            />
           </div>
-        )}
+          <div className="form-group">
+            <label className="form-label">Annual growth</label>
+            <div className="growth-editor">
+              <div className="type-toggle sign-toggle" data-pos={accSign === '-' ? 1 : 0}>
+                <span className="type-toggle-thumb" aria-hidden="true" />
+                <button
+                  type="button"
+                  className={`type-toggle-btn${accSign === '+' ? ' active' : ''}`}
+                  aria-label="Positive growth"
+                  onClick={() => setAccSign('+')}
+                >+</button>
+                <button
+                  type="button"
+                  className={`type-toggle-btn${accSign === '-' ? ' active' : ''}`}
+                  aria-label="Negative growth"
+                  onClick={() => setAccSign('-')}
+                >−</button>
+              </div>
+              <input
+                className="input growth-rate-input"
+                inputMode="decimal"
+                placeholder="0"
+                value={accMag}
+                onChange={e => setAccMag(e.target.value.replace(/[^0-9.]/g, ''))}
+                onKeyDown={e => { if (e.key === 'Enter') commitAccount() }}
+              />
+              <span className="growth-suffix">%/yr</span>
+            </div>
+            <p className="growth-hint">
+              Estimated annual growth, used for future estimates. Choose − for
+              depreciating assets.
+            </p>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="form-group">
+            <label className="form-label">Name</label>
+            <input
+              className="input"
+              placeholder="e.g. Retirement"
+              value={name}
+              onChange={e => setName(e.target.value)}
+            />
+          </div>
 
-        <div style={{ display: 'flex', gap: 8 }}>
-          <input
-            ref={accInputRef}
-            className="input"
-            style={{ fontSize: 16 }}
-            placeholder="Account name"
-            value={newAccName}
-            onChange={e => setNewAccName(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') isNew ? handleAddLocalAcc() : handleAddAcc() }}
-          />
-          <button
-            className="btn btn-secondary btn-sm"
-            style={{ flexShrink: 0 }}
-            onClick={isNew ? handleAddLocalAcc : handleAddAcc}
-            disabled={!newAccName.trim()}
-          >
-            Add
-          </button>
-        </div>
-      </div>
+          <div className="form-group">
+            <label className="form-label">Type</label>
+            <div className="type-toggle" data-pos={type === 'liability' ? 1 : 0}>
+              <span className="type-toggle-thumb" aria-hidden="true" />
+              <button type="button" className={`type-toggle-btn${type === 'asset' ? ' active' : ''}`} onClick={() => setType('asset')}>Asset</button>
+              <button type="button" className={`type-toggle-btn${type === 'liability' ? ' active' : ''}`} onClick={() => setType('liability')}>Liability</button>
+            </div>
+            <label className="checkbox-row" style={{ marginTop: 14 }}>
+              <input
+                type="checkbox"
+                className="checkbox-input"
+                checked={contributing}
+                onChange={e => setContributing(e.target.checked)}
+              />
+              <span className="checkbox-label">Contributing monthly</span>
+            </label>
+          </div>
+
+          {/* Accounts — a settings-style table of rows that each open the
+              account sub-view; just a full-width add button when empty. */}
+          <div className="form-group">
+            <label className="form-label">Accounts</label>
+            {accounts.length > 0 && (
+              <div className="settings-card">
+                {accounts.map(acc => (
+                  <button
+                    key={acc.id}
+                    type="button"
+                    className="settings-row"
+                    onClick={() => openAccount(acc)}
+                  >
+                    <span className="settings-row-lead">{acc.name}</span>
+                    {rowChevron}
+                  </button>
+                ))}
+              </div>
+            )}
+            <button
+              type="button"
+              className="btn btn-secondary add-account-btn"
+              onClick={openNewAccount}
+            >
+              Add account
+            </button>
+          </div>
+        </>
+      )}
     </Modal>
   )
 }
