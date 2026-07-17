@@ -596,33 +596,6 @@ a { text-decoration: none; color: inherit; }
 
 /* ── Section ── */
 .section { padding: 0 20px; margin-bottom: 24px; }
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-.section-title {
-  font-family: var(--font);
-  font-size: 12px;
-  font-weight: var(--font-weight-regular);
-  letter-spacing: 0.09em;
-  color: var(--c-ink-mute);
-  flex: 1;
-}
-.add-category-link {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: var(--font);
-  font-size: 12px;
-  font-weight: var(--font-weight-regular);
-  letter-spacing: 0.09em;
-  color: var(--c-primary);
-  padding: 0;
-  opacity: 0.85;
-}
-.add-category-link:hover { opacity: 1; }
 
 /* ── Category cards (vertical list) ── */
 .cat-scroll {
