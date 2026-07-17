@@ -1167,9 +1167,6 @@ a { text-decoration: none; color: inherit; }
   font-size: 16px;
   line-height: 1;
 }
-/* "Add account" spans the modal body even on desktop, where footer
-   .btn-full buttons shrink to fit-content. */
-.add-account-btn { width: 100%; }
 
 /* ── Color swatches ── */
 .swatch-row { display: flex; gap: 8px; flex-wrap: wrap; }

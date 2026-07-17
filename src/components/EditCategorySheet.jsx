@@ -226,31 +226,31 @@ export default function EditCategorySheet({
           </div>
 
           {/* Accounts — a settings-style table of rows that each open the
-              account sub-view; just a full-width add button when empty. */}
+              account sub-view, with "Add account" as a permanent last row. */}
           <div className="form-group">
             <label className="form-label">Accounts</label>
-            {accounts.length > 0 && (
-              <div className="settings-card">
-                {accounts.map(acc => (
-                  <button
-                    key={acc.id}
-                    type="button"
-                    className="settings-row"
-                    onClick={() => openAccount(acc)}
-                  >
-                    <span className="settings-row-lead">{acc.name}</span>
-                    {rowChevron}
-                  </button>
-                ))}
-              </div>
-            )}
-            <button
-              type="button"
-              className="btn btn-secondary add-account-btn"
-              onClick={openNewAccount}
-            >
-              Add account
-            </button>
+            <div className="settings-card">
+              {accounts.map(acc => (
+                <button
+                  key={acc.id}
+                  type="button"
+                  className="settings-row"
+                  onClick={() => openAccount(acc)}
+                >
+                  <span className="settings-row-lead">{acc.name}</span>
+                  {rowChevron}
+                </button>
+              ))}
+              <button type="button" className="settings-row" onClick={openNewAccount}>
+                <span className="settings-row-lead">
+                  <svg className="settings-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  Add account
+                </span>
+              </button>
+            </div>
           </div>
         </>
       )}
