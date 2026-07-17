@@ -191,10 +191,7 @@ export default function EditCategorySheet({
                 <span className="growth-rate-suffix" aria-hidden="true">%</span>
               </div>
             </div>
-            <p className="growth-hint">
-              Estimated annual growth, used for future estimates. Choose − for
-              depreciating assets.
-            </p>
+            <p className="growth-hint">Used for future estimates</p>
           </div>
         </>
       ) : (
