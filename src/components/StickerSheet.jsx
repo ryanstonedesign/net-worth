@@ -118,7 +118,7 @@ const TYPE_SCALE = [
   { role: 'Subhead', cls: 'ds-t-subhead', specs: '15 / 700', font: 'Title' },
   { role: 'Body', cls: 'ds-t-body', specs: '15 / 500', font: 'Body' },
   { role: 'Body small', cls: 'ds-t-small', specs: '13 / 500', font: 'Body' },
-  { role: 'Label', cls: 'ds-t-label', specs: '12 / 700 · caps', font: 'Body' },
+  { role: 'Label', cls: 'ds-t-label', specs: '13 / 400', font: 'Body' },
   { role: 'Caption', cls: 'ds-t-caption', specs: '11 / 600', font: 'Body' },
 ]
 
