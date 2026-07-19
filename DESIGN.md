@@ -73,6 +73,7 @@ Column uses a deep-navy institutional language on a near-white canvas: the page 
 |------|------|-------------|----------------|-------|
 | micro | 10px | 1.5 | — | `--text-micro` |
 | caption | 12px | 1.5 | — | `--text-caption` |
+| label | 13px | 1.4 | — | `--text-label` |
 | body | 16px | 1.5 | — | `--text-body` |
 | body-lg | 18px | 1.33 | — | `--text-body-lg` |
 | subheading-sm | 20px | 1.1 | -0.2px | `--text-subheading-sm` |
@@ -340,6 +341,8 @@ SuisseIntl's character variants ('salt' 2) subtly modify the typeface's default 
   --leading-micro: 1.5;
   --text-caption: 12px;
   --leading-caption: 1.5;
+  --text-label: 13px;
+  --leading-label: 1.4;
   --text-body: 16px;
   --leading-body: 1.5;
   --text-body-lg: 18px;
@@ -471,6 +474,8 @@ SuisseIntl's character variants ('salt' 2) subtly modify the typeface's default 
   --leading-micro: 1.5;
   --text-caption: 12px;
   --leading-caption: 1.5;
+  --text-label: 13px;
+  --leading-label: 1.4;
   --text-body: 16px;
   --leading-body: 1.5;
   --text-body-lg: 18px;
