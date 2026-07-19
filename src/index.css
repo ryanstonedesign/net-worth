@@ -763,9 +763,9 @@ a { text-decoration: none; color: inherit; }
   margin-top: 4px;
 }
 .cat-total-label {
-  font-size: var(--text-label);
+  font-size: 15px; /* one step up from the label token — body size */
   font-weight: var(--font-weight-regular);
-  color: var(--c-ink-mute);
+  color: var(--c-ink);
 }
 .cat-total-amount {
   font-size: 15px;
