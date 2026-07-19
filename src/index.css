@@ -721,7 +721,7 @@ a { text-decoration: none; color: inherit; }
   font-family: var(--font);
   font-size: 13px; /* matches .cat-account-input */
   font-weight: var(--font-weight-medium);
-  color: var(--c-ink);
+  color: var(--c-ink-mute); /* secondary — contribution is not the balance */
   padding: 2px 0;
   outline: none;
   transition: border-color 0.2s;
