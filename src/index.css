@@ -41,6 +41,7 @@
   /* Typography — scale */
   --text-micro: 10px;   --leading-micro: 1.5;
   --text-caption: 12px; --leading-caption: 1.5;
+  --text-label: 13px;   --leading-label: 1.4;
   --text-body: 16px;    --leading-body: 1.5;
   --text-body-lg: 18px; --leading-body-lg: 1.33;
   --text-subheading-sm: 20px; --leading-subheading-sm: 1.1; --tracking-subheading-sm: -0.2px;
@@ -762,7 +763,7 @@ a { text-decoration: none; color: inherit; }
   margin-top: 4px;
 }
 .cat-total-label {
-  font-size: 13px; /* matches .cat-account-name */
+  font-size: var(--text-label);
   font-weight: var(--font-weight-regular);
   color: var(--c-ink-mute);
 }
@@ -826,7 +827,7 @@ a { text-decoration: none; color: inherit; }
 }
 .summary-cell-label {
   font-family: var(--font);
-  font-size: 13px;
+  font-size: var(--text-label);
   font-weight: var(--font-weight-regular);
   letter-spacing: 0.09em;
   margin-bottom: 4px;
@@ -1084,7 +1085,7 @@ a { text-decoration: none; color: inherit; }
 }
 .form-label {
   font-family: var(--font);
-  font-size: 11px;
+  font-size: var(--text-label);
   font-weight: var(--font-weight-regular);
   color: var(--c-ink-mute);
   letter-spacing: 0.06em;
