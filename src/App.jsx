@@ -132,7 +132,6 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
           // undefined hides the badge entirely.
           synced={forecasts.length > 1 ? !!activeForecast?.linked : undefined}
           onMenu={() => setMenuOpen(true)}
-          onSettings={() => setSettingsView('main')}
         />
         <div className="page-content">
           <div className="scenario-stage-track">

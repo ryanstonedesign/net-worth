@@ -1243,7 +1243,7 @@ a { text-decoration: none; color: inherit; }
 .fab {
   width: 44px; height: 44px;
   flex-shrink: 0;
-  border-radius: var(--radius-nav-pills);
+  border-radius: 50%;
   display: inline-flex; align-items: center; justify-content: center;
   color: var(--c-ink);
   background: var(--surface-frosted-overlay);
@@ -1885,8 +1885,7 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
     box-shadow: none;
   }
   .nav-scrim { display: none; }
-  .top-nav-menu-btn,
-  .top-nav-settings-btn { display: none; }
+  .top-nav-menu-btn { display: none; }
   /* Re-center the floating month selector over the content area. */
   .month-float { left: calc(50% + var(--sidebar-w) / 2); }
 
