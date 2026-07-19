@@ -682,6 +682,7 @@ a { text-decoration: none; color: inherit; }
    which suppresses the zoom; at rest they match their 13px labels. */
 @media (pointer: coarse) {
   .cat-account-input:focus,
+  .cat-contrib-input:focus,
   .update-amount-input:focus,
   .manage-account-input:focus { font-size: 16px; }
 }
@@ -718,7 +719,7 @@ a { text-decoration: none; color: inherit; }
   border: none;
   border-bottom: 1px solid transparent;
   font-family: var(--font);
-  font-size: 14px;
+  font-size: 13px; /* matches .cat-account-input */
   font-weight: var(--font-weight-medium);
   color: var(--c-ink);
   padding: 2px 0;
