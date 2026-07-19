@@ -762,17 +762,13 @@ a { text-decoration: none; color: inherit; }
   margin-top: 4px;
 }
 .cat-total-label {
-  font-family: var(--font-title);
-  font-size: var(--text-subheading-sm);
+  font-size: 15px;
   font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--tracking-subheading-sm);
   color: var(--c-ink-mute);
 }
 .cat-total-amount {
-  font-family: var(--font-title);
-  font-size: var(--text-subheading-sm);
+  font-size: 15px;
   font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--tracking-subheading-sm);
   font-variant-numeric: tabular-nums;
 }
 .cat-empty-accounts {
@@ -829,10 +825,8 @@ a { text-decoration: none; color: inherit; }
   padding: 16px;
 }
 .summary-cell-label {
-  font-family: var(--font-title);
-  font-size: var(--text-subheading-sm);
+  font-size: 15px;
   font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--tracking-subheading-sm);
   margin-bottom: 4px;
 }
 .summary-cell-amount {
