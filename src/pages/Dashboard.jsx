@@ -10,7 +10,7 @@ import { formatCurrency, formatCompact, formatMonthDisplay, getAdjacentMonth, ge
 const RANGE_OPTIONS = ['1M', '3M', '6M', '1Y', 'custom']
 const RANGE_COUNTS   = { '1M': 2,  '3M': 3,  '6M': 6,  '1Y': 12 }
 const FORECAST_MONTHS = { '1M': 1, '3M': 3,  '6M': 6,  '1Y': 12 }
-const MAX_FORECAST_MONTHS = 600 // 50 years — guard against absurd custom years
+const MAX_FORECAST_MONTHS = 900 // 75 years — guard against absurd custom years
 
 function monthIndex(month) {
   const [y, m] = month.split('-').map(Number)
@@ -257,7 +257,7 @@ export default function Dashboard({
   const goalReached = goal != null && displayNetWorth >= goal
   let monthsToGoal = null
   if (goal != null && !goalReached && lastDataMonth) {
-    const GOAL_HORIZON = 600 // look up to ~50 years ahead
+    const GOAL_HORIZON = MAX_FORECAST_MONTHS // same ceiling as the custom range
     const goalForecast = generateForecast(
       data.categories, accountModels, data.snapshots, data.contributions || {},
       lastDataMonth, GOAL_HORIZON,

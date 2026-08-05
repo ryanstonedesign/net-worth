@@ -28,16 +28,23 @@ about. What's left is plumbing.
 > **Every number the model can say is a number your code computed and
 > handed to it. The model does no arithmetic.**
 
-LLMs are unreliable at compounding a rate over 120 months and excellent at
-reading a table and explaining it. So we build a **briefing payload** — a
-complete, precomputed picture of the active scenario — send it with the
-question, and instruct the model to answer *only* from it and to say "I
-don't have that" otherwise.
+LLMs are unreliable at compounding a rate over 900 months and excellent at
+reading a table and explaining it. So the model is never asked to
+calculate — it's given precomputed values and asked to find the right one
+and explain it, and instructed to say "I don't have that" rather than
+derive anything.
 
-This is why "look up real values" is achievable without a tool-calling
-agent loop: your dataset is small enough that we can precompute the
-answers to essentially every numeric question in advance, so the model is
-doing lookup, not math.
+Two mechanisms deliver those values, and the split between them falls out
+of the measurements below:
+
+- a **briefing payload** sent with every question, carrying the headline
+  series in full plus precomputed derived facts — one round trip, covers
+  the common case;
+- **lookup tools** the model calls for anything the briefing summarizes
+  rather than enumerates, executed locally against the vault.
+
+Together they cover every month the app supports, at every account, with
+exact engine values and zero model arithmetic.
 
 ---
 
@@ -68,10 +75,10 @@ Built fresh on each question from the active scenario:
   },
 
   // Engine output — same call the chart makes, run to the app's full ceiling
-  horizon: { origin: '2026-08', end: '2076-08', months: 600 },
+  horizon: { origin: '2026-08', end: '2101-08', months: 900 },
   forecast: {
-    netWorth: { '2026-09': 415100, ... },          // monthly, all 600
-    accounts: { acc_9: { '2027-08': 1200, ... } }, // annual checkpoints
+    netWorth: { '2026-09': 415100, ... },          // monthly, all 900
+    accounts: { acc_9: { '2027-08': 1200, ... } }, // tapered checkpoints
   },
 
   // Precomputed derived facts, so the model never divides
@@ -94,41 +101,55 @@ is paid off" becomes reading `derived.payoff.acc_9` — not asking a
 language model to solve for a zero crossing. Every entry there is a
 function in `forecast.js` with a unit test.
 
-### How far ahead: 600 months (50 years)
+### How far ahead: 900 months (75 years)
 
-That's the app's own ceiling, and it's asserted in two independent places
-in `Dashboard.jsx`: `MAX_FORECAST_MONTHS = 600` clamps the Custom range
-(so typing "2200" gets you 50 years, not 174), and the goal-ETA search
-uses its own `GOAL_HORIZON = 600`. The briefing must use the same number —
-if it projected a different distance, the chat could disagree with the
-goal label printed on the chart.
+**Done — the ceiling is raised.** `MAX_FORECAST_MONTHS` in
+`Dashboard.jsx` is now `900`, so the Custom range reaches 75 years out.
+The goal-ETA search previously carried its own hard-coded `600`; it now
+reads `MAX_FORECAST_MONTHS` instead, so the two can't drift apart. That
+drift was a live bug risk for this feature specifically: with two
+different ceilings, the chat's answer about when you hit your goal could
+contradict the ETA printed on the chart.
 
-Note it's 600 months from `lastDataMonth`, not from today, so a user who
-hasn't updated in six months has a horizon ending six months earlier than
-they'd guess. The payload carries `horizon.end` as an absolute month, and
-the model should quote absolute dates rather than "in 50 years."
+Note the horizon runs 900 months from `lastDataMonth`, not from today, so
+a user who hasn't updated in six months has a horizon ending six months
+earlier than they'd guess. The payload carries `horizon.end` as an
+absolute month, and the model should quote absolute dates rather than "in
+75 years."
+
+One honest caveat to build into the system prompt: at this distance the
+projections are arithmetic, not prediction. A single $10k account at 7%
+compounds to **$1.6M** over 75 years, entirely on the strength of a growth
+rate you typed once. The far tail is worth showing — that's what the user
+asked for — but the chat should present decades-out figures as "what this
+rate implies," never as a forecast, and should volunteer the assumption it
+rests on when the horizon is long.
 
 ### What full coverage actually costs
 
-Measured on a representative 13-account scenario at 600 months:
+Measured on a representative 13-account scenario at 900 months:
 
 | Series | Size | ~Tokens |
 |---|---|---|
-| Net worth, monthly, all 600 | 10.4 KB | ~3,800 |
-| + assets & liabilities, monthly | 19.6 KB | ~7,200 |
-| All accounts × annual checkpoints (50 pts) | 10.7 KB | ~3,900 |
-| **All accounts × all 600 months** | **126.6 KB** | **~46,300** |
+| Net worth, monthly, all 900 | 15.9 KB | ~5,800 |
+| All accounts × annual checkpoints (75 pts) | 16.3 KB | ~5,900 |
+| All accounts × tapered checkpoints (35 pts) | 7.5 KB | ~2,700 |
+| **All accounts × all 900 months** | **193.9 KB** | **~70,900** |
 
 That last row is the finding. Complete per-account monthly detail across
-50 years can't ride along in every request — not mainly for cost, but
-because recall over 46k tokens of near-identical numeric rows is exactly
+75 years can't ride along in every request — not mainly for cost, but
+because recall over 70k tokens of near-identical numeric rows is exactly
 where models start reading the wrong line, which defeats the point.
 
 So: **tier it.**
 
-**Eager, in every request (~8k tokens):**
-- Net worth monthly, all 600 months — the headline series, complete
-- Every account at annual checkpoints, all 50 years — shape and context
+**Eager, in every request (~8.5k tokens):**
+- Net worth monthly, all 900 months — the headline series, complete, and
+  cheap enough at ~5.8k tokens to leave at full resolution
+- Every account at **tapered** checkpoints — annual through year 25, then
+  every 5 years. Straight annual across 75 years costs ~5.9k tokens;
+  tapering drops it to ~2.7k, and nobody asks for a precise per-account
+  balance in year 63. `get_series` answers it exactly when they do.
 - The `derived` block and the structure (both small)
 - History: full monthly for the last 36 months, quarterly before that
 
@@ -164,7 +185,7 @@ Two edge cases the extraction should fix while we're in there:
   will I be worth in ten years?" gets nothing. Fall back to
   `currentMonth` as the origin when categories exist.
 - The Dashboard caps the horizon at the selected range; the briefing
-  should always project the full 600 months regardless of which range
+  should always project the full 900 months regardless of which range
   pill is active, so answers don't depend on invisible UI state.
 
 ---
@@ -218,9 +239,9 @@ So the mitigations are honest ones, not technical sleight of hand:
 
 An earlier draft of this plan deprioritized tool calling as a v1 nicety.
 Requiring answers across every month the app supports reverses that: the
-table above shows complete per-account monthly detail is ~46k tokens, so
-it can't be eager, and the annual checkpoints that *are* eager leave gaps
-between them. Without tools, "what's my brokerage worth in March 2041?"
+table above shows complete per-account monthly detail is ~71k tokens, so
+it can't be eager, and the tapered checkpoints that *are* eager leave gaps
+between them. Without tools, "what's my brokerage worth in March 2058?"
 falls between checkpoints and the model interpolates — arithmetic, which
 is the one thing this design forbids.
 
@@ -230,7 +251,7 @@ memory:
 
 | Tool | Returns |
 |---|---|
-| `get_month(month)` | Full per-account + category breakdown at any one of the 600 months |
+| `get_month(month)` | Full per-account + category breakdown at any one of the 900 months |
 | `get_series(target, from, to, step)` | Any account or total, any window, monthly/quarterly/annual |
 | `find_crossing(target, value)` | When a balance crosses a threshold — payoff dates, goal dates, "when do I hit $1M" |
 | `compare_scenarios(month)` | Every scenario's net worth at a month |
@@ -329,8 +350,6 @@ No writes of any kind. Worth naming the two that will be tempting:
    better answers), or generic labels from the start?
 2. **Transcript persistence** — keep threads in the encrypted vault so
    they follow you across devices, or ephemeral per session?
-3. **The 50-year ceiling itself** — 600 months is the app's current limit,
-   and the briefing now matches it exactly. If you want answers past 2076,
-   that's a one-constant change in `forecast.js` and the eager net worth
-   series grows ~6 tokens per extra month. Worth raising, or is 50 years
-   already past the point of meaning?
+3. **Per-account taper** — annual checkpoints through year 25 then every
+   5 years (saves ~3.2k tokens per request, with `get_series` covering the
+   gaps exactly), or straight annual for all 75 years?
