@@ -1,345 +1,268 @@
-# Plan: Forecast chat — describing the future in plain language
+# Plan: Forecast chat — asking questions about your numbers
 
-## What you're asking for
+## Scope
 
-Type (or say) a sentence and have the forecast change:
+Ask questions in plain language and get answers grounded in your actual
+data. **Read-only.** The chat never creates an account, never edits a
+balance, never changes a growth rate, never touches a scenario.
 
-- "In five years I want to open a brokerage account with $10k."
-- "In two years I want this Visa paid off."
-- "In ten years I buy a rental property for $400k, appreciating 4% a year."
+- "What's my net worth going to be in 2036?"
+- "How long until the Visa is paid off at this rate?"
+- "How much did my brokerage grow last year?"
+- "Which category is dragging me down?"
+- "Am I on track for my goal?"
 
-Today each of those is a manual chore: create the account, scroll the month
-selector out to 2031, type a balance into that month, open the category
-sheet, set a growth rate, and — for anything involving ongoing funding —
-type the same contribution into every future month one at a time.
+The hard requirement: **it must look up real values.** Not vibes, not
+approximations — the actual balances in the vault and the actual output of
+the forecast engine.
 
-## The real blocker isn't the AI
+Scoping out the write side removes the entire blocker from the previous
+draft of this plan. That version needed a dated-event model in the
+forecast engine before chat could do anything, because the engine can't
+express "start funding this in five years." Answering questions needs
+none of that — the engine already computes everything a question could ask
+about. What's left is plumbing.
 
-It's tempting to read this as "add a chat box that calls the existing
-mutators." That doesn't work, because **the forecast engine has no concept
-of a dated future event.** Everything it knows is in `Dashboard.jsx`
-(`buildAccountModels` / `generateForecast`, lines 44–112):
+## The core idea: your code computes, the model narrates
 
-- an account's `base` — its most recent recorded balance
-- a single `annual` growth rate that applies for all time
-- a single average `contribution` that applies for all time
-- per-month balance overrides in `snapshots`, and per-month contribution
-  overrides in `contributions`
+> **Every number the model can say is a number your code computed and
+> handed to it. The model does no arithmetic.**
 
-Check the three sentences above against that model:
+LLMs are unreliable at compounding a rate over 120 months and excellent at
+reading a table and explaining it. So we build a **briefing payload** — a
+complete, precomputed picture of the active scenario — send it with the
+question, and instruct the model to answer *only* from it and to say "I
+don't have that" otherwise.
 
-| Sentence | Expressible today? |
-|---|---|
-| Open an account in 5 years with $10k | Partly — create the account now (it sits at $0 in every card for five years) and write a `snapshots['2031-08']` override. |
-| Fund it $500/mo from then on | **No.** `generateForecast` reads `contributions[month][accId]` for that month only, falling back to the *historical average*. A plan starting in 2031 means writing 500 into all ~240 remaining months. |
-| Pay off the Visa by 2028-03 | **No.** You can set a `-22%` annual decay and eyeball it, or drop a hard `0` override into 2028-03 and get a cliff in the chart. Neither is "pay this off by then." |
-| Buy a property in 10 years, 4% growth | **No.** Growth is one number for all time; there's no "starts in 2036," no down payment leaving Savings, no mortgage appearing as a liability. |
-
-So the chat feature is the front door to a capability the app doesn't have
-yet. The plan below builds that capability first, as something usable on
-its own, and puts the LLM on top of it as a translator.
-
-## The core idea: the model writes plans, never numbers
-
-One rule governs the whole design:
-
-> **The LLM converts English into a list of typed, dated events. The
-> existing deterministic engine computes every dollar.**
-
-The model never returns a balance, a projection, or a payment amount. It
-returns `{ kind: 'payoff', accountId: 'acc_123', by: '2028-03' }` and the
-engine solves the payment. That buys us:
-
-- **Auditability** — every number on screen still comes from code you can
-  read and unit-test. No hallucinated arithmetic.
-- **Reversibility** — events are declarative data with ids. Undo is
-  deleting one. Compare that to letting the model call `addAccount` and
-  `updateContributions` directly: those are irreversible, and the fact
-  mutators fan out to every synced scenario (`setFactData` in
-  `useData.js`), so a bad guess would corrupt your other scenarios too.
-- **Privacy** — translating "this Visa" into an account id needs *names
-  and ids*, not balances. The default context we send contains no money.
-  See "What leaves the vault" below.
-- **A non-AI fallback** — the event list gets its own plain UI, so the
-  feature degrades to a normal (good) editor if you have no API key,
-  and you can always fix a misunderstood request by hand.
+This is why "look up real values" is achievable without a tool-calling
+agent loop: your dataset is small enough that we can precompute the
+answers to essentially every numeric question in advance, so the model is
+doing lookup, not math.
 
 ---
 
-## Part 1 — The event model (no AI involved)
+## Part 1 — The briefing payload
 
-### Storage
+### What's in it
 
-A new per-scenario array, alongside `categories` / `snapshots` /
-`contributions` / `goal`:
+Built fresh on each question from the active scenario:
 
 ```js
-data.events = [
-  { id: 'ev_...', createdAt, source: 'chat' | 'manual', note: 'Open brokerage', ...event },
-]
+{
+  asOf: '2026-08',
+  scenario: { name: 'Default Scenario', synced: true },
+
+  // Structure + assumptions
+  categories: [
+    { id, name, type: 'asset'|'liability', contributing: true,
+      accounts: [{ id, name, growth: '7' }] },
+  ],
+
+  // Real recorded history — every month, per account, plus net worth
+  history: {
+    months: ['2025-09', ...],
+    netWorth:   [412300, ...],
+    assets:     [...], liabilities: [...],
+    accounts: { acc_9: [4200, 4050, ...] },
+    contributions: { acc_3: [500, 500, ...] },
+  },
+
+  // Engine output — same call the chart makes, run long
+  forecast: {
+    netWorth: { '2026-09': 415100, ... },        // monthly, 120 months
+    accounts: { acc_9: { '2027-08': 1200, ... } }, // annual checkpoints
+  },
+
+  // Precomputed derived facts, so the model never divides
+  derived: {
+    currentNetWorth, monthOverMonth, yearOverYear,
+    horizons: { '1y': ..., '3y': ..., '5y': ..., '10y': ... },
+    byCategory: { cat_1: { current, share, yoy } },
+    goal: { amount: 500000, reachedOn: '2031-04', monthsAway: 56 },
+    payoff: { acc_9: '2028-11' },   // when each liability hits zero
+    biggestMover: { accountId: 'acc_3', delta: 8400, window: '12mo' },
+  },
+
+  // Other scenarios, headline only — enough to compare
+  otherScenarios: [{ name: 'Market Downturn', currentNetWorth, at10y }],
+}
 ```
 
-Events are **assumptions**, not facts, in the sense
-`PLAN-scenario-inheritance.md` establishes: they describe a hypothetical
-future, so they live in one scenario and never fan out. They go through
-plain `setData`, like `growth` and `goal`.
+The `derived` block is what does the real work. "How long until the Visa
+is paid off" becomes reading `derived.payoff.acc_9` — not asking a
+language model to solve for a zero crossing. Every entry there is a
+function in `forecast.js` with a unit test.
 
-This forces one extension to that document's rule, worth stating
-explicitly: **a planned account is an assumption, not a structural fact.**
-An account created by an `open_account` event carries an `openFrom` month
-and stays local to its scenario, unlike `addAccount`, which fans out.
-"What if I open a rental account in 2036" must not add a $0 rental account
-to your Default scenario. When that month actually arrives and you record
-a real balance, the normal fact path takes over from there.
+### Size
 
-### Event kinds
+The 1-year demo scenario — 9 categories, 13 accounts, 12 months — comes
+out around 4–6 KB, roughly 1.5–2.5k tokens. A user with ten years of real
+history lands near 5k tokens, still comfortable. Guard rail: **downsample
+history beyond 36 months to quarterly** and cap forecast detail at annual
+checkpoints past 10 years. Recompute the payload per turn (data may have
+changed) but keep it out of the transcript history, so a long conversation
+doesn't resend it N times.
 
-| Kind | Fields | Meaning |
-|---|---|---|
-| `open_account` | `at`, `categoryId` \| `categoryName`+`type`+`icon`, `accountName`, `initial`, `growth?` | Account springs into existence at `at` with `initial`. Stored as a real account with `openFrom: at`. |
-| `fund` | `accountId`, `from`, `to?`, `amount` | Contribute `amount`/mo over the window. Open-ended if `to` is null. |
-| `payoff` | `accountId`, `by`, `from?` | Solve the monthly payment that lands the balance on $0 at `by`. |
-| `lump_sum` | `accountId`, `at`, `amount` | One-off deposit (+) or withdrawal (−). |
-| `transfer` | `fromAccountId`, `toAccountId`, `at`, `amount` | A `lump_sum` pair — down payments, moving cash into an investment. |
-| `set_growth` | `accountId`, `from`, `growth` | Growth rate changes at a date ("market cools after 2030"). |
-| `set_balance` | `accountId`, `at`, `value` | Today's future override, expressed as an event so it's listable and undoable. |
-| `close_account` | `accountId`, `at`, `proceedsTo?` | Sell/close; optionally route the balance into another account. |
-| `set_goal` | `amount`, `by?` | Writes `data.goal`. |
+### Where it comes from
 
-The property example decomposes into four events — `open_account`
-(Property, 4% growth, $400k), `open_account` (Mortgage, liability,
-$320k), `transfer` (Savings → Property, $80k down payment), and `payoff`
-(Mortgage by 2066). That composability is the point: a small vocabulary
-covers a wide range of sentences.
-
-### Engine changes
-
-**Phase 0 first: extract the engine.** Move `buildAccountModels`,
+**Phase 0 is a pure refactor:** move `buildAccountModels`,
 `generateForecast`, `monthIndex`, and `customForecastCount` out of
-`Dashboard.jsx` into `src/lib/forecast.js`, unchanged. This is a pure
-refactor with no behavior change, and it's a prerequisite for everything
-else — the chat preview has to run the forecast outside the Dashboard to
-show you a before/after.
+`Dashboard.jsx` (lines 15–112) into `src/lib/forecast.js`, unchanged.
+Right now the engine only exists inside the Dashboard's render, and the
+chat panel is a sibling in `AppShell` — it needs to run projections
+independently. `src/lib/briefing.js` then builds the payload on top of
+`forecast.js` plus the pure helpers already in `utils.js`
+(`netWorthAt`, `dataHistory`, `dataTotals`).
 
-Then, inside `generateForecast`'s month loop, resolve events per account
-per month, in this precedence order:
+Two edge cases the extraction should fix while we're in there:
 
-1. an explicit `snapshots` override for that month (unchanged — a typed
-   number always wins)
-2. `set_balance` / `open_account` initial at this exact month
-3. compound at the effective growth rate (base rate, or the latest
-   `set_growth` in effect)
-4. add the effective monthly contribution: an active `fund` window, else
-   a `payoff` solve, else today's category-average behavior
-5. add any `lump_sum` / `transfer` legs landing on this month
-
-Two mechanical additions:
-
-- **Existence windows.** An account with `openFrom` contributes 0 to net
-  worth and is hidden in `CategoryCard` for months before it opens — no
-  more $0 phantom rows for five years. Same for `close_account` after.
-- **Payoff solve.** Default to linear (`balance / months` per month over
-  the window, growth suppressed inside it) so it lands exactly on zero.
-  A proper amortization needs an interest rate, and here the data model
-  has a wart worth noting: for liabilities the app's `growth` field
-  conflates interest *and* payment (Visa at `-22%` means "net paydown,"
-  not an APR). Adding a separate per-account `apr` later lets `payoff`
-  use the annuity formula; linear is honest and predictable until then.
-
-### Edge cases this surfaces
-
-- `lastDataMonth` is null when you have no snapshots at all, so
-  `forecastCount` is 0 and *nothing* renders. A brand-new user saying
-  "in five years I'll open an account" currently gets silence. Fix: fall
-  back to `currentMonth` as the forecast origin when categories exist.
-- The range pills top out at 1Y; a 10-year event is invisible unless you
-  switch to Custom. Applying an event should auto-extend the time range
-  to cover its month.
-- `MAX_FORECAST_MONTHS` is 600 (50 years) — validate event dates against
-  the same ceiling.
-
-### A plain UI for events
-
-A "Plan" list — every event as a row in plain English ("Jun 2031 · Open
-Brokerage with $10,000 · 7%/yr") with edit and delete, plus small markers
-at event months on the chart. Reachable from the side nav.
-
-**This phase ships on its own.** Even with no AI, it's the feature you'd
-want: dated plans instead of typing into 240 future months.
+- `lastDataMonth` is null when there are no snapshots at all, so
+  `forecastCount` is 0 and the forecast is empty. A new user asking "what
+  will I be worth in ten years?" gets nothing. Fall back to
+  `currentMonth` as the origin when categories exist.
+- The Dashboard caps the horizon at the selected range; the briefing
+  should always project the full 120 months regardless of which range
+  pill is active, so answers don't depend on invisible UI state.
 
 ---
 
-## Part 2 — The AI layer
+## Part 2 — The AI plumbing
 
 ### Where the call goes
 
-`vite.config.js` locks `connect-src` to `'self'` and Supabase. Calling
-`api.openai.com` from the browser is blocked today. Two ways out:
+`vite.config.js` locks `connect-src` to `'self'` and Supabase, so
+`api.openai.com` is blocked today. Add it to the CSP and call OpenAI
+**directly from the browser with your own key**. No proxy, no Edge
+Function, nothing passing through the app's server — which keeps the E2E
+story as intact as it can be for a feature that by definition sends your
+data somewhere.
 
-**(A) Browser → OpenAI directly, with your own key.** Add
-`https://api.openai.com` to `connect-src`. The key lives on your device;
-requests never touch our server. ✅ Recommended — no new infrastructure,
-and it keeps the E2E story intact: *your data never reaches the app's
-server in plaintext.* ⚠️ The key is readable by anything running on the
-page (it's your own key, scoped and revocable, and the app ships no
-third-party scripts — but it's the honest trade-off).
+Build it as a thin adapter (`src/lib/ai.js`) with one `ask()` function
+behind which the provider lives, so switching providers or moving to a
+server-side proxy later is a swap rather than a rewrite.
 
-**(B) A Supabase Edge Function proxy.** The key sits server-side; the
-`delete-account` function is the template. ⚠️ Your financial context now
-passes through the server in plaintext — a bigger break of the app's
-promise than (A), for a personal app. This becomes the right answer only
-if Worthfolio ever offers this to users who *don't* bring a key, at which
-point it's a billed feature and the proxy also carries rate limiting and
-abuse controls.
+Key storage: `localStorage`, device-local. Zero schema change, and
+re-entering it on a second device is a small price. Moving it into the
+encrypted vault so it syncs is a later one-field follow-up.
 
-Go with (A). Build the client as a thin adapter (`src/lib/ai.js`) with the
-provider behind one function, so (B) — or a different provider — is a
-swap, not a rewrite.
+### The privacy call — stated plainly
 
-### Key storage
+Answering questions about real values means **the real values go to
+OpenAI**: balances, account names, history, projections. There's no clever
+way around it — a model can't tell you your brokerage grew 12% without
+seeing the brokerage. My previous draft could keep amounts on-device
+because a plan-writing model only needs ids and names; a question-
+answering model needs the numbers themselves.
 
-Two options, both fine:
+So the mitigations are honest ones, not technical sleight of hand:
 
-- **Device-local** (`localStorage`) — simplest, nothing new syncs, but
-  you re-enter the key on each device.
-- **In the vault** — rides the existing E2E encryption, so it follows you
-  to your phone. Costs a field on the container and means the key is in
-  the encrypted blob.
+- **Off until you turn it on.** No key, no feature — the panel shows a
+  setup CTA and nothing is sent.
+- **A consent screen that names OpenAI**, lists exactly what the payload
+  contains, and says it leaves the encrypted vault. Shown once, revisitable
+  in settings.
+- **A kill switch** in settings that clears the key and hides the panel.
+- **Your key, your account** — requests go browser → OpenAI, revocable at
+  any time, never through our server, and the app ships no third-party
+  scripts that could read it.
+- **Optional name redaction** (worth building only if it bothers you):
+  replace account names with generic labels — `Brokerage A`, `Card B` —
+  keeping types and categories, which is most of what the model needs for
+  context. Un-map them in the displayed answer. OpenAI then sees numbers
+  without institution names attached.
 
-Start device-local (zero schema change); vault storage is a small
-follow-up if re-entering it annoys you.
+The alternative — a **tool-calling loop**, where the model requests
+specific values (`get_account_history('acc_9')`) and only those leave the
+device — genuinely reduces per-question disclosure and handles arbitrary
+questions the briefing didn't anticipate. It costs an agent loop, 2–4
+round trips per answer, and noticeably more latency. I'd skip it for v1:
+over a session of questions most of the vault ends up sent anyway, so the
+privacy gain is smaller than it looks, and the briefing is a fraction of
+the code. Revisit it if you find yourself hitting "I don't have that."
 
-### What leaves the vault
+### The hallucination guard
 
-This deserves to be a deliberate, visible decision, not a footnote —
-end-to-end encryption is the app's whole pitch.
+Two layers, both cheap:
 
-**Default context sent with each message** — structure only, no money:
+1. **System prompt discipline** — answer only from the payload; never
+   compute a figure that isn't in it; if the answer isn't there, say so;
+   always name the month and account a figure came from.
+2. **A number check.** After the reply comes back, extract every currency
+   figure and percentage from it and verify each against the set of values
+   actually in the payload (with rounding tolerance). Anything unmatched
+   gets flagged inline — a subtle marker rather than a hidden lie.
 
-```json
-{ "currentMonth": "2026-08",
-  "categories": [ { "id": "cat_1", "name": "Credit Cards", "type": "liability",
-    "accounts": [ { "id": "acc_9", "name": "Visa", "growth": "-22" } ] } ],
-  "existingEvents": [ ... ] }
-```
-
-That is enough to resolve "this Visa" → `acc_9` and to emit every event
-kind, because the model doesn't need the balance to say "pay this off by
-March 2028" — the engine reads the balance locally and solves. Account
-*names* still leave the device, so this is not zero-disclosure, and the
-consent screen should say so plainly.
-
-**Optional "include balances" toggle**, off by default, for questions
-that genuinely need them ("can I afford this?", "what's realistic?").
-
-**Also required:** a first-run consent screen naming OpenAI explicitly,
-stating what is sent and that it leaves the encrypted vault; the toggle
-in settings to turn the feature off entirely; and the API key never being
-sent anywhere but OpenAI.
-
-### Getting structured output
-
-Use OpenAI Structured Outputs (`response_format: { type: 'json_schema',
-strict: true }`) rather than free-form JSON. One practical note: strict
-mode constrains `anyOf` and requires every property be present, so model
-the events as one **wide object with nullable fields** discriminated by
-`kind` rather than a union of per-kind shapes — it's far more reliable
-under strict schemas, and the validator narrows it afterwards.
-
-Response shape:
-
-```json
-{ "reply": "Added a brokerage account opening June 2031 with $10,000 at 7%.",
-  "needsClarification": null,
-  "events": [ { "kind": "open_account", "at": "2031-06", ... } ] }
-```
-
-`needsClarification` lets the model ask ("Visa or Amex?") instead of
-guessing — chat is multi-turn, so a question is a valid turn.
-
-Pin the model id in a setting rather than hard-coding it; verify the exact
-current id against OpenAI's model list when implementing (a small,
-cheap, fast model is the right class here — the task is translation, not
-reasoning about money). Each turn is a couple thousand tokens: fractions
-of a cent.
-
-### Validation is a hard boundary
-
-`src/lib/planSchema.js`, hand-written, treating model output as untrusted
-input:
-
-- `kind` in the known set; unknown → reject the event, don't crash
-- months match `YYYY-MM` and fall within `[currentMonth, +600 months]`
-- `accountId` resolves to a real account (except on `open_account`)
-- amounts finite and within sane bounds; `growth` within ±100
-- windows ordered (`from <= to`, `from < by`)
-
-Nothing the model returns is ever executed — it's parsed into the same
-event objects the manual UI produces. Account names in the context are
-your own data, so prompt-injection risk is low, but the validator is the
-boundary regardless.
+That second one is the difference between "probably right" and
+"verifiably grounded," and it's maybe 40 lines. It's also the thing that
+tells you, in real use, whether the briefing has gaps worth closing with
+tools.
 
 ### Chat UX
 
-Mirror the `ImportSheet` flow, which already establishes the pattern:
-**propose → review → apply.**
+Deliberately small, since there's no propose/preview/apply flow to build:
 
-1. **Ask** — full-height sheet on mobile (the `Modal` primitive), right
-   drawer on desktop. Scoped to the active scenario; the scenario name is
-   in the header, since "this account" means something different in each.
-2. **Preview** — the reply, plus each proposed event as an editable row
-   (date, amount, growth, target account), plus the projected impact
-   computed locally: net worth at the horizon before vs. after, and the
-   chart with a ghost line.
-3. **Apply** — to this scenario, or **"Create a new scenario from this"**
-   (`addForecast` already forks). "What if I buy a property" is a
-   textbook new-scenario request, and offering it is one button.
-4. **Undo** — remove the applied event ids. Trivial because events are
-   declarative.
+- Full-height sheet on mobile (the existing `Modal` primitive), right-hand
+  drawer on desktop. Entry point beside the month selector or in the side
+  nav.
+- **Scoped to the active scenario**, with its name in the header — "how am
+  I doing" means something different in Market Downturn than in Default.
+  Switching scenarios starts a fresh thread.
+- Streaming the reply token-by-token, since a grounded answer over a 5k
+  payload takes a couple of seconds.
+- A few starter chips on the empty state ("What's my net worth in 10
+  years?", "When do I hit my goal?") — the fastest way to teach the
+  feature's range without documentation.
+- Transcript persisted per scenario in the container so it survives a
+  reload (encrypted with everything else), capped at ~20 turns. The
+  briefing is never stored in the transcript, only the messages.
 
-Persist the last N messages per scenario in the container so the thread
-survives a reload (it's encrypted with everything else); cap the length so
-the vault blob stays small.
-
-Voice input ("have it work when I *speak*") is the browser's
-`SpeechRecognition` on the same text box — a small add-on once the text
-path works, and worth deferring to the end.
+Voice input is `SpeechRecognition` on the same text box — a small add-on
+once the text path works.
 
 ---
 
 ## Phasing
 
-| Phase | Scope | Ships value alone? | Rough effort |
-|---|---|---|---|
-| **0** | Extract `src/lib/forecast.js` from `Dashboard.jsx`, no behavior change | Enables everything | Half a session |
-| **1** | Event model + engine support (`open_account`, `fund`, `payoff`, `lump_sum`, `set_growth`) + existence windows + origin/range edge cases | **Yes** — dated plans without the typing | 1–2 sessions |
-| **2** | Plan list UI: rows in plain English, edit/delete, chart markers | Yes | 1 session |
-| **3** | AI plumbing: CSP entry, key setting, consent screen, `ai.js` adapter, JSON schema, `planSchema.js` validator | No | 1 session |
-| **4** | Chat sheet: transcript, propose → preview → apply → undo, apply-to-new-scenario | **The ask** | 1–2 sessions |
-| **5** | Polish: `transfer`/`close_account`, multi-turn clarify, auto-range, voice input, optional balance context | Yes | ongoing |
+| Phase | Scope | Effort |
+|---|---|---|
+| **0** | Extract `src/lib/forecast.js` from `Dashboard.jsx`; fix the empty-history origin and horizon caps | Half a session |
+| **1** | `src/lib/briefing.js` — payload builder + the `derived` block, with tests | 1 session |
+| **2** | AI plumbing: CSP entry, key setting, consent screen, `ai.js` adapter, streaming | 1 session |
+| **3** | Chat sheet: transcript, per-scenario scoping, starter chips, number check | 1 session |
+| **4** | Polish: name redaction, scenario comparison questions, voice input, tool loop if the briefing shows gaps | ongoing |
 
-Phases 0–2 are worth doing whether or not the AI part ever ships, which
-is the main argument for this ordering: no phase is wasted if you change
-your mind about sending data to OpenAI.
+Phase 0 and most of phase 1 are useful regardless — extracting the engine
+and getting `payoff` / `goal ETA` / `biggestMover` as tested pure
+functions is groundwork the app wants either way.
 
 ### Testing
 
-There's no test infrastructure in the repo today. The forecast engine and
-the validator are exactly the code that should have it — pure functions,
-no DOM, and the whole trust story rests on them. Add `vitest` and cover
-`forecast.js` (event application, payoff solve, existence windows) and
-`planSchema.js` (malformed model output) with fixtures. No network in
-tests; record a handful of real model responses as JSON.
+No test infrastructure exists in the repo today, and `forecast.js` and
+`briefing.js` are exactly the code that should have it: pure functions, no
+DOM, and the entire trust story rests on them being right. Add `vitest`
+and cover the engine plus every `derived` metric. The number-check
+verifier gets tests too, against a handful of recorded model replies. No
+network in tests.
 
 ---
 
+## Deliberately out of scope
+
+No writes of any kind. Worth naming the two that will be tempting:
+
+- **Navigation** ("show me March 2033" jumping the month selector) is
+  non-destructive and a natural first extension, but it's still the model
+  driving the UI. Left out of v1 on purpose.
+- **Taking actions** — creating accounts, planning payoffs, applying
+  what-ifs — needs a dated-event model in the forecast engine before it
+  can work at all. That design is written up in the first commit on this
+  branch if it ever comes back.
+
 ## Decisions I need from you
 
-1. **Privacy default** — ship with balances excluded from the AI context
-   (my recommendation), or include them from the start for richer
-   answers?
-2. **Key storage** — device-local, or synced in the encrypted vault?
-3. **Scope of phase 1** — is the event vocabulary above right, or is
-   there a kind of plan you have in mind that it doesn't cover?
-4. **Apply behavior** — should chat default to editing the current
-   scenario, or default to forking a new one?
+1. **Redaction** — ship with real account names in the payload (simpler,
+   better answers), or generic labels from the start?
+2. **Transcript persistence** — keep threads in the encrypted vault so
+   they follow you across devices, or ephemeral per session?
+3. **Horizon** — is 120 months the right default projection depth for the
+   briefing, or do you want it to reach further?
