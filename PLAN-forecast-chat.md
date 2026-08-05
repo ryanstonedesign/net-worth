@@ -67,9 +67,10 @@ Built fresh on each question from the active scenario:
     contributions: { acc_3: [500, 500, ...] },
   },
 
-  // Engine output — same call the chart makes, run long
+  // Engine output — same call the chart makes, run to the app's full ceiling
+  horizon: { origin: '2026-08', end: '2076-08', months: 600 },
   forecast: {
-    netWorth: { '2026-09': 415100, ... },        // monthly, 120 months
+    netWorth: { '2026-09': 415100, ... },          // monthly, all 600
     accounts: { acc_9: { '2027-08': 1200, ... } }, // annual checkpoints
   },
 
@@ -93,15 +94,57 @@ is paid off" becomes reading `derived.payoff.acc_9` — not asking a
 language model to solve for a zero crossing. Every entry there is a
 function in `forecast.js` with a unit test.
 
-### Size
+### How far ahead: 600 months (50 years)
 
-The 1-year demo scenario — 9 categories, 13 accounts, 12 months — comes
-out around 4–6 KB, roughly 1.5–2.5k tokens. A user with ten years of real
-history lands near 5k tokens, still comfortable. Guard rail: **downsample
-history beyond 36 months to quarterly** and cap forecast detail at annual
-checkpoints past 10 years. Recompute the payload per turn (data may have
-changed) but keep it out of the transcript history, so a long conversation
-doesn't resend it N times.
+That's the app's own ceiling, and it's asserted in two independent places
+in `Dashboard.jsx`: `MAX_FORECAST_MONTHS = 600` clamps the Custom range
+(so typing "2200" gets you 50 years, not 174), and the goal-ETA search
+uses its own `GOAL_HORIZON = 600`. The briefing must use the same number —
+if it projected a different distance, the chat could disagree with the
+goal label printed on the chart.
+
+Note it's 600 months from `lastDataMonth`, not from today, so a user who
+hasn't updated in six months has a horizon ending six months earlier than
+they'd guess. The payload carries `horizon.end` as an absolute month, and
+the model should quote absolute dates rather than "in 50 years."
+
+### What full coverage actually costs
+
+Measured on a representative 13-account scenario at 600 months:
+
+| Series | Size | ~Tokens |
+|---|---|---|
+| Net worth, monthly, all 600 | 10.4 KB | ~3,800 |
+| + assets & liabilities, monthly | 19.6 KB | ~7,200 |
+| All accounts × annual checkpoints (50 pts) | 10.7 KB | ~3,900 |
+| **All accounts × all 600 months** | **126.6 KB** | **~46,300** |
+
+That last row is the finding. Complete per-account monthly detail across
+50 years can't ride along in every request — not mainly for cost, but
+because recall over 46k tokens of near-identical numeric rows is exactly
+where models start reading the wrong line, which defeats the point.
+
+So: **tier it.**
+
+**Eager, in every request (~8k tokens):**
+- Net worth monthly, all 600 months — the headline series, complete
+- Every account at annual checkpoints, all 50 years — shape and context
+- The `derived` block and the structure (both small)
+- History: full monthly for the last 36 months, quarterly before that
+
+**On demand, via tools (see below):** any account at any single month, any
+window at any granularity, any crossing.
+
+One encoding detail that matters: **key every point by its month string,
+never send bare arrays.** `{"2041-03": 812400}` costs ~30% more than a
+flat array but makes lookup a string match instead of counting to the
+183rd element — and counting offsets is precisely the thing to keep away
+from a language model.
+
+Recompute the payload per turn (data may have changed) but keep it out of
+the stored transcript. Put it at the *front* of the prompt with the
+question last, so OpenAI's automatic prefix caching hits on every turn
+after the first in a conversation.
 
 ### Where it comes from
 
@@ -121,7 +164,7 @@ Two edge cases the extraction should fix while we're in there:
   will I be worth in ten years?" gets nothing. Fall back to
   `currentMonth` as the origin when categories exist.
 - The Dashboard caps the horizon at the selected range; the briefing
-  should always project the full 120 months regardless of which range
+  should always project the full 600 months regardless of which range
   pill is active, so answers don't depend on invisible UI state.
 
 ---
@@ -171,14 +214,35 @@ So the mitigations are honest ones, not technical sleight of hand:
   context. Un-map them in the displayed answer. OpenAI then sees numbers
   without institution names attached.
 
-The alternative — a **tool-calling loop**, where the model requests
-specific values (`get_account_history('acc_9')`) and only those leave the
-device — genuinely reduces per-question disclosure and handles arbitrary
-questions the briefing didn't anticipate. It costs an agent loop, 2–4
-round trips per answer, and noticeably more latency. I'd skip it for v1:
-over a session of questions most of the vault ends up sent anyway, so the
-privacy gain is smaller than it looks, and the briefing is a fraction of
-the code. Revisit it if you find yourself hitting "I don't have that."
+### Lookup tools — now required, not optional
+
+An earlier draft of this plan deprioritized tool calling as a v1 nicety.
+Requiring answers across every month the app supports reverses that: the
+table above shows complete per-account monthly detail is ~46k tokens, so
+it can't be eager, and the annual checkpoints that *are* eager leave gaps
+between them. Without tools, "what's my brokerage worth in March 2041?"
+falls between checkpoints and the model interpolates — arithmetic, which
+is the one thing this design forbids.
+
+Four tools close the gap completely. Each is a thin wrapper over
+`forecast.js`, executed **locally in the browser** against data already in
+memory:
+
+| Tool | Returns |
+|---|---|
+| `get_month(month)` | Full per-account + category breakdown at any one of the 600 months |
+| `get_series(target, from, to, step)` | Any account or total, any window, monthly/quarterly/annual |
+| `find_crossing(target, value)` | When a balance crosses a threshold — payoff dates, goal dates, "when do I hit $1M" |
+| `compare_scenarios(month)` | Every scenario's net worth at a month |
+
+Together with the eager series, that's genuine complete coverage: any
+month, any account, exact engine values, zero model arithmetic. It also
+gets the privacy property back that the eager payload gives up — a
+question about one account pulls one account.
+
+Cost is a 2–4 round-trip agent loop on the questions that need it, versus
+one round trip for anything the eager briefing already answers. Streaming
+plus a "checking your 2041 balances…" status line covers the latency.
 
 ### The hallucination guard
 
@@ -226,10 +290,11 @@ once the text path works.
 | Phase | Scope | Effort |
 |---|---|---|
 | **0** | Extract `src/lib/forecast.js` from `Dashboard.jsx`; fix the empty-history origin and horizon caps | Half a session |
-| **1** | `src/lib/briefing.js` — payload builder + the `derived` block, with tests | 1 session |
+| **1** | `src/lib/briefing.js` — tiered payload builder + the `derived` block, with tests | 1 session |
 | **2** | AI plumbing: CSP entry, key setting, consent screen, `ai.js` adapter, streaming | 1 session |
-| **3** | Chat sheet: transcript, per-scenario scoping, starter chips, number check | 1 session |
-| **4** | Polish: name redaction, scenario comparison questions, voice input, tool loop if the briefing shows gaps | ongoing |
+| **3** | The four lookup tools + the local execution loop | 1 session |
+| **4** | Chat sheet: transcript, per-scenario scoping, starter chips, number check | 1 session |
+| **5** | Polish: name redaction, voice input, tool-status affordances | ongoing |
 
 Phase 0 and most of phase 1 are useful regardless — extracting the engine
 and getting `payoff` / `goal ETA` / `biggestMover` as tested pure
@@ -264,5 +329,8 @@ No writes of any kind. Worth naming the two that will be tempting:
    better answers), or generic labels from the start?
 2. **Transcript persistence** — keep threads in the encrypted vault so
    they follow you across devices, or ephemeral per session?
-3. **Horizon** — is 120 months the right default projection depth for the
-   briefing, or do you want it to reach further?
+3. **The 50-year ceiling itself** — 600 months is the app's current limit,
+   and the briefing now matches it exactly. If you want answers past 2076,
+   that's a one-constant change in `forecast.js` and the eager net worth
+   series grows ~6 tokens per extra month. Worth raising, or is 50 years
+   already past the point of meaning?
