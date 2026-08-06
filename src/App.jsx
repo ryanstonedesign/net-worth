@@ -18,6 +18,8 @@ import LandingPage from './components/LandingPage'
 import LockScreen from './components/LockScreen'
 import RecoveryPhraseSetup from './components/RecoveryPhraseSetup'
 import RestoreAccessScreen from './components/RestoreAccessScreen'
+import AskWorthfolio from './components/AskWorthfolio'
+import { buildAskContext } from './lib/askWorthfolio'
 
 // Shared shell for both vaulted and legacy modes: a side nav (drawer on
 // mobile, fixed sidebar on desktop), a floating top nav (menu + scenario name
@@ -64,6 +66,7 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
   const [enterMode, setEnterMode] = useState('fade')
   const [outgoing, setOutgoing] = useState(null)
   const [newOpen, setNewOpen] = useState(false)
+  const [askOpen, setAskOpen] = useState(false)
 
   const { forecasts, activeForecastId } = dataHook
   const activeForecast = forecasts.find(f => f.id === activeForecastId)
@@ -132,6 +135,7 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
           // undefined hides the badge entirely.
           synced={forecasts.length > 1 ? !!activeForecast?.linked : undefined}
           onMenu={() => setMenuOpen(true)}
+          onAsk={() => setAskOpen(true)}
         />
         <div className="page-content">
           <div className="scenario-stage-track">
@@ -204,6 +208,15 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
       )}
 
       {stickerOpen && <StickerSheet onClose={() => setStickerOpen(false)} />}
+
+      {askOpen && (
+        <AskWorthfolio
+          onClose={() => setAskOpen(false)}
+          context={buildAskContext(dataHook, barName)}
+          userKey={account?.user?.id || 'guest'}
+          signedIn={!!account?.user}
+        />
+      )}
 
       {accountOpen && account && (
         <AccountModal
