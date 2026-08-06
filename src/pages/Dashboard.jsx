@@ -6,25 +6,17 @@ import RollingNumber from '../components/RollingNumber'
 import EditCategorySheet from '../components/EditCategorySheet'
 import Modal from '../components/Modal'
 import { formatCurrency, formatCompact, formatMonthDisplay, getAdjacentMonth, getCurrentMonth, parseAmount } from '../utils'
+import {
+  MAX_FORECAST_MONTHS,
+  buildAccountModels,
+  customForecastCount,
+  generateForecast,
+  monthIndex,
+} from '../lib/forecast'
 
 const RANGE_OPTIONS = ['1M', '3M', '6M', '1Y', 'custom']
 const RANGE_COUNTS   = { '1M': 2,  '3M': 3,  '6M': 6,  '1Y': 12 }
 const FORECAST_MONTHS = { '1M': 1, '3M': 3,  '6M': 6,  '1Y': 12 }
-const MAX_FORECAST_MONTHS = 600 // 50 years — guard against absurd custom years
-
-function monthIndex(month) {
-  const [y, m] = month.split('-').map(Number)
-  return y * 12 + (m - 1)
-}
-
-// Custom range forecasts every month from the last actual month through the end
-// (December) of the year the user typed in.
-function customForecastCount(lastMonth, year) {
-  if (!lastMonth || !year) return 0
-  const count = monthIndex(`${year}-12`) - monthIndex(lastMonth)
-  return Math.max(0, Math.min(count, MAX_FORECAST_MONTHS))
-}
-
 function getFilteredHistory(history, range, selectedMonth) {
   let windowed
   if (range === 'custom') {
@@ -39,76 +31,6 @@ function getFilteredHistory(history, range, selectedMonth) {
     windowed = [...earlier, ...windowed]
   }
   return windowed
-}
-
-// Build a forecasting model for every account:
-//   base         — most recent known balance
-//   contribution — average of the per-month contributions recorded for this
-//                  account (only when its category is contributing, else 0)
-//   annual       — user's estimated annual growth rate (interest), as a fraction
-// Growth and contribution are independent levers, so market return is never
-// double-counted into the contribution.
-function buildAccountModels(categories, snapshots, contributions, historyMonths, currentMonth) {
-  // Only contributions up to the current month form the baseline average;
-  // future months hold hypothetical overrides that shouldn't skew it.
-  const contribMonths = Object.keys(contributions || {}).filter(m => m <= currentMonth)
-  const models = {}
-  categories.forEach(cat => cat.accounts.forEach(acc => {
-    const series = historyMonths
-      .map(m => snapshots[m]?.[acc.id])
-      .filter(v => v != null)
-    const base = series.length ? series[series.length - 1] : 0
-
-    let contribution = 0
-    if (cat.contributing) {
-      const cseries = contribMonths
-        .map(m => contributions[m]?.[acc.id])
-        .filter(v => v != null)
-      if (cseries.length) contribution = cseries.reduce((a, b) => a + b, 0) / cseries.length
-    }
-    models[acc.id] = { base, contribution, annual: (Number(acc.growth) || 0) / 100 }
-  }))
-  return models
-}
-
-// Forecast future months by walking forward one month at a time. Each month an
-// account earns its monthly-equivalent interest and receives its average
-// contribution — UNLESS the user has typed an override value for that month,
-// which replaces the projection and becomes the base the next month builds on.
-// Overrides live in `overrides` (a month → {accountId: value} map) so editing a
-// future month never corrupts real history.
-function generateForecast(categories, models, overrides, contribOverrides, lastMonth, count) {
-  if (!lastMonth || count < 1) return []
-  const running = {}
-  Object.entries(models).forEach(([id, m]) => { running[id] = m.base })
-  const out = []
-  for (let i = 1; i <= count; i++) {
-    const month = getAdjacentMonth(lastMonth, i)
-    const ov  = overrides[month] || {}
-    const cov = contribOverrides[month] || {}
-    const accounts = {}
-    const netWorth = categories.reduce((total, cat) => {
-      const catTotal = cat.accounts.reduce((sum, acc) => {
-        const m = models[acc.id]
-        let v
-        if (ov[acc.id] != null) {
-          v = ov[acc.id]
-        } else {
-          const monthlyRate = Math.pow(1 + m.annual, 1 / 12) - 1
-          const contribution = cat.contributing
-            ? (cov[acc.id] != null ? cov[acc.id] : m.contribution)
-            : 0
-          v = Math.max(0, Math.round(running[acc.id] * (1 + monthlyRate) + contribution))
-        }
-        running[acc.id] = v
-        accounts[acc.id] = v
-        return sum + v
-      }, 0)
-      return total + (cat.type === 'liability' ? -catTotal : catTotal)
-    }, 0)
-    out.push({ month, netWorth, accounts, isForecast: true })
-  }
-  return out
 }
 
 function GoalEditor({ goal, onSave, onClose }) {
@@ -257,7 +179,7 @@ export default function Dashboard({
   const goalReached = goal != null && displayNetWorth >= goal
   let monthsToGoal = null
   if (goal != null && !goalReached && lastDataMonth) {
-    const GOAL_HORIZON = 600 // look up to ~50 years ahead
+    const GOAL_HORIZON = MAX_FORECAST_MONTHS // same ceiling as the custom range
     const goalForecast = generateForecast(
       data.categories, accountModels, data.snapshots, data.contributions || {},
       lastDataMonth, GOAL_HORIZON,
