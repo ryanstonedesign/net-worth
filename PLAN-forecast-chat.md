@@ -78,7 +78,7 @@ Built fresh on each question from the active scenario:
   horizon: { origin: '2026-08', end: '2101-08', months: 900 },
   forecast: {
     netWorth: { '2026-09': 415100, ... },          // monthly, all 900
-    accounts: { acc_9: { '2027-08': 1200, ... } }, // tapered checkpoints
+    accounts: { acc_9: { '2027-08': 1200, ... } }, // annual checkpoints
   },
 
   // Precomputed derived facts, so the model never divides
@@ -133,7 +133,6 @@ Measured on a representative 13-account scenario at 900 months:
 |---|---|---|
 | Net worth, monthly, all 900 | 15.9 KB | ~5,800 |
 | All accounts × annual checkpoints (75 pts) | 16.3 KB | ~5,900 |
-| All accounts × tapered checkpoints (35 pts) | 7.5 KB | ~2,700 |
 | **All accounts × all 900 months** | **193.9 KB** | **~70,900** |
 
 That last row is the finding. Complete per-account monthly detail across
@@ -143,13 +142,15 @@ where models start reading the wrong line, which defeats the point.
 
 So: **tier it.**
 
-**Eager, in every request (~8.5k tokens):**
+**Eager, in every request (~12k tokens):**
 - Net worth monthly, all 900 months — the headline series, complete, and
   cheap enough at ~5.8k tokens to leave at full resolution
-- Every account at **tapered** checkpoints — annual through year 25, then
-  every 5 years. Straight annual across 75 years costs ~5.9k tokens;
-  tapering drops it to ~2.7k, and nobody asks for a precise per-account
-  balance in year 63. `get_series` answers it exactly when they do.
+- Every account at annual checkpoints, all 75 years — one uniform rule,
+  ~5.9k tokens. A denser-near-term/sparser-far-out taper was considered
+  and dropped: it saved ~3.2k tokens, which is a fraction of a cent per
+  question, at the cost of two sampling rules and more questions bouncing
+  out to a tool call. Revisit only if account count grows past ~50, where
+  per-account annual starts approaching 20k tokens.
 - The `derived` block and the structure (both small)
 - History: full monthly for the last 36 months, quarterly before that
 
@@ -229,18 +230,21 @@ So the mitigations are honest ones, not technical sleight of hand:
 - **Your key, your account** — requests go browser → OpenAI, revocable at
   any time, never through our server, and the app ships no third-party
   scripts that could read it.
-- **Optional name redaction** (worth building only if it bothers you):
-  replace account names with generic labels — `Brokerage A`, `Card B` —
-  keeping types and categories, which is most of what the model needs for
-  context. Un-map them in the displayed answer. OpenAI then sees numbers
-  without institution names attached.
+
+**Decided: real account names go in the payload.** Redaction — swapping
+names for generic labels like `Brokerage A` and un-mapping them in the
+answer — was considered and declined. It degrades the answers ("how's my
+Roth doing" needs to know which account is the Roth), and it only hides
+labels while every balance still goes over, so it buys less privacy than
+it appears to. If it ever becomes a concern, it slots in cleanly as a
+toggle in `briefing.js` without touching anything else.
 
 ### Lookup tools — now required, not optional
 
 An earlier draft of this plan deprioritized tool calling as a v1 nicety.
 Requiring answers across every month the app supports reverses that: the
 table above shows complete per-account monthly detail is ~71k tokens, so
-it can't be eager, and the tapered checkpoints that *are* eager leave gaps
+it can't be eager, and the annual checkpoints that *are* eager leave gaps
 between them. Without tools, "what's my brokerage worth in March 2058?"
 falls between checkpoints and the model interpolates — arithmetic, which
 is the one thing this design forbids.
@@ -291,18 +295,50 @@ Deliberately small, since there's no propose/preview/apply flow to build:
   nav.
 - **Scoped to the active scenario**, with its name in the header — "how am
   I doing" means something different in Market Downturn than in Default.
-  Switching scenarios starts a fresh thread.
-- Streaming the reply token-by-token, since a grounded answer over a 5k
+  Switching scenarios swaps to that scenario's own thread rather than
+  clearing the panel, since threads now persist (below).
+- Streaming the reply token-by-token, since a grounded answer over a 12k
   payload takes a couple of seconds.
 - A few starter chips on the empty state ("What's my net worth in 10
   years?", "When do I hit my goal?") — the fastest way to teach the
   feature's range without documentation.
-- Transcript persisted per scenario in the container so it survives a
-  reload (encrypted with everything else), capped at ~20 turns. The
-  briefing is never stored in the transcript, only the messages.
 
 Voice input is `SpeechRecognition` on the same text box — a small add-on
 once the text path works.
+
+### Threads sync across devices
+
+**Decided: transcripts live in the encrypted vault**, so a conversation
+started on the phone is there on the desktop. Three implementation notes,
+because where they're stored matters more than it first appears:
+
+**Put them at container level, not in `scenario.data`.** Add
+`container.threads = { [scenarioId]: [...] }` alongside the existing
+`container.theme`, which already establishes exactly this pattern — a
+container-level map that syncs with the vault and follows the account
+across devices (`useData.js`, the theme-sync effect). Storing threads
+inside `scenario.data` instead would go wrong two ways: `addForecast`
+deep-clones the source scenario's data, so forking "Market Downturn" from
+"Default" would silently duplicate Default's entire chat history into it;
+and the fact fan-out in `setFactData` walks `data` on every synced
+scenario, which has no business touching conversations. `deleteForecast`
+gets one line to prune the deleted scenario's thread.
+
+**Budget the blob.** The container is fetched whole at unlock and
+re-encrypted on every push, so transcripts are now part of that cost. Cap
+at ~20 turns per scenario *and* a total character budget across all
+threads, trimming oldest-first when it's exceeded. The briefing is never
+stored — only the messages — which is what keeps this to kilobytes
+instead of megabytes.
+
+**Don't push mid-stream.** `useData.js` debounces the cloud push 600ms
+after any container change. A token-by-token streaming reply would fire
+that constantly, re-encrypting and re-uploading the whole vault on every
+frame. Write the message to the container once, when the turn completes;
+hold the streaming partial in local component state until then.
+
+Migration is free — `migrate()` spreads the stored object, so a container
+without `threads` just reads as having none.
 
 ---
 
@@ -315,7 +351,7 @@ once the text path works.
 | **2** | AI plumbing: CSP entry, key setting, consent screen, `ai.js` adapter, streaming | 1 session |
 | **3** | The four lookup tools + the local execution loop | 1 session |
 | **4** | Chat sheet: transcript, per-scenario scoping, starter chips, number check | 1 session |
-| **5** | Polish: name redaction, voice input, tool-status affordances | ongoing |
+| **5** | Polish: voice input, tool-status affordances, scenario-comparison questions | ongoing |
 
 Phase 0 and most of phase 1 are useful regardless — extracting the engine
 and getting `payoff` / `goal ETA` / `biggestMover` as tested pure
@@ -344,12 +380,22 @@ No writes of any kind. Worth naming the two that will be tempting:
   can work at all. That design is written up in the first commit on this
   branch if it ever comes back.
 
-## Decisions I need from you
+## Decisions settled
 
-1. **Redaction** — ship with real account names in the payload (simpler,
-   better answers), or generic labels from the start?
-2. **Transcript persistence** — keep threads in the encrypted vault so
-   they follow you across devices, or ephemeral per session?
-3. **Per-account taper** — annual checkpoints through year 25 then every
-   5 years (saves ~3.2k tokens per request, with `get_series` covering the
-   gaps exactly), or straight annual for all 75 years?
+Nothing is blocking implementation. For the record:
+
+| Question | Decision |
+|---|---|
+| Scope | Read-only Q&A. No writes of any kind. |
+| Horizon | 900 months / 75 years — **done in code**, `MAX_FORECAST_MONTHS`, with the goal search now reading the same constant. |
+| Per-account sampling | Straight annual for all 75 years. No taper. |
+| Account names | Real names in the payload. Redaction declined, but slots in later as a `briefing.js` toggle. |
+| Transcripts | Persisted in the encrypted vault at container level, so threads follow the account across devices. |
+| Where the call goes | Browser → OpenAI directly, BYO key, `connect-src` widened. No proxy. |
+| API key storage | `localStorage`, device-local. |
+| Tool calling | Required, not optional — it's what closes the gaps between annual checkpoints. |
+
+One thing to verify at implementation time rather than trust from memory:
+the exact current OpenAI model id. Pin it in a setting rather than
+hard-coding it; the task is lookup and narration, so the cheap fast tier
+is the right class.
