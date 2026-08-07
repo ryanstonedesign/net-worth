@@ -252,6 +252,12 @@ function unavailable(message) {
   }
 }
 
+function scenarioGapSummary(gaps = []) {
+  return gaps
+    .map(gap => `${gap.scenarioName || gap.scenarioId}: ${gap.reason || 'Forecast unavailable.'}`)
+    .join(' ')
+}
+
 export function answerStarterQuestion(starterId, context) {
   if (starterId === 'ten_years') {
     if (!context.dataset.lastRecordedMonth) return unavailable('Add a recorded balance month before asking for a forecast.')
@@ -298,11 +304,17 @@ export function answerStarterQuestion(starterId, context) {
     if (!context.dataset.lastRecordedMonth) return unavailable('Add a recorded balance month before comparing forecasts.')
     const month = getAdjacentMonth(context.dataset.lastRecordedMonth, 120)
     const result = compareScenarioValues({ scenarios: context.scenarios, month, currentMonth: context.currentMonth })
-    if (result.status !== 'ok') return unavailable('The scenarios do not have enough complete data for that comparison.')
+    const gapSummary = scenarioGapSummary(result.gaps)
+    if (result.status !== 'ok') {
+      return unavailable(`The scenarios could not be compared. ${gapSummary}`.trim())
+    }
     return answered(
       `Here is how your scenarios compare in ${formatMonthDisplay(month)}:`,
       result.evidence,
-      'Each value uses that scenario’s own saved growth and contribution assumptions.',
+      [
+        'Each value uses that scenario’s own saved growth and contribution assumptions.',
+        gapSummary ? `Not shown: ${gapSummary}` : '',
+      ].filter(Boolean).join(' '),
       ['FORECAST_ASSUMPTIONS'],
     )
   }

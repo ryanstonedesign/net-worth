@@ -43,6 +43,50 @@ describe('Ask Worthfolio local orchestration', () => {
     expect(result.evidence[0].month).toBe('2036-08')
   })
 
+  it('answers imported-account forecasts with a visible 0% growth warning', () => {
+    const scenarioData = data()
+    delete scenarioData.categories[0].accounts[0].growth
+    const hook = {
+      activeForecastId: 'default',
+      data: scenarioData,
+      forecasts: [{ id: 'default', name: 'Default Scenario', linked: true }],
+      getForecastData: () => scenarioData,
+    }
+    const result = answerStarterQuestion(
+      'ten_years',
+      buildAskContext(hook, 'Default Scenario', '2026-08'),
+    )
+
+    expect(result.answer.status).toBe('answered')
+    expect(result.evidence[0].quality.warnings.join(' ')).toContain('0% growth')
+  })
+
+  it('names a scenario whose invalid assumptions prevent comparison', () => {
+    const defaultData = data()
+    delete defaultData.categories[0].accounts[0].growth
+    const invalidData = structuredClone(data())
+    invalidData.categories[0].accounts[0].growth = '-101'
+    const scenarioData = { default: defaultData, invalid: invalidData }
+    const hook = {
+      activeForecastId: 'default',
+      data: defaultData,
+      forecasts: [
+        { id: 'default', name: 'Default Scenario', linked: true },
+        { id: 'invalid', name: 'Broken Growth', linked: true },
+      ],
+      getForecastData: id => scenarioData[id],
+    }
+    const result = answerStarterQuestion(
+      'compare_scenarios',
+      buildAskContext(hook, 'Default Scenario', '2026-08'),
+    )
+
+    expect(result.answer.status).toBe('answered')
+    expect(result.answer.explanation).toContain('Broken Growth')
+    expect(result.answer.explanation).toContain('-100% or higher')
+    expect(result.evidence).toHaveLength(1)
+  })
+
   it('executes an allowlisted local tool and collects only evidence records', () => {
     const result = executeAskTool('get_change', {
       targetId: 'savings', from: '2025-08', to: '2026-08',

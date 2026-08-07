@@ -3,6 +3,7 @@ import {
   buildAskManifest,
   createForecastDataset,
   findCrossing,
+  getAssumptions,
   getChange,
   getLargestHistoricalMover,
   getValue,
@@ -55,11 +56,40 @@ describe('forecast insight evidence', () => {
     expect(result.evidence.display).toMatch(/^\$/)
   })
 
+  it('uses the dashboard 0% default when an account has no saved growth rate', () => {
+    const data = sampleData()
+    delete data.categories[0].accounts[0].growth
+    const dataset = createForecastDataset(data, { currentMonth: '2026-08' })
+    const result = getValue(dataset, { targetId: 'portfolio', month: '2027-08' })
+
+    expect(result.status).toBe('ok')
+    expect(result.evidence.quality.complete).toBe(false)
+    expect(result.evidence.quality.warnings.join(' ')).toContain('0% growth')
+    expect(result.evidence.quality.warnings.join(' ')).toContain('Brokerage')
+    expect(getAssumptions(dataset).accounts.find(account => account.id === 'brokerage')).toMatchObject({
+      growthPercent: 0,
+      growthWasDefaulted: true,
+      validForForecast: true,
+    })
+  })
+
   it('finds a locally computed goal crossing', () => {
     const dataset = createForecastDataset(sampleData(), { currentMonth: '2026-08' })
     const result = findCrossing(dataset, { targetId: 'portfolio', threshold: 10000, direction: 'above' })
     expect(result.status).toBe('ok')
     expect(result.evidence.value).toBeGreaterThanOrEqual(10000)
+  })
+
+  it('reports the blocking growth assumption instead of a false goal-horizon result', () => {
+    const data = sampleData()
+    data.categories[0].accounts[0].growth = '-101'
+    const dataset = createForecastDataset(data, { currentMonth: '2026-08' })
+    const result = findCrossing(dataset, { targetId: 'portfolio', threshold: 10000, direction: 'above' })
+
+    expect(result.status).toBe('unknown')
+    expect(result.reason).toContain('Brokerage')
+    expect(result.reason).toContain('-100% or higher')
+    expect(result.reason).not.toContain('forecast horizon')
   })
 
   it('finds the largest complete historical mover', () => {

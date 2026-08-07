@@ -28,6 +28,15 @@ function missingIds(snapshot, ids) {
   return ids.filter(id => snapshot?.[id] == null)
 }
 
+function accountNames(dataset, ids) {
+  return ids.map(id => dataset.accountById.get(id)?.account.name || id)
+}
+
+function formatAccountNames(names) {
+  if (names.length <= 3) return names.join(', ')
+  return `${names.slice(0, 3).join(', ')}, and ${names.length - 3} other account(s)`
+}
+
 function cleanSegment(value) {
   return String(value).replace(/[^a-zA-Z0-9_-]/g, '_')
 }
@@ -103,8 +112,15 @@ export function getForecastCoverage(data, currentMonth = getCurrentMonth()) {
   const entries = activeAccounts(data)
   const allIds = entries.map(({ account }) => account.id)
   const incompleteMonths = months.filter(month => missingIds(data.snapshots?.[month], allIds).length > 0)
+  const defaultedGrowthAccountIds = entries
+    .filter(({ account }) => account.growth == null || String(account.growth).trim() === '')
+    .map(({ account }) => account.id)
   const invalidGrowthAccountIds = entries
-    .filter(({ account }) => !Number.isFinite(Number(account.growth)) || Number(account.growth) <= -100)
+    .filter(({ account }) => {
+      if (account.growth == null || String(account.growth).trim() === '') return false
+      const growth = Number(account.growth)
+      return !Number.isFinite(growth) || growth < -100
+    })
     .map(({ account }) => account.id)
 
   return {
@@ -112,6 +128,7 @@ export function getForecastCoverage(data, currentMonth = getCurrentMonth()) {
     lastRecordedMonth: months.at(-1) || null,
     recordedMonthCount: months.length,
     incompleteMonths,
+    defaultedGrowthAccountIds,
     invalidGrowthAccountIds,
     staleMonths: months.length
       ? Math.max(0, (monthIndex(currentMonth) ?? 0) - (monthIndex(months.at(-1)) ?? 0))
@@ -212,7 +229,11 @@ export function getValue(dataset, { targetId = PORTFOLIO_TARGET, month }) {
   const row = dataset.forecastByMonth.get(month)
   if (!row) return { status: 'unknown', reason: `The forecast does not cover ${month}.` }
   if (dataset.coverage.invalidGrowthAccountIds.some(id => target.accountIds.includes(id))) {
-    return { status: 'unknown', reason: 'A growth rate for this target cannot be forecast safely.' }
+    const invalidIds = dataset.coverage.invalidGrowthAccountIds.filter(id => target.accountIds.includes(id))
+    return {
+      status: 'unknown',
+      reason: `Set a valid annual growth rate of -100% or higher for ${formatAccountNames(accountNames(dataset, invalidIds))}.`,
+    }
   }
 
   const values = row.accounts
@@ -221,6 +242,10 @@ export function getValue(dataset, { targetId = PORTFOLIO_TARGET, month }) {
   if (!Number.isFinite(value)) return { status: 'unknown', reason: 'The forecast produced an invalid value.' }
 
   const warnings = []
+  const defaultedIds = dataset.coverage.defaultedGrowthAccountIds.filter(id => target.accountIds.includes(id))
+  if (defaultedIds.length) {
+    warnings.push(`0% growth is assumed because no rate is saved for ${formatAccountNames(accountNames(dataset, defaultedIds))}.`)
+  }
   if (dataset.coverage.staleMonths > 0) warnings.push(`Forecast starts from data ${dataset.coverage.staleMonths} month(s) old.`)
   if (dataset.coverage.incompleteMonths.length) warnings.push('Some recorded snapshots are incomplete.')
 
@@ -282,15 +307,22 @@ export function findCrossing(dataset, {
   if (!dataset.lastRecordedMonth) return { status: 'unknown', reason: 'No recorded balance exists.' }
 
   const months = [dataset.lastRecordedMonth, ...dataset.forecast.map(row => row.month)]
+  let forecastFailure = null
   for (const month of months) {
     const result = getValue(dataset, { targetId, month })
-    if (result.status !== 'ok') continue
+    if (result.status !== 'ok') {
+      if (month > dataset.lastRecordedMonth && !forecastFailure) {
+        forecastFailure = result.reason || result.error || 'The forecast could not be evaluated.'
+      }
+      continue
+    }
     const crossed = direction === 'above'
       ? result.evidence.value >= threshold
       : result.evidence.value <= threshold
     if (crossed) return result
   }
 
+  if (forecastFailure) return { status: 'unknown', reason: forecastFailure }
   return { status: 'unknown', reason: 'The threshold is not crossed within the supported forecast horizon.' }
 }
 
@@ -350,6 +382,7 @@ export function getAssumptions(dataset, targetIds = [PORTFOLIO_TARGET]) {
         name: entry?.account.name || id,
         growthPercent: model ? Math.round(model.annual * 10000) / 100 : null,
         averageMonthlyContribution: model ? Math.round(model.contribution) : null,
+        growthWasDefaulted: dataset.coverage.defaultedGrowthAccountIds.includes(id),
         validForForecast: !dataset.coverage.invalidGrowthAccountIds.includes(id),
       }
     }),
@@ -378,6 +411,8 @@ export function buildAskManifest({
       firstRecordedMonth: coverage.firstRecordedMonth,
       lastRecordedMonth: coverage.lastRecordedMonth,
       incompleteMonthCount: coverage.incompleteMonths.length,
+      defaultedGrowthAccountCount: coverage.defaultedGrowthAccountIds.length,
+      invalidGrowthAccountCount: coverage.invalidGrowthAccountIds.length,
       staleMonths: coverage.staleMonths,
       forecastEnd: coverage.lastRecordedMonth
         ? getAdjacentMonth(coverage.lastRecordedMonth, MAX_FORECAST_MONTHS)
@@ -410,7 +445,11 @@ export function compareScenarioValues({ scenarios, month, currentMonth = getCurr
     })
     const result = getValue(dataset, { targetId: PORTFOLIO_TARGET, month })
     if (result.status === 'ok') evidence.push(result.evidence)
-    else gaps.push({ scenarioId: scenario.id, reason: result.reason || result.error })
+    else gaps.push({
+      scenarioId: scenario.id,
+      scenarioName: scenario.name,
+      reason: result.reason || result.error,
+    })
   }
   return { status: evidence.length ? 'ok' : 'unknown', evidence, gaps }
 }
