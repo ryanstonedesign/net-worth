@@ -47,3 +47,14 @@ supabase functions deploy ask-worthfolio
 The daily limit counts provider requests. A normal custom question uses two:
 one to choose the local calculation and one to narrate its validated evidence.
 Starter questions calculate entirely on-device and do not consume API quota.
+
+### What-if questions
+
+Ask Worthfolio also answers hypotheticals ("What if I added an account
+contributing $500/mo at 7%?"). The model only parses the question into a
+bounded, validated changes spec; the simulation runs locally through the same
+deterministic forecast engine and compares baseline against hypothetical.
+Answers offer a "Save as scenario" action that replays the identical spec into
+a real scenario — the saved scenario reproduces the simulated numbers exactly,
+which `npm test` enforces as a parity invariant. Redeploy the gateway after
+pulling this feature so the `simulate_what_if` tool is available.

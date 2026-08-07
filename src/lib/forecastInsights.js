@@ -82,15 +82,18 @@ function targetMeta(dataset, targetId) {
   return null
 }
 
+// Accounts with no value in a month count as 0: genuinely-missing accounts are
+// rejected by the completeness gate before totals run, so the only accounts
+// that reach here without a value are ones that did not exist yet.
 function totalForTarget(dataset, target, values) {
   if (target.type === 'account') return values[target.id]
 
   if (target.type === 'category') {
-    return target.accountIds.reduce((total, id) => total + values[id], 0)
+    return target.accountIds.reduce((total, id) => total + (values[id] ?? 0), 0)
   }
 
   return dataset.data.categories.reduce((portfolioTotal, category) => {
-    const categoryTotal = category.accounts.reduce((total, account) => total + values[account.id], 0)
+    const categoryTotal = category.accounts.reduce((total, account) => total + (values[account.id] ?? 0), 0)
     return portfolioTotal + (category.type === 'liability' ? -categoryTotal : categoryTotal)
   }, 0)
 }
@@ -111,7 +114,13 @@ export function getForecastCoverage(data, currentMonth = getCurrentMonth()) {
   const months = recordedMonths(data, currentMonth)
   const entries = activeAccounts(data)
   const allIds = entries.map(({ account }) => account.id)
-  const incompleteMonths = months.filter(month => missingIds(data.snapshots?.[month], allIds).length > 0)
+  // Accounts that never appear in recorded history (e.g. added by a saved
+  // what-if, starting in the future) do not make past months "incomplete".
+  const neverRecordedAccountIds = allIds.filter(
+    id => !months.some(month => data.snapshots?.[month]?.[id] != null),
+  )
+  const recordedIds = allIds.filter(id => !neverRecordedAccountIds.includes(id))
+  const incompleteMonths = months.filter(month => missingIds(data.snapshots?.[month], recordedIds).length > 0)
   const defaultedGrowthAccountIds = entries
     .filter(({ account }) => account.growth == null || String(account.growth).trim() === '')
     .map(({ account }) => account.id)
@@ -128,6 +137,7 @@ export function getForecastCoverage(data, currentMonth = getCurrentMonth()) {
     lastRecordedMonth: months.at(-1) || null,
     recordedMonthCount: months.length,
     incompleteMonths,
+    neverRecordedAccountIds,
     defaultedGrowthAccountIds,
     invalidGrowthAccountIds,
     staleMonths: months.length
@@ -198,7 +208,15 @@ export function getValue(dataset, { targetId = PORTFOLIO_TARGET, month }) {
   if (month <= dataset.lastRecordedMonth) {
     const snapshot = dataset.data.snapshots[month]
     if (!snapshot) return { status: 'unknown', reason: `No recorded snapshot exists for ${month}.` }
-    const missing = missingIds(snapshot, target.accountIds)
+    // Never-recorded accounts did not exist in the past: they are excluded
+    // from the completeness gate and count as 0 in historical totals.
+    const recordedTargetIds = target.accountIds.filter(
+      id => !dataset.coverage.neverRecordedAccountIds.includes(id),
+    )
+    if (!recordedTargetIds.length && target.accountIds.length) {
+      return { status: 'unknown', reason: `${target.name} has no recorded history for ${month}.` }
+    }
+    const missing = missingIds(snapshot, recordedTargetIds)
     if (missing.length) {
       return {
         status: 'unknown',
@@ -405,6 +423,7 @@ export function buildAskManifest({
       id: category.id,
       name: category.name,
       type: category.type,
+      contributing: !!category.contributing,
       accounts: (category.accounts || []).map(account => ({ id: account.id, name: account.name })),
     })),
     coverage: {
@@ -430,6 +449,7 @@ export function buildAskManifest({
       'category_contribution',
       'scenario_comparison',
       'assumption_summary',
+      'what_if_projection',
     ],
   }
 }
@@ -488,6 +508,284 @@ export function getLargestHistoricalMover(dataset, windowMonths = 12) {
     quality: { complete: true, warnings: [] },
   }
   return { status: 'ok', evidence, endpoints: [mover.start, mover.end] }
+}
+
+// ── What-if simulation ──
+// A what-if is a bounded list of validated operations applied to a deep copy
+// of the active scenario, run through the same deterministic engine, and
+// compared against the untouched baseline. The LLM only routes a question into
+// this spec; every number below is computed locally.
+export const MAX_WHAT_IF_CHANGES = 4
+const WHAT_IF_NAME_MAX = 60
+const WHAT_IF_BALANCE_MAX = 1_000_000_000
+const WHAT_IF_CONTRIBUTION_MAX = 1_000_000
+
+function whatIfError(error) {
+  return { ok: false, error }
+}
+
+function boundedNumber(value, min, max) {
+  const number = Number(value)
+  return Number.isFinite(number) && number >= min && number <= max ? number : null
+}
+
+export function validateWhatIfChanges(data, changes, currentMonth = getCurrentMonth()) {
+  if (!Array.isArray(changes) || changes.length < 1 || changes.length > MAX_WHAT_IF_CHANGES) {
+    return whatIfError(`A what-if needs between 1 and ${MAX_WHAT_IF_CHANGES} changes.`)
+  }
+
+  const coverage = getForecastCoverage(data, currentMonth)
+  if (!coverage.lastRecordedMonth) {
+    return whatIfError('Add a recorded balance month before exploring what-ifs.')
+  }
+
+  const entries = activeAccounts(data)
+  const entryById = new Map(entries.map(entry => [entry.account.id, entry]))
+  const categoryById = new Map((data.categories || []).map(category => [category.id, category]))
+  const normalized = []
+
+  for (const change of changes) {
+    if (!change || typeof change !== 'object') return whatIfError('Each change must be an object.')
+
+    if (change.op === 'add_account') {
+      const category = categoryById.get(change.categoryId)
+      if (!category) return whatIfError('The new account needs an existing category from the manifest.')
+      const name = String(change.name || '').trim().slice(0, WHAT_IF_NAME_MAX)
+      if (!name) return whatIfError('The new account needs a name.')
+      const startingBalance = boundedNumber(change.startingBalance, 0, WHAT_IF_BALANCE_MAX)
+      if (startingBalance == null) return whatIfError('The new account needs a starting balance between $0 and $1B.')
+      const growth = boundedNumber(change.annualGrowthPercent, -100, 100)
+      if (growth == null) return whatIfError('Annual growth must be between -100% and 100%.')
+      const contribution = boundedNumber(change.monthlyContribution, -WHAT_IF_CONTRIBUTION_MAX, WHAT_IF_CONTRIBUTION_MAX)
+      if (contribution == null) return whatIfError('Monthly contribution must be between -$1M and $1M.')
+      if (contribution !== 0 && !category.contributing) {
+        return whatIfError(`${category.name} is not a contributing category, so a monthly contribution there would be ignored.`)
+      }
+      if (contribution < 0 && category.type !== 'liability') {
+        return whatIfError('Negative contributions are only supported on liability accounts (extra payments).')
+      }
+      normalized.push({ op: 'add_account', categoryId: category.id, categoryName: category.name, name, startingBalance, monthlyContribution: contribution, annualGrowthPercent: growth })
+      continue
+    }
+
+    const entry = entryById.get(change.accountId)
+    if (!entry) return whatIfError('That change references an account that does not exist in this scenario.')
+
+    if (change.op === 'set_growth') {
+      const growth = boundedNumber(change.annualGrowthPercent, -100, 100)
+      if (growth == null) return whatIfError('Annual growth must be between -100% and 100%.')
+      normalized.push({ op: 'set_growth', accountId: entry.account.id, accountName: entry.account.name, annualGrowthPercent: growth })
+      continue
+    }
+
+    if (change.op === 'set_contribution') {
+      if (!entry.category.contributing) {
+        return whatIfError(`${entry.category.name} is not a contributing category, so ${entry.account.name} cannot take a monthly contribution.`)
+      }
+      const contribution = boundedNumber(change.monthlyContribution, -WHAT_IF_CONTRIBUTION_MAX, WHAT_IF_CONTRIBUTION_MAX)
+      if (contribution == null) return whatIfError('Monthly contribution must be between -$1M and $1M.')
+      if (contribution < 0 && entry.category.type !== 'liability') {
+        return whatIfError('Negative contributions are only supported on liability accounts (extra payments).')
+      }
+      normalized.push({ op: 'set_contribution', accountId: entry.account.id, accountName: entry.account.name, monthlyContribution: contribution })
+      continue
+    }
+
+    if (change.op === 'one_time_change') {
+      if (!entry.category.contributing) {
+        return whatIfError(`${entry.category.name} is not a contributing category, so a one-time deposit to ${entry.account.name} would be ignored.`)
+      }
+      const amount = boundedNumber(change.amount, -WHAT_IF_BALANCE_MAX, WHAT_IF_BALANCE_MAX)
+      if (amount == null || amount === 0) return whatIfError('A one-time change needs a non-zero amount within $1B.')
+      const offset = monthIndex(change.month) != null
+        ? monthIndex(change.month) - monthIndex(coverage.lastRecordedMonth)
+        : null
+      if (offset == null || offset < 1 || offset > MAX_FORECAST_MONTHS) {
+        return whatIfError('A one-time change needs a future month within the forecast horizon.')
+      }
+      normalized.push({ op: 'one_time_change', accountId: entry.account.id, accountName: entry.account.name, month: change.month, amount })
+      continue
+    }
+
+    return whatIfError('Unsupported what-if operation.')
+  }
+
+  return { ok: true, changes: normalized, lastRecordedMonth: coverage.lastRecordedMonth }
+}
+
+// Pure: deep-copies the scenario data and applies the validated ops so the
+// engine reproduces the hypothetical. The same function materializes a saved
+// scenario (with real minted ids), which is what guarantees simulate-vs-save
+// parity. New-account starting balances are seeded as a first-forecast-month
+// override — never as fake recorded history — so a sync catch-up (which only
+// replaces past months) can never wipe them.
+export function applyWhatIfChanges(data, changes, {
+  currentMonth = getCurrentMonth(),
+  mintAccountId,
+} = {}) {
+  const validation = validateWhatIfChanges(data, changes, currentMonth)
+  if (!validation.ok) return validation
+
+  const copy = JSON.parse(JSON.stringify({
+    ...data,
+    categories: data.categories || [],
+    snapshots: data.snapshots || {},
+    contributions: data.contributions || {},
+  }))
+  const firstForecastMonth = getAdjacentMonth(validation.lastRecordedMonth, 1)
+  const applied = []
+  const oneTimeChanges = []
+
+  validation.changes.forEach((change, index) => {
+    if (change.op === 'add_account') {
+      const id = mintAccountId ? mintAccountId(index) : `whatif_acc_${index}`
+      const category = copy.categories.find(candidate => candidate.id === change.categoryId)
+      category.accounts.push({
+        id,
+        name: change.name,
+        growth: String(change.annualGrowthPercent),
+        monthlyContribution: change.monthlyContribution,
+      })
+      copy.snapshots[firstForecastMonth] = {
+        ...(copy.snapshots[firstForecastMonth] || {}),
+        [id]: change.startingBalance,
+      }
+      applied.push({ ...change, accountId: id })
+      return
+    }
+    if (change.op === 'one_time_change') {
+      oneTimeChanges.push(change) // needs final models; applied after the rest
+      return
+    }
+    const entry = copy.categories
+      .flatMap(category => category.accounts)
+      .find(account => account.id === change.accountId)
+    if (change.op === 'set_growth') entry.growth = String(change.annualGrowthPercent)
+    if (change.op === 'set_contribution') entry.monthlyContribution = change.monthlyContribution
+    applied.push(change)
+  })
+
+  if (oneTimeChanges.length) {
+    const months = recordedMonths(copy, currentMonth)
+    const models = buildAccountModels(copy.categories, copy.snapshots, copy.contributions, months, currentMonth)
+    for (const change of oneTimeChanges) {
+      // A one-time amount is an extra deposit (or payment) on top of whatever
+      // that month would otherwise contribute.
+      const base = copy.contributions?.[change.month]?.[change.accountId]
+        ?? models[change.accountId]?.contribution
+        ?? 0
+      copy.contributions[change.month] = {
+        ...(copy.contributions[change.month] || {}),
+        [change.accountId]: base + change.amount,
+      }
+      applied.push(change)
+    }
+  }
+
+  return { ok: true, data: copy, appliedChanges: applied }
+}
+
+function asHypothetical(evidence) {
+  return {
+    ...evidence,
+    id: evidenceId('hypothetical', 'what_if', evidence.targetId, evidence.metric, evidence.month),
+    kind: 'hypothetical',
+  }
+}
+
+export function simulateWhatIf(context, {
+  changes,
+  metric = 'value_at_month',
+  month,
+  threshold,
+} = {}) {
+  const applied = applyWhatIfChanges(context.data, changes, { currentMonth: context.currentMonth })
+  if (!applied.ok) return { status: 'unknown', reason: applied.error }
+
+  const baseline = context.dataset
+  const hypothetical = createForecastDataset(applied.data, {
+    scenarioId: 'what_if',
+    scenarioName: 'What-if',
+    currentMonth: context.currentMonth,
+  })
+
+  const evidence = []
+  const gaps = []
+  let delta = null
+
+  if (metric === 'value_at_month') {
+    if (monthIndex(month) == null) return { status: 'error', error: 'Invalid month.' }
+    const base = getValue(baseline, { targetId: PORTFOLIO_TARGET, month })
+    const hypo = getValue(hypothetical, { targetId: PORTFOLIO_TARGET, month })
+    if (base.status === 'ok') evidence.push(base.evidence)
+    else gaps.push({ scenarioName: baseline.scenarioName, reason: base.reason || base.error })
+    if (hypo.status === 'ok') evidence.push(asHypothetical(hypo.evidence))
+    else gaps.push({ scenarioName: 'What-if', reason: hypo.reason || hypo.error })
+    if (base.status === 'ok' && hypo.status === 'ok') {
+      const value = hypo.evidence.value - base.evidence.value
+      delta = {
+        id: evidenceId('hypothetical', 'what_if', PORTFOLIO_TARGET, 'whatIfDelta', month),
+        kind: 'hypothetical',
+        metric: 'whatIfDelta',
+        targetId: PORTFOLIO_TARGET,
+        targetName: 'Difference',
+        scenarioId: 'what_if',
+        scenarioName: 'What-if vs baseline',
+        month,
+        value,
+        display: `${value >= 0 ? '+' : ''}${formatCurrency(value)}`,
+        assumptions: hypothetical ? assumptionIds(hypothetical, targetMeta(hypothetical, PORTFOLIO_TARGET)) : [],
+        quality: {
+          complete: base.evidence.quality.complete && hypo.evidence.quality.complete,
+          warnings: [...new Set([...base.evidence.quality.warnings, ...hypo.evidence.quality.warnings])],
+        },
+      }
+      evidence.push(delta)
+    }
+  } else if (metric === 'goal_crossing') {
+    const target = Number.isFinite(threshold) && threshold > 0 ? threshold : context.data.goal
+    if (!Number.isFinite(target) || target <= 0) {
+      return { status: 'unknown', reason: 'Set a net worth goal, or include a target amount in the question.' }
+    }
+    const base = findCrossing(baseline, { targetId: PORTFOLIO_TARGET, threshold: target, direction: 'above' })
+    const hypo = findCrossing(hypothetical, { targetId: PORTFOLIO_TARGET, threshold: target, direction: 'above' })
+    if (base.status === 'ok') evidence.push(base.evidence)
+    else gaps.push({ scenarioName: baseline.scenarioName, reason: base.reason || base.error })
+    if (hypo.status === 'ok') evidence.push(asHypothetical(hypo.evidence))
+    else gaps.push({ scenarioName: 'What-if', reason: hypo.reason || hypo.error })
+    if (base.status === 'ok' && hypo.status === 'ok') {
+      const value = monthIndex(hypo.evidence.month) - monthIndex(base.evidence.month)
+      const magnitude = Math.abs(value)
+      delta = {
+        id: evidenceId('hypothetical', 'what_if', PORTFOLIO_TARGET, 'goalTimingChange', hypo.evidence.month),
+        kind: 'hypothetical',
+        metric: 'goalTimingChange',
+        targetId: PORTFOLIO_TARGET,
+        targetName: 'Timing change',
+        scenarioId: 'what_if',
+        scenarioName: 'What-if vs baseline',
+        month: hypo.evidence.month,
+        value,
+        display: value === 0
+          ? 'Same month'
+          : `${magnitude} month${magnitude === 1 ? '' : 's'} ${value < 0 ? 'earlier' : 'later'}`,
+        assumptions: [],
+        quality: { complete: true, warnings: [] },
+      }
+      evidence.push(delta)
+    }
+  } else {
+    return { status: 'error', error: 'Unsupported what-if metric.' }
+  }
+
+  return {
+    status: evidence.length ? 'ok' : 'unknown',
+    reason: evidence.length ? undefined : gaps.map(gap => gap.reason).filter(Boolean).join(' ') || 'The what-if could not be evaluated.',
+    evidence,
+    gaps,
+    appliedChanges: applied.appliedChanges,
+    metric,
+  }
 }
 
 export function validateStructuredAnswer(answer, evidenceRecords = []) {

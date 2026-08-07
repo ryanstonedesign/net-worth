@@ -33,13 +33,20 @@ export function buildAccountModels(categories, snapshots, contributions, history
         .filter(value => value != null)
       const base = series.length ? series[series.length - 1] : 0
 
+      // An explicit per-account assumption (set by what-if scenarios) wins over
+      // the recorded-history average, so accounts without history can still
+      // contribute and saved what-ifs reproduce their simulation exactly.
       let contribution = 0
       if (category.contributing) {
-        const contributionSeries = contributionMonths
-          .map(month => contributions?.[month]?.[account.id])
-          .filter(value => value != null)
-        if (contributionSeries.length) {
-          contribution = contributionSeries.reduce((total, value) => total + value, 0) / contributionSeries.length
+        if (account.monthlyContribution != null && Number.isFinite(Number(account.monthlyContribution))) {
+          contribution = Number(account.monthlyContribution)
+        } else {
+          const contributionSeries = contributionMonths
+            .map(month => contributions?.[month]?.[account.id])
+            .filter(value => value != null)
+          if (contributionSeries.length) {
+            contribution = contributionSeries.reduce((total, value) => total + value, 0) / contributionSeries.length
+          }
         }
       }
 

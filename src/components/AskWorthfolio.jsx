@@ -6,6 +6,7 @@ import {
   askWorthfolio,
   clearAllAskThreads,
   clearAskThread,
+  deriveWhatIfName,
   hasAskConsent,
   loadAskThread,
   saveAskThread,
@@ -20,6 +21,7 @@ const CAVEAT_LABELS = {
   INCOMPLETE_DATA: 'Some recorded months are incomplete.',
   LIABILITY_MODEL: 'This is Worthfolio’s modeled balance path, not a payment schedule.',
   BALANCE_CHANGE_NOT_RETURN: 'Balance change includes deposits and withdrawals; it is not investment return.',
+  HYPOTHETICAL_NOT_SAVED: 'This is a simulation — nothing changes unless you save it as a scenario.',
 }
 
 function SparkleIcon() {
@@ -77,6 +79,32 @@ function AnswerResult({ result }) {
   )
 }
 
+// Follow-up action under a what-if answer: an editable prefilled name and a
+// save button. Saving replays the validated changes spec locally — no AI call.
+function SaveWhatIf({ message, onSave }) {
+  const [name, setName] = useState(() => deriveWhatIfName(message.result.whatIf.changes))
+
+  if (message.savedScenario) {
+    return <div className="ask-whatif-saved">Saved as “{message.savedScenario.name}” — now viewing it.</div>
+  }
+
+  return (
+    <div className="ask-whatif">
+      <div className="ask-whatif-hint">Keep exploring this? Save it as a scenario.</div>
+      <div className="ask-whatif-row">
+        <input
+          value={name}
+          maxLength={80}
+          aria-label="Scenario name"
+          onChange={event => setName(event.target.value)}
+        />
+        <button className="btn btn-primary" onClick={() => onSave(message, name)}>Save as scenario</button>
+      </div>
+      {message.saveError && <div className="ask-whatif-error">{message.saveError}</div>}
+    </div>
+  )
+}
+
 function Consent({ onEnable, onClose }) {
   return (
     <div className="ask-consent">
@@ -88,7 +116,7 @@ function Consent({ onEnable, onClose }) {
       <div className="ask-consent-card">
         <strong>Before you continue</strong>
         <ul>
-          <li>Your question, relevant account names, and only the financial values needed for the answer leave your encrypted vault.</li>
+          <li>Your question, relevant account names, and only the financial values needed for the answer leave your encrypted vault. Amounts you type into what-if questions travel with the question.</li>
           <li>Requests pass through Worthfolio’s secure gateway to OpenAI.</li>
           <li>OpenAI may retain API content for up to 30 days for abuse monitoring, depending on Worthfolio’s account controls. API data is not used to train models by default.</li>
           <li>Answers explain your data and are not financial advice.</li>
@@ -103,7 +131,7 @@ function Consent({ onEnable, onClose }) {
   )
 }
 
-export default function AskWorthfolio({ onClose, context, userKey, signedIn }) {
+export default function AskWorthfolio({ onClose, context, userKey, signedIn, onSaveWhatIf }) {
   const scenarioId = context.activeScenario.id
   const [enabled, setEnabled] = useState(() => hasAskConsent(userKey))
   const [messages, setMessages] = useState(() => loadAskThread(userKey, scenarioId))
@@ -190,6 +218,18 @@ export default function AskWorthfolio({ onClose, context, userKey, signedIn }) {
     }
   }
 
+  // Persist the saved/error marker into this (pre-switch) scenario's thread
+  // before the save flips the active scenario and the panel swaps threads.
+  const saveWhatIf = (message, name) => {
+    const clean = (name || '').trim() || deriveWhatIfName(message.result.whatIf.changes)
+    const id = onSaveWhatIf?.(clean, message.result.whatIf.changes)
+    persist(messages.map(existing => existing.id === message.id
+      ? (id
+          ? { ...existing, savedScenario: { name: clean }, saveError: null }
+          : { ...existing, saveError: 'This what-if no longer matches your accounts, so it could not be saved.' })
+      : existing))
+  }
+
   const clear = () => {
     clearAskThread(userKey, scenarioId)
     setMessages([])
@@ -243,7 +283,15 @@ export default function AskWorthfolio({ onClose, context, userKey, signedIn }) {
                 {messages.map(message => (
                   <div className={`ask-message ask-message--${message.role}${message.error ? ' ask-message--error' : ''}`} key={message.id}>
                     {message.role === 'assistant' && message.result
-                      ? <AnswerResult result={message.result} />
+                      ? (
+                          <>
+                            <AnswerResult result={message.result} />
+                            {message.result.whatIf?.changes?.length > 0
+                              && message.result.answer.status === 'answered'
+                              && onSaveWhatIf
+                              && <SaveWhatIf message={message} onSave={saveWhatIf} />}
+                          </>
+                        )
                       : <p>{message.text}</p>}
                   </div>
                 ))}

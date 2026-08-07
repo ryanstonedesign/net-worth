@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { getCurrentMonth, getAdjacentMonth } from '../utils'
 import { subscribeTheme, applyOverrides, getOverrides } from '../lib/theme'
+import { applyWhatIfChanges } from '../lib/forecastInsights'
 
 // "None" holds the user's real data and is never overwritten by a scenario.
 // Each prototype scenario lives in its own slot so real data is always safe.
@@ -390,6 +391,36 @@ export function useData({ initialData = null, onChange = null } = {}) {
     return id
   }, [])
 
+  // Materialize an Ask Worthfolio what-if into a real scenario: duplicate the
+  // active scenario, then replay the validated changes spec against the copy —
+  // the exact function the simulation ran, so the saved scenario reproduces
+  // the chat answer. Changes land only in the new slot (never via setFactData),
+  // so nothing fans out to synced siblings. The new scenario defaults to
+  // synced like any other; a new account's balance seed lives in a future
+  // month, which sync catch-ups never touch. Returns the new id, or null when
+  // the spec no longer applies (e.g. a referenced account was deleted).
+  const addForecastFromWhatIf = useCallback((name, changes) => {
+    const stamp = Date.now()
+    const applied = applyWhatIfChanges(activeOf(container).data, changes, {
+      currentMonth: getCurrentMonth(),
+      mintAccountId: index => `acc_${stamp}_${index}`,
+    })
+    if (!applied.ok) return null
+
+    const id = makeForecastId()
+    setContainer(c => ({
+      ...c,
+      activeId: id,
+      scenarios: [...c.scenarios, {
+        id,
+        name: (name || '').trim() || 'What-if Scenario',
+        linked: true,
+        data: applied.data,
+      }],
+    }))
+    return id
+  }, [container])
+
   // Flip a scenario's sync state. Unsyncing just stops future propagation —
   // the scenario's data stays exactly as it is. Re-syncing also catches the
   // scenario up: its current-and-past months are replaced with the shared
@@ -689,6 +720,7 @@ export function useData({ initialData = null, onChange = null } = {}) {
     activeForecastId: container.activeId,
     setActiveForecast,
     addForecast,
+    addForecastFromWhatIf,
     deleteForecast,
     renameForecast,
     setForecastSynced,

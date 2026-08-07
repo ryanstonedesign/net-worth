@@ -61,6 +61,42 @@ describe('forecast primitives', () => {
     expect(models.visa.contribution).toBe(0)
   })
 
+  it('prefers an explicit monthlyContribution assumption over the recorded average', () => {
+    const withOverride = [
+      {
+        ...categories[0],
+        accounts: [{ id: 'brokerage', name: 'Brokerage', growth: '12', monthlyContribution: 500 }],
+      },
+      categories[1],
+    ]
+    const models = buildAccountModels(
+      withOverride,
+      { '2026-01': { brokerage: 1000, visa: 500 } },
+      { '2026-01': { brokerage: 100 } },
+      ['2026-01'],
+      '2026-01',
+    )
+
+    expect(models.brokerage.contribution).toBe(500)
+  })
+
+  it('lets an account with no contribution history contribute via the explicit assumption', () => {
+    const withNewAccount = [
+      {
+        ...categories[0],
+        accounts: [
+          ...categories[0].accounts,
+          { id: 'roth', name: 'Roth IRA', growth: '7', monthlyContribution: 250 },
+        ],
+      },
+      categories[1],
+    ]
+    const models = buildAccountModels(withNewAccount, {}, {}, [], '2026-01')
+
+    expect(models.roth.base).toBe(0)
+    expect(models.roth.contribution).toBe(250)
+  })
+
   it('applies balance and contribution overrides with chart-compatible math', () => {
     const models = buildAccountModels(
       categories,

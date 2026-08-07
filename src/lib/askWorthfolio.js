@@ -10,6 +10,7 @@ import {
   getLargestHistoricalMover,
   getSeries,
   getValue,
+  simulateWhatIf,
   validateStructuredAnswer,
 } from './forecastInsights'
 import { formatMonthDisplay, getAdjacentMonth, getCurrentMonth } from '../utils'
@@ -25,6 +26,7 @@ export const STARTER_QUESTIONS = [
   { id: 'goal_timing', label: 'When might I reach my goal?' },
   { id: 'largest_mover', label: 'What changed my net worth the most?' },
   { id: 'compare_scenarios', label: 'Compare my scenarios in 10 years' },
+  { id: 'save_more', label: 'What if I saved $200 more each month?' },
 ]
 
 function storageKey(prefix, userKey, scenarioId = '') {
@@ -151,6 +153,8 @@ export function executeAskTool(name, args, context) {
     }
     case 'get_assumptions':
       return getAssumptions(context.dataset, args.targetIds)
+    case 'simulate_what_if':
+      return simulateWhatIf(context, args)
     case 'respond_without_data':
       return { status: args.status, message: args.message }
     default:
@@ -225,7 +229,15 @@ export async function askWorthfolio(question, context, transcript = []) {
   })
   const validation = validateStructuredAnswer(second.answer, evidence)
   if (!validation.ok) throw new Error('Worthfolio could not verify the answer against your data.')
-  return { answer: second.answer, evidence }
+
+  // What-if answers carry their validated changes spec so the UI can offer
+  // "Save as scenario" — the spec is replayed locally, never re-parsed.
+  const whatIf = first.name === 'simulate_what_if' && Array.isArray(toolResult.appliedChanges)
+    ? { changes: toolResult.appliedChanges }
+    : null
+  return whatIf
+    ? { answer: second.answer, evidence, whatIf }
+    : { answer: second.answer, evidence }
 }
 
 function answered(intro, evidence, explanation, caveatCodes = []) {
@@ -319,5 +331,56 @@ export function answerStarterQuestion(starterId, context) {
     )
   }
 
+  if (starterId === 'save_more') {
+    if (!context.dataset.lastRecordedMonth) return unavailable('Add a recorded balance month before exploring what-ifs.')
+    const candidates = context.dataset.accountEntries
+      .filter(({ category }) => category.contributing && category.type !== 'liability')
+      .map(({ account }) => ({ account, contribution: context.dataset.models[account.id]?.contribution || 0 }))
+      .sort((a, b) => b.contribution - a.contribution)
+    if (!candidates.length) return unavailable('Add an account in a contributing category before exploring this what-if.')
+
+    const target = candidates[0]
+    const month = getAdjacentMonth(context.dataset.lastRecordedMonth, 120)
+    const result = simulateWhatIf(context, {
+      changes: [{
+        op: 'set_contribution',
+        accountId: target.account.id,
+        monthlyContribution: Math.round(target.contribution) + 200,
+      }],
+      metric: 'value_at_month',
+      month,
+    })
+    if (result.status !== 'ok') return unavailable(result.reason || 'That what-if could not be evaluated.')
+    const response = answered(
+      'Here is your projected net worth with an extra monthly contribution, next to your current path:',
+      result.evidence,
+      `The what-if adds it to ${target.account.name}, your largest contributing account, in ${formatMonthDisplay(month)}. Nothing is saved unless you keep it.`,
+      ['FORECAST_ASSUMPTIONS', 'HYPOTHETICAL_NOT_SAVED'],
+    )
+    return { ...response, whatIf: { changes: result.appliedChanges } }
+  }
+
   return unavailable('That starter question is not supported.')
+}
+
+// Deterministic scenario name for a saved what-if — derived locally from the
+// validated ops, never from the model.
+export function deriveWhatIfName(changes = []) {
+  const compactAmount = value => {
+    const abs = Math.abs(value)
+    const text = abs >= 1000 && abs % 1000 === 0 ? `${abs / 1000}k` : String(Math.round(abs))
+    return `${value < 0 ? '-' : ''}$${text}`
+  }
+  const parts = changes.map(change => {
+    if (change.op === 'add_account') {
+      return `+${change.name} ${compactAmount(change.monthlyContribution)}/mo @ ${change.annualGrowthPercent}%`
+    }
+    if (change.op === 'set_growth') return `${change.accountName} @ ${change.annualGrowthPercent}%`
+    if (change.op === 'set_contribution') return `${change.accountName} ${compactAmount(change.monthlyContribution)}/mo`
+    if (change.op === 'one_time_change') {
+      return `${change.accountName} ${change.amount >= 0 ? '+' : ''}${compactAmount(change.amount)} in ${formatMonthDisplay(change.month)}`
+    }
+    return ''
+  }).filter(Boolean)
+  return `What if: ${parts.join(', ')}`.slice(0, 80)
 }

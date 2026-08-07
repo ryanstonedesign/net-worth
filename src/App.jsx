@@ -215,6 +215,7 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
           context={buildAskContext(dataHook, barName)}
           userKey={account?.user?.id || 'guest'}
           signedIn={!!account?.user}
+          onSaveWhatIf={dataHook.addForecastFromWhatIf}
         />
       )}
 

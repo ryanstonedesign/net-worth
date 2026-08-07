@@ -236,11 +236,9 @@ Each milestone ships independently; 1–2 are pure refactors invisible to users.
 
 ## Open questions
 
-1. **Sync default for saved what-if scenarios.** A scenario with an added
-   hypothetical account diverges structurally from its siblings. Proposal:
-   keep `linked: true` default (balance updates still flow; the seed survives
-   re-sync per section 2), but flag it if users find the extra account
-   confusing in synced flows.
+1. **Sync default for saved what-if scenarios.** Decided: saved what-if
+   scenarios default to `linked: true` like every other scenario (balance
+   updates still flow; the seed survives re-sync per section 2).
 2. **Multi-turn refinement** ("okay, what about $800/mo?"). The transcript
    (last 8 messages) is already sent, so the interpreter can re-emit a full
    changes spec each turn — the spec must always be self-contained. Worth a

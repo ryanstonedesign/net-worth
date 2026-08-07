@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  applyWhatIfChanges,
   buildAskManifest,
   createForecastDataset,
   findCrossing,
@@ -7,7 +8,9 @@ import {
   getChange,
   getLargestHistoricalMover,
   getValue,
+  simulateWhatIf,
   validateStructuredAnswer,
+  validateWhatIfChanges,
 } from './forecastInsights'
 
 function sampleData() {
@@ -119,6 +122,21 @@ describe('forecast insight evidence', () => {
     expect(manifest.categories[0].accounts[1].name).toBe('Roth IRA')
   })
 
+  it('excludes never-recorded accounts from historical completeness and totals', () => {
+    const data = sampleData()
+    data.categories[0].accounts.push({ id: 'future', name: 'Future Fund', growth: '7', monthlyContribution: 100 })
+    data.snapshots['2026-09'] = { future: 5000 } // seeded ahead of recorded history
+    const dataset = createForecastDataset(data, { currentMonth: '2026-08' })
+
+    expect(dataset.coverage.neverRecordedAccountIds).toEqual(['future'])
+    expect(dataset.coverage.incompleteMonths).toEqual([])
+    const recorded = getValue(dataset, { targetId: 'portfolio', month: '2026-08' })
+    expect(recorded.status).toBe('ok')
+    expect(recorded.evidence.value).toBe(1800 + 2300 - 400)
+    const history = getValue(dataset, { targetId: 'future', month: '2026-08' })
+    expect(history.status).toBe('unknown')
+  })
+
   it('rejects unknown evidence and prose-authored financial numbers', () => {
     const evidence = { id: 'known', display: '$1,000' }
     expect(validateStructuredAnswer({
@@ -127,5 +145,128 @@ describe('forecast insight evidence', () => {
     expect(validateStructuredAnswer({
       status: 'answered', intro: 'Your value is $1,000', facts: [{ evidenceId: 'known' }], evidenceIds: ['known'],
     }, [evidence]).ok).toBe(false)
+  })
+})
+
+function whatIfContext(data = sampleData()) {
+  return {
+    data,
+    currentMonth: '2026-08',
+    dataset: createForecastDataset(data, {
+      scenarioId: 'default',
+      scenarioName: 'Default Scenario',
+      currentMonth: '2026-08',
+    }),
+  }
+}
+
+describe('what-if simulation', () => {
+  it('validates every op bound before anything is applied', () => {
+    const data = sampleData()
+    expect(validateWhatIfChanges(data, [], '2026-08').ok).toBe(false)
+    expect(validateWhatIfChanges(data, [
+      { op: 'set_growth', accountId: 'missing', annualGrowthPercent: 7 },
+    ], '2026-08').ok).toBe(false)
+    expect(validateWhatIfChanges(data, [
+      { op: 'set_growth', accountId: 'brokerage', annualGrowthPercent: 250 },
+    ], '2026-08').ok).toBe(false)
+    expect(validateWhatIfChanges(data, [
+      { op: 'set_contribution', accountId: 'brokerage', monthlyContribution: -50 },
+    ], '2026-08').ok).toBe(false) // negative only on liabilities
+    expect(validateWhatIfChanges(data, [
+      { op: 'set_contribution', accountId: 'visa', monthlyContribution: -50 },
+    ], '2026-08').ok).toBe(false) // cards category is not contributing
+    expect(validateWhatIfChanges(data, [
+      { op: 'add_account', categoryId: 'cards', name: 'Side fund', startingBalance: 100, monthlyContribution: 50, annualGrowthPercent: 5 },
+    ], '2026-08').ok).toBe(false) // contribution into a non-contributing category
+    expect(validateWhatIfChanges(data, [
+      { op: 'one_time_change', accountId: 'brokerage', month: '2025-01', amount: 1000 },
+    ], '2026-08').ok).toBe(false) // past month
+    expect(validateWhatIfChanges(data, [
+      { op: 'set_growth', accountId: 'brokerage', annualGrowthPercent: 9 },
+    ], '2026-08').ok).toBe(true)
+  })
+
+  it('applies changes to a deep copy without touching the input', () => {
+    const data = sampleData()
+    const frozen = JSON.stringify(data)
+    const applied = applyWhatIfChanges(data, [
+      { op: 'set_growth', accountId: 'brokerage', annualGrowthPercent: 9 },
+      { op: 'add_account', categoryId: 'investments', name: 'New Fund', startingBalance: 1000, monthlyContribution: 200, annualGrowthPercent: 7 },
+    ], { currentMonth: '2026-08' })
+
+    expect(applied.ok).toBe(true)
+    expect(JSON.stringify(data)).toBe(frozen)
+    const brokerage = applied.data.categories[0].accounts.find(account => account.id === 'brokerage')
+    expect(brokerage.growth).toBe('9')
+    const added = applied.data.categories[0].accounts.find(account => account.name === 'New Fund')
+    expect(added.monthlyContribution).toBe(200)
+    // Starting balance seeds the first forecast month, never recorded history.
+    expect(applied.data.snapshots['2026-09'][added.id]).toBe(1000)
+    expect(applied.data.snapshots['2026-08'][added.id]).toBeUndefined()
+  })
+
+  it('turns a one-time change into a single-month extra contribution', () => {
+    const applied = applyWhatIfChanges(sampleData(), [
+      { op: 'one_time_change', accountId: 'brokerage', month: '2027-01', amount: 5000 },
+    ], { currentMonth: '2026-08' })
+
+    expect(applied.ok).toBe(true)
+    // Base contribution is the recorded average (100), plus the windfall.
+    expect(applied.data.contributions['2027-01'].brokerage).toBe(5100)
+  })
+
+  it('compares baseline and hypothetical values with a derived delta', () => {
+    const result = simulateWhatIf(whatIfContext(), {
+      changes: [{ op: 'set_contribution', accountId: 'brokerage', monthlyContribution: 300 }],
+      metric: 'value_at_month',
+      month: '2031-08',
+    })
+
+    expect(result.status).toBe('ok')
+    const kinds = result.evidence.map(record => record.kind)
+    expect(kinds).toEqual(['forecast', 'hypothetical', 'hypothetical'])
+    const [base, hypo, delta] = result.evidence
+    expect(hypo.value).toBeGreaterThan(base.value)
+    expect(delta.metric).toBe('whatIfDelta')
+    expect(delta.value).toBe(hypo.value - base.value)
+    expect(delta.display).toMatch(/^\+\$/)
+    expect(result.appliedChanges[0]).toMatchObject({ op: 'set_contribution', accountName: 'Brokerage' })
+  })
+
+  it('reports goal-timing change in months for goal_crossing what-ifs', () => {
+    const result = simulateWhatIf(whatIfContext(), {
+      changes: [{ op: 'set_contribution', accountId: 'brokerage', monthlyContribution: 500 }],
+      metric: 'goal_crossing',
+    })
+
+    expect(result.status).toBe('ok')
+    const delta = result.evidence.find(record => record.metric === 'goalTimingChange')
+    expect(delta.value).toBeLessThan(0)
+    expect(delta.display).toContain('earlier')
+  })
+
+  it('needs a goal or explicit threshold for goal_crossing', () => {
+    const data = sampleData()
+    data.goal = null
+    const result = simulateWhatIf(whatIfContext(data), {
+      changes: [{ op: 'set_contribution', accountId: 'brokerage', monthlyContribution: 500 }],
+      metric: 'goal_crossing',
+    })
+    expect(result.status).toBe('unknown')
+    expect(result.reason).toContain('goal')
+  })
+
+  it('surfaces validation failures as reasons, not partial application', () => {
+    const result = simulateWhatIf(whatIfContext(), {
+      changes: [
+        { op: 'set_growth', accountId: 'brokerage', annualGrowthPercent: 9 },
+        { op: 'set_growth', accountId: 'missing', annualGrowthPercent: 9 },
+      ],
+      metric: 'value_at_month',
+      month: '2031-08',
+    })
+    expect(result.status).toBe('unknown')
+    expect(result.reason).toContain('does not exist')
   })
 })

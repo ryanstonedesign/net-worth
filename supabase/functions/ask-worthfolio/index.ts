@@ -41,6 +41,40 @@ const toolDefinitions = [
   tool('get_assumptions', 'Get saved growth and contribution assumptions for targets.', {
     targetIds: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 50 },
   }),
+  tool('simulate_what_if', 'Simulate a hypothetical change (new account, different growth or contribution, one-time amount) locally and compare it to the current forecast. Copy amounts, rates, and dates verbatim from the question; never invent missing values.', {
+    changes: {
+      type: 'array',
+      minItems: 1,
+      maxItems: 4,
+      items: {
+        anyOf: [
+          whatIfOp('add_account', {
+            categoryId: stringField('Existing category id from the manifest. Non-zero contributions need a contributing category.'),
+            name: stringField('Short name for the hypothetical account.'),
+            startingBalance: { type: 'number', description: 'Opening balance; 0 if none stated.' },
+            monthlyContribution: { type: 'number', description: 'Monthly contribution; 0 if none stated.' },
+            annualGrowthPercent: { type: 'number', description: 'Annual growth percent, e.g. 7 for 7%.' },
+          }),
+          whatIfOp('set_growth', {
+            accountId: stringField('Existing account id from the manifest.'),
+            annualGrowthPercent: { type: 'number', description: 'New annual growth percent.' },
+          }),
+          whatIfOp('set_contribution', {
+            accountId: stringField('Existing account id from the manifest.'),
+            monthlyContribution: { type: 'number', description: 'New monthly contribution amount.' },
+          }),
+          whatIfOp('one_time_change', {
+            accountId: stringField('Existing account id from the manifest.'),
+            month: stringField('Future month in YYYY-MM format.'),
+            amount: { type: 'number', description: 'One-time deposit (positive) or payment/withdrawal (negative).' },
+          }),
+        ],
+      },
+    },
+    metric: { type: 'string', enum: ['value_at_month', 'goal_crossing'] },
+    month: { type: ['string', 'null'], description: 'YYYY-MM month to compare at; required for value_at_month, null for goal_crossing.' },
+    threshold: { type: ['number', 'null'], description: 'Target amount for goal_crossing; null uses the saved goal.' },
+  }),
   tool('respond_without_data', 'Use when the request needs clarification, is unsupported, or cannot use a data tool.', {
     status: { type: 'string', enum: ['needs_clarification', 'unsupported', 'insufficient_data'] },
     message: stringField('One concise, user-facing explanation. Do not include financial advice.'),
@@ -75,6 +109,7 @@ const answerSchema = {
           'INCOMPLETE_DATA',
           'LIABILITY_MODEL',
           'BALANCE_CHANGE_NOT_RETURN',
+          'HYPOTHETICAL_NOT_SAVED',
         ],
       },
       maxItems: 6,
@@ -146,7 +181,9 @@ Deno.serve(async req => {
         tools: toolDefinitions,
         tool_choice: 'required',
         parallel_tool_calls: false,
-        max_output_tokens: 500,
+        // The simulate_what_if changes array is a larger argument payload than
+        // the single-value tools.
+        max_output_tokens: 700,
       })
       logUsage('interpret', safetyIdentifier, model, response.usage)
 
@@ -236,6 +273,9 @@ Choose the narrowest tool that can answer the question.
 Use respond_without_data for advice, writes, external data, unsupported requests, missing clarification, or questions outside the supported intents.
 For "last year", default to the last recorded month and the closest recorded month at least 12 months earlier.
 For future relative dates, resolve them from coverage.lastRecordedMonth, not from the calendar month.
+Route hypothetical "what if" questions to simulate_what_if. Copy every amount, rate, and date verbatim from the question; if a needed amount, rate, account, or horizon is not stated, use respond_without_data with needs_clarification instead of inventing one.
+For "what if" questions about reaching the goal, use metric goal_crossing; otherwise use value_at_month with the resolved month.
+simulate_what_if only simulates: it never creates, saves, or modifies real data.
 Never provide financial advice.`
 
 const answerInstructions = `Write one concise Worthfolio answer using only the function output.
@@ -247,6 +287,7 @@ Say "modeled" or "projected" for forecast evidence, never guaranteed.
 Use BALANCE_CHANGE_NOT_RETURN when describing historical balance change.
 Use LIABILITY_MODEL for a liability zero crossing.
 Use FORECAST_ASSUMPTIONS for forecast evidence and STALE_DATA or INCOMPLETE_DATA when its warnings require them.
+Describe hypothetical evidence as "if you made this change", never as saved, applied, or guaranteed, and always include HYPOTHETICAL_NOT_SAVED for it.
 Do not provide financial advice.`
 
 function tool(name: string, description: string, properties: Record<string, unknown>) {
@@ -266,6 +307,17 @@ function tool(name: string, description: string, properties: Record<string, unkn
 
 function stringField(description: string) {
   return { type: 'string', description }
+}
+
+// One branch of the simulate_what_if changes union: a fixed op tag plus that
+// op's full field set, strict like every other schema here.
+function whatIfOp(op: string, properties: Record<string, unknown>) {
+  return {
+    type: 'object',
+    additionalProperties: false,
+    properties: { op: { type: 'string', enum: [op] }, ...properties },
+    required: ['op', ...Object.keys(properties)],
+  }
 }
 
 function boundedInteger(raw: string | undefined, fallback: number, min: number, max: number) {
