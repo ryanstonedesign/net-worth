@@ -703,14 +703,33 @@ function asHypothetical(evidence) {
   }
 }
 
+// A what-if is measured on the whole portfolio by default, but it can also be
+// measured on an existing account or category, or on an account the what-if
+// itself creates. A created account has no baseline — it does not exist
+// without the change — so those answer with a single value and no comparison.
+export function resolveWhatIfTarget(targetId, appliedChanges = []) {
+  if (!targetId || targetId === PORTFOLIO_TARGET) return { isNew: false, id: PORTFOLIO_TARGET }
+  const reference = /^new_account(?::(\d+))?$/.exec(String(targetId))
+  if (!reference) return { isNew: false, id: targetId }
+  const added = appliedChanges.filter(change => change.op === 'add_account')
+  const match = added[Number(reference[1] || 0)]
+  return match ? { isNew: true, id: match.accountId, name: match.name } : null
+}
+
 export function simulateWhatIf(context, {
   changes,
   metric = 'value_at_month',
   month,
   threshold,
+  targetId,
 } = {}) {
   const applied = applyWhatIfChanges(context.data, changes, { currentMonth: context.currentMonth })
   if (!applied.ok) return { status: 'unknown', reason: applied.error }
+
+  const target = resolveWhatIfTarget(targetId, applied.appliedChanges)
+  if (!target) {
+    return { status: 'unknown', reason: 'That question refers to a new account this what-if does not create.' }
+  }
 
   const baseline = context.dataset
   const hypothetical = createForecastDataset(applied.data, {
@@ -718,59 +737,79 @@ export function simulateWhatIf(context, {
     scenarioName: 'What-if',
     currentMonth: context.currentMonth,
   })
+  const only = record => ({
+    status: 'ok', evidence: [record], gaps: [], appliedChanges: applied.appliedChanges, metric,
+  })
 
   const evidence = []
   const gaps = []
-  let delta = null
 
   if (metric === 'value_at_month') {
     if (monthIndex(month) == null) return { status: 'error', error: 'Invalid month.' }
-    const base = getValue(baseline, { targetId: PORTFOLIO_TARGET, month })
-    const hypo = getValue(hypothetical, { targetId: PORTFOLIO_TARGET, month })
+    const hypo = getValue(hypothetical, { targetId: target.id, month })
+    if (hypo.status !== 'ok') {
+      return { status: 'unknown', reason: hypo.reason || hypo.error || 'The what-if could not be evaluated.' }
+    }
+    if (target.isNew) return only(asHypothetical(hypo.evidence))
+
+    const base = getValue(baseline, { targetId: target.id, month })
     if (base.status === 'ok') evidence.push(base.evidence)
     else gaps.push({ scenarioName: baseline.scenarioName, reason: base.reason || base.error })
-    if (hypo.status === 'ok') evidence.push(asHypothetical(hypo.evidence))
-    else gaps.push({ scenarioName: 'What-if', reason: hypo.reason || hypo.error })
-    if (base.status === 'ok' && hypo.status === 'ok') {
+    evidence.push(asHypothetical(hypo.evidence))
+    if (base.status === 'ok') {
       const value = hypo.evidence.value - base.evidence.value
-      delta = {
-        id: evidenceId('hypothetical', 'what_if', PORTFOLIO_TARGET, 'whatIfDelta', month),
+      const meta = targetMeta(hypothetical, target.id)
+      evidence.push({
+        id: evidenceId('hypothetical', 'what_if', target.id, 'whatIfDelta', month),
         kind: 'hypothetical',
         metric: 'whatIfDelta',
-        targetId: PORTFOLIO_TARGET,
+        targetId: target.id,
         targetName: 'Difference',
         scenarioId: 'what_if',
         scenarioName: 'What-if vs baseline',
         month,
         value,
         display: `${value >= 0 ? '+' : ''}${formatCurrency(value)}`,
-        assumptions: hypothetical ? assumptionIds(hypothetical, targetMeta(hypothetical, PORTFOLIO_TARGET)) : [],
+        assumptions: meta ? assumptionIds(hypothetical, meta) : [],
         quality: {
           complete: base.evidence.quality.complete && hypo.evidence.quality.complete,
           warnings: [...new Set([...base.evidence.quality.warnings, ...hypo.evidence.quality.warnings])],
         },
-      }
-      evidence.push(delta)
+      })
     }
   } else if (metric === 'goal_crossing') {
-    const target = Number.isFinite(threshold) && threshold > 0 ? threshold : context.data.goal
-    if (!Number.isFinite(target) || target <= 0) {
-      return { status: 'unknown', reason: 'Set a net worth goal, or include a target amount in the question.' }
+    // The saved goal is a net worth target, so it only stands in for the
+    // portfolio; any other target has to name its own amount.
+    const isPortfolio = target.id === PORTFOLIO_TARGET
+    const level = Number.isFinite(threshold) && threshold > 0
+      ? threshold
+      : (isPortfolio ? context.data.goal : null)
+    if (!Number.isFinite(level) || level <= 0) {
+      return {
+        status: 'unknown',
+        reason: isPortfolio
+          ? 'Set a net worth goal, or include a target amount in the question.'
+          : 'Include the amount that account should reach in the question.',
+      }
     }
-    const base = findCrossing(baseline, { targetId: PORTFOLIO_TARGET, threshold: target, direction: 'above' })
-    const hypo = findCrossing(hypothetical, { targetId: PORTFOLIO_TARGET, threshold: target, direction: 'above' })
+    const hypo = findCrossing(hypothetical, { targetId: target.id, threshold: level, direction: 'above' })
+    if (hypo.status !== 'ok') {
+      return { status: 'unknown', reason: hypo.reason || hypo.error || 'That amount is not reached within the forecast.' }
+    }
+    if (target.isNew) return only(asHypothetical(hypo.evidence))
+
+    const base = findCrossing(baseline, { targetId: target.id, threshold: level, direction: 'above' })
     if (base.status === 'ok') evidence.push(base.evidence)
     else gaps.push({ scenarioName: baseline.scenarioName, reason: base.reason || base.error })
-    if (hypo.status === 'ok') evidence.push(asHypothetical(hypo.evidence))
-    else gaps.push({ scenarioName: 'What-if', reason: hypo.reason || hypo.error })
-    if (base.status === 'ok' && hypo.status === 'ok') {
+    evidence.push(asHypothetical(hypo.evidence))
+    if (base.status === 'ok') {
       const value = monthIndex(hypo.evidence.month) - monthIndex(base.evidence.month)
       const magnitude = Math.abs(value)
-      delta = {
-        id: evidenceId('hypothetical', 'what_if', PORTFOLIO_TARGET, 'goalTimingChange', hypo.evidence.month),
+      evidence.push({
+        id: evidenceId('hypothetical', 'what_if', target.id, 'goalTimingChange', hypo.evidence.month),
         kind: 'hypothetical',
         metric: 'goalTimingChange',
-        targetId: PORTFOLIO_TARGET,
+        targetId: target.id,
         targetName: 'Timing change',
         scenarioId: 'what_if',
         scenarioName: 'What-if vs baseline',
@@ -781,8 +820,7 @@ export function simulateWhatIf(context, {
           : `${magnitude} month${magnitude === 1 ? '' : 's'} ${value < 0 ? 'earlier' : 'later'}`,
         assumptions: [],
         quality: { complete: true, warnings: [] },
-      }
-      evidence.push(delta)
+      })
     }
   } else {
     return { status: 'error', error: 'Unsupported what-if metric.' }

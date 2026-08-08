@@ -74,7 +74,8 @@ const toolDefinitions = [
     },
     metric: { type: 'string', enum: ['value_at_month', 'goal_crossing'] },
     month: { type: ['string', 'null'], description: 'YYYY-MM month to compare at; required for value_at_month, null for goal_crossing.' },
-    threshold: { type: ['number', 'null'], description: 'Target amount for goal_crossing; null uses the saved goal.' },
+    threshold: { type: ['number', 'null'], description: 'Target amount for goal_crossing; null uses the saved goal, and is required when targetId is not portfolio.' },
+    targetId: { type: ['string', 'null'], description: 'What the question asks about: null or "portfolio" for net worth, a manifest account/category id for an existing one, or "new_account" (or "new_account:1", "new_account:2" …) for an account this what-if creates, in the order the add_account changes appear.' },
   }),
   tool('respond_without_data', 'Use when the request needs clarification, is unsupported, or cannot use a data tool.', {
     status: { type: 'string', enum: ['needs_clarification', 'unsupported', 'insufficient_data'] },
@@ -277,6 +278,7 @@ For future relative dates, resolve them from coverage.lastRecordedMonth, not fro
 Route hypothetical "what if" questions to simulate_what_if. Copy every amount, rate, and date verbatim from the question; if a needed amount, rate, account, or horizon is not stated, use respond_without_data with needs_clarification instead of inventing one.
 For "what if" questions about reaching the goal, use metric goal_crossing; otherwise use value_at_month with the resolved month.
 A hypothetical account that opens on a stated future date is supported: put that month in add_account.startMonth rather than declining.
+Set simulate_what_if.targetId to whatever the question asks the value of: leave it null for net worth, use a manifest id for an existing account or category, and use "new_account" when the question asks what the account being created would be worth ("what would it be worth").
 simulate_what_if only simulates: it never creates, saves, or modifies real data.
 Never provide financial advice.`
 

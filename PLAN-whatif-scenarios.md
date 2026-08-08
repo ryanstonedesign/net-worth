@@ -123,8 +123,14 @@ In `forecastInsights.js`:
 applyWhatIfChanges(data, changes)
 // → { data: modifiedCopy, issues: [] } — pure, deep-copies, never mutates input
 
-simulateWhatIf(context, { changes, metric, month, threshold })
-// metric: 'value_at_month' (default) | 'goal_crossing'
+simulateWhatIf(context, { changes, metric, month, threshold, targetId })
+// metric:   'value_at_month' (default) | 'goal_crossing'
+// targetId: omitted/'portfolio' → net worth; a manifest account or category
+//           id → that target compared against itself; 'new_account[:N]' → an
+//           account this what-if creates, answered as a single value because
+//           it has no baseline to compare against. A goal_crossing on any
+//           non-portfolio target must carry its own threshold, since the
+//           saved goal is a net worth figure.
 ```
 
 `simulateWhatIf`:

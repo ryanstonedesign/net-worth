@@ -310,6 +310,65 @@ describe('what-if simulation', () => {
     expect(after.appliedChanges[0].startMonth).toBe('2027-03')
   })
 
+  it('answers what a newly created account alone would be worth', () => {
+    const result = simulateWhatIf(whatIfContext(), {
+      changes: [{
+        op: 'add_account', categoryId: 'investments', name: 'Baby 529',
+        startingBalance: 0, monthlyContribution: 500, annualGrowthPercent: 8,
+        startMonth: '2027-03',
+      }],
+      metric: 'value_at_month',
+      month: '2040-03',
+      targetId: 'new_account',
+    })
+
+    expect(result.status).toBe('ok')
+    // No baseline exists for an account the change invents, so there is one row.
+    expect(result.evidence).toHaveLength(1)
+    expect(result.evidence[0].kind).toBe('hypothetical')
+    expect(result.evidence[0].targetName).toBe('Baby 529')
+    expect(result.evidence[0].value).toBeGreaterThan(100000)
+  })
+
+  it('compares an existing account against itself when targeted', () => {
+    const result = simulateWhatIf(whatIfContext(), {
+      changes: [{ op: 'set_growth', accountId: 'brokerage', annualGrowthPercent: 12 }],
+      metric: 'value_at_month',
+      month: '2036-08',
+      targetId: 'brokerage',
+    })
+
+    expect(result.status).toBe('ok')
+    expect(result.evidence.map(record => record.targetName)).toEqual(['Brokerage', 'Brokerage', 'Difference'])
+    const [base, hypo, delta] = result.evidence
+    expect(hypo.value).toBeGreaterThan(base.value)
+    expect(delta.value).toBe(hypo.value - base.value)
+  })
+
+  it('needs an explicit amount for a goal crossing on a single account', () => {
+    const changes = [{ op: 'set_contribution', accountId: 'brokerage', monthlyContribution: 800 }]
+    const withoutAmount = simulateWhatIf(whatIfContext(), { changes, metric: 'goal_crossing', targetId: 'brokerage' })
+    expect(withoutAmount.status).toBe('unknown')
+    expect(withoutAmount.reason).toContain('amount that account should reach')
+
+    const withAmount = simulateWhatIf(whatIfContext(), {
+      changes, metric: 'goal_crossing', targetId: 'brokerage', threshold: 50000,
+    })
+    expect(withAmount.status).toBe('ok')
+    expect(withAmount.evidence.find(record => record.metric === 'goalTimingChange').display).toContain('earlier')
+  })
+
+  it('rejects a reference to a new account the what-if never creates', () => {
+    const result = simulateWhatIf(whatIfContext(), {
+      changes: [{ op: 'set_growth', accountId: 'brokerage', annualGrowthPercent: 9 }],
+      metric: 'value_at_month',
+      month: '2036-08',
+      targetId: 'new_account',
+    })
+    expect(result.status).toBe('unknown')
+    expect(result.reason).toContain('does not create')
+  })
+
   it('surfaces validation failures as reasons, not partial application', () => {
     const result = simulateWhatIf(whatIfContext(), {
       changes: [
