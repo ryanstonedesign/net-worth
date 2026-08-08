@@ -97,6 +97,40 @@ describe('forecast primitives', () => {
     expect(models.roth.contribution).toBe(250)
   })
 
+  it('opens a history-less account at its explicit startingBalance', () => {
+    const withOpeningBalance = [
+      {
+        ...categories[0],
+        accounts: [{ id: 'roth', name: 'Roth IRA', growth: '7', startingBalance: 5000 }],
+      },
+    ]
+    const models = buildAccountModels(
+      withOpeningBalance,
+      { '2026-01': {} },
+      {},
+      ['2026-01'],
+      '2026-01',
+    )
+    expect(models.roth.base).toBe(5000)
+  })
+
+  it('prefers recorded history over startingBalance once the account has any', () => {
+    const withBoth = [
+      {
+        ...categories[0],
+        accounts: [{ id: 'roth', name: 'Roth IRA', growth: '7', startingBalance: 5000 }],
+      },
+    ]
+    const models = buildAccountModels(
+      withBoth,
+      { '2026-01': { roth: 8000 } },
+      {},
+      ['2026-01'],
+      '2026-01',
+    )
+    expect(models.roth.base).toBe(8000)
+  })
+
   it('applies balance and contribution overrides with chart-compatible math', () => {
     const models = buildAccountModels(
       categories,

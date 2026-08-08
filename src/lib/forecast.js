@@ -31,7 +31,14 @@ export function buildAccountModels(categories, snapshots, contributions, history
       const series = historyMonths
         .map(month => snapshots?.[month]?.[account.id])
         .filter(value => value != null)
-      const base = series.length ? series[series.length - 1] : 0
+      // Accounts with no recorded history fall back to an explicit opening
+      // balance when one is set (what-if accounts), otherwise 0. This is an
+      // assumption, never a recorded snapshot — writing a partial snapshot for
+      // an unrecorded month would turn it into "history" and read every other
+      // account as 0.
+      const base = series.length
+        ? series[series.length - 1]
+        : (Number(account.startingBalance) || 0)
 
       // An explicit per-account assumption (set by what-if scenarios) wins over
       // the recorded-history average, so accounts without history can still

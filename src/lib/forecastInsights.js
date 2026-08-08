@@ -616,9 +616,10 @@ export function validateWhatIfChanges(data, changes, currentMonth = getCurrentMo
 // Pure: deep-copies the scenario data and applies the validated ops so the
 // engine reproduces the hypothetical. The same function materializes a saved
 // scenario (with real minted ids), which is what guarantees simulate-vs-save
-// parity. New-account starting balances are seeded as a first-forecast-month
-// override — never as fake recorded history — so a sync catch-up (which only
-// replaces past months) can never wipe them.
+// parity. A new account's opening balance is stored as an assumption on the
+// account (`startingBalance`), never as a snapshot: a partial snapshot in an
+// unrecorded month would make that month count as recorded history and read
+// every other account as 0, and clearing it would fan out to synced siblings.
 export function applyWhatIfChanges(data, changes, {
   currentMonth = getCurrentMonth(),
   mintAccountId,
@@ -632,7 +633,6 @@ export function applyWhatIfChanges(data, changes, {
     snapshots: data.snapshots || {},
     contributions: data.contributions || {},
   }))
-  const firstForecastMonth = getAdjacentMonth(validation.lastRecordedMonth, 1)
   const applied = []
   const oneTimeChanges = []
 
@@ -645,11 +645,8 @@ export function applyWhatIfChanges(data, changes, {
         name: change.name,
         growth: String(change.annualGrowthPercent),
         monthlyContribution: change.monthlyContribution,
+        startingBalance: change.startingBalance,
       })
-      copy.snapshots[firstForecastMonth] = {
-        ...(copy.snapshots[firstForecastMonth] || {}),
-        [id]: change.startingBalance,
-      }
       applied.push({ ...change, accountId: id })
       return
     }

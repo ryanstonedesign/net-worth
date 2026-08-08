@@ -93,11 +93,24 @@ coverage machinery honest instead of spamming warnings:
 - Accounts with **zero recorded snapshots** are excluded from
   `incompleteMonths` / historical completeness checks — they didn't exist in
   the past, so old months aren't "incomplete" for missing them.
-- The starting balance is seeded as a **first-forecast-month snapshot
-  override** (`snapshots[lastRecordedMonth + 1][accountId] = startingBalance`)
-  rather than fake recorded history. Future-month overrides already survive
-  `setForecastSynced` re-sync (which only replaces past months), so a saved
-  what-if scenario keeps its seed even if the user toggles sync.
+- The opening balance is an **assumption on the account**
+  (`account.startingBalance`, consumed by `buildAccountModels` as the base when
+  the account has no recorded history). What-ifs write **no snapshots at all**.
+
+That second point is load-bearing, and the first implementation got it wrong by
+seeding `snapshots[lastRecordedMonth + 1]` instead. `lastRecordedMonth + 1` is
+the **current** month whenever this month is not yet recorded, so the seed
+created a snapshot holding only the new account. `getHistory()` counts any
+month with at least one entry as recorded, and `getNetWorth` reads absent
+accounts as `|| 0` — so the current month flipped from estimated to recorded
+with every other account showing $0. Worse, that fake month made `hasEdits`
+true, and `clearMonthSnapshot` on a current-or-past month routes through
+`setFactData`, which fans the deletion out to every linked scenario — so
+resetting the bogus month destroyed real recorded data in the siblings.
+
+Rule: a what-if must never write into `snapshots`. Assumptions live on the
+account, where sync catch-up (which only replaces past months) cannot touch
+them either.
 
 ## 3. New local tool: `simulate_what_if`
 
@@ -164,9 +177,9 @@ addForecastFromWhatIf(name, changes, { fromId } = {})
   `changes` **directly to the new scenario's slot** — never through
   `setFactData`, so nothing fans out to synced scenarios.
 - Materialization per op:
-  - `add_account` → real `acc_` id, account `{ name, growth, monthlyContribution }`
-    appended to the category, starting balance seeded as the
-    first-forecast-month override (section 2)
+  - `add_account` → real `acc_` id, account
+    `{ name, growth, monthlyContribution, startingBalance }` appended to the
+    category (no snapshot write — section 2)
   - `set_growth` / `set_contribution` → write `growth` /
     `monthlyContribution` on the account in this scenario only
   - `one_time_change` → future-month snapshot override for that account

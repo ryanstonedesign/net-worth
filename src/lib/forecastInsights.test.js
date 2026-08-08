@@ -201,9 +201,30 @@ describe('what-if simulation', () => {
     expect(brokerage.growth).toBe('9')
     const added = applied.data.categories[0].accounts.find(account => account.name === 'New Fund')
     expect(added.monthlyContribution).toBe(200)
-    // Starting balance seeds the first forecast month, never recorded history.
-    expect(applied.data.snapshots['2026-09'][added.id]).toBe(1000)
-    expect(applied.data.snapshots['2026-08'][added.id]).toBeUndefined()
+    // The opening balance is an assumption on the account, never a snapshot.
+    expect(added.startingBalance).toBe(1000)
+    expect(applied.data.snapshots).toEqual(sampleData().snapshots)
+  })
+
+  // Regression: seeding a new account's balance into a snapshot made the
+  // unrecorded current month count as recorded history, which read every other
+  // account as 0 — and clearing it fanned the deletion out to synced scenarios.
+  it('never writes a snapshot for an unrecorded month when adding an account', () => {
+    const data = sampleData()
+    delete data.snapshots['2026-08'] // this month not recorded yet
+    const applied = applyWhatIfChanges(data, [
+      { op: 'add_account', categoryId: 'investments', name: 'New Fund', startingBalance: 5000, monthlyContribution: 0, annualGrowthPercent: 7 },
+    ], { currentMonth: '2026-08' })
+
+    expect(applied.ok).toBe(true)
+    expect(Object.keys(applied.data.snapshots)).toEqual(['2025-08'])
+    // The unrecorded month stays unrecorded, so nothing is zeroed.
+    const dataset = createForecastDataset(applied.data, { currentMonth: '2026-08' })
+    expect(dataset.lastRecordedMonth).toBe('2025-08')
+    // The account still starts at its opening balance in the forecast.
+    const added = applied.data.categories[0].accounts.find(account => account.name === 'New Fund')
+    expect(dataset.models[added.id].base).toBe(5000)
+    expect(getValue(dataset, { targetId: added.id, month: '2025-09' }).evidence.value).toBeGreaterThan(5000)
   })
 
   it('turns a one-time change into a single-month extra contribution', () => {
