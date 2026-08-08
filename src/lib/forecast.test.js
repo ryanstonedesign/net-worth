@@ -131,6 +131,41 @@ describe('forecast primitives', () => {
     expect(models.roth.base).toBe(8000)
   })
 
+  it('holds an account at zero until its start month, then opens and compounds', () => {
+    const withLaterStart = [{
+      ...categories[0],
+      accounts: [{
+        id: 'five29', name: 'Baby 529', growth: '8',
+        startingBalance: 1000, monthlyContribution: 500, startMonth: '2026-04',
+      }],
+    }]
+    const models = buildAccountModels(withLaterStart, { '2026-01': {} }, {}, ['2026-01'], '2026-01')
+    const forecast = generateForecast(withLaterStart, models, {}, {}, '2026-01', 5)
+
+    expect(models.five29.startMonth).toBe('2026-04')
+    expect(forecast[0].accounts.five29).toBe(0) // 2026-02, not open
+    expect(forecast[1].accounts.five29).toBe(0) // 2026-03, not open
+    expect(forecast[2].accounts.five29).toBe(1000) // 2026-04, opens at its balance
+    // 2026-05 onward: compounds and takes the contribution.
+    expect(forecast[3].accounts.five29).toBeGreaterThan(1500)
+    expect(forecast[4].accounts.five29).toBeGreaterThan(forecast[3].accounts.five29)
+    // Months before the start contribute nothing to net worth.
+    expect(forecast[0].netWorth).toBe(0)
+  })
+
+  it('leaves accounts without a start month behaving exactly as before', () => {
+    const models = buildAccountModels(
+      categories,
+      { '2026-01': { brokerage: 1000, visa: 500 } },
+      { '2026-01': { brokerage: 100 } },
+      ['2026-01'],
+      '2026-01',
+    )
+    expect(models.brokerage.startMonth).toBeNull()
+    const forecast = generateForecast(categories, models, {}, {}, '2026-01', 1)
+    expect(forecast[0].accounts.brokerage).toBeGreaterThan(1000)
+  })
+
   it('applies balance and contribution overrides with chart-compatible math', () => {
     const models = buildAccountModels(
       categories,

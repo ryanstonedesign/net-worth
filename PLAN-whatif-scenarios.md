@@ -38,9 +38,12 @@ A what-if is a list of 1–4 validated operations applied to a deep copy of the
 active scenario's data:
 
 ```js
-// add_account: a brand-new account in an existing category
+// add_account: a brand-new account in an existing category.
+// startMonth is optional — omitted, the account opens at the forecast
+// origin; set, it holds nothing until that future month, then opens at
+// startingBalance and compounds from there ("starting in March 2027").
 { op: 'add_account', categoryId, name, startingBalance,
-  monthlyContribution, annualGrowthPercent }
+  monthlyContribution, annualGrowthPercent, startMonth? }
 
 // set_growth: change an existing account's growth assumption
 { op: 'set_growth', accountId, annualGrowthPercent }

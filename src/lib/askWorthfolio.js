@@ -373,7 +373,8 @@ export function deriveWhatIfName(changes = []) {
   }
   const parts = changes.map(change => {
     if (change.op === 'add_account') {
-      return `+${change.name} ${compactAmount(change.monthlyContribution)}/mo @ ${change.annualGrowthPercent}%`
+      const opens = change.startMonth ? ` from ${formatMonthDisplay(change.startMonth)}` : ''
+      return `+${change.name} ${compactAmount(change.monthlyContribution)}/mo @ ${change.annualGrowthPercent}%${opens}`
     }
     if (change.op === 'set_growth') return `${change.accountName} @ ${change.annualGrowthPercent}%`
     if (change.op === 'set_contribution') return `${change.accountName} ${compactAmount(change.monthlyContribution)}/mo`

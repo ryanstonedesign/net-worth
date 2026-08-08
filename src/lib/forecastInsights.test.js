@@ -278,6 +278,38 @@ describe('what-if simulation', () => {
     expect(result.reason).toContain('goal')
   })
 
+  it('accepts a future start month and rejects one in the past', () => {
+    const data = sampleData()
+    const account = {
+      op: 'add_account', categoryId: 'investments', name: 'Baby 529',
+      startingBalance: 0, monthlyContribution: 500, annualGrowthPercent: 8,
+    }
+    expect(validateWhatIfChanges(data, [{ ...account, startMonth: '2027-03' }], '2026-08').ok).toBe(true)
+    expect(validateWhatIfChanges(data, [{ ...account, startMonth: '2024-01' }], '2026-08').ok).toBe(false)
+    expect(validateWhatIfChanges(data, [{ ...account, startMonth: 'soon' }], '2026-08').ok).toBe(false)
+    // Omitting it stays valid — the account simply opens right away.
+    expect(validateWhatIfChanges(data, [account], '2026-08').ok).toBe(true)
+  })
+
+  it('defers a delayed account so it is worth nothing before it opens', () => {
+    const changes = [{
+      op: 'add_account', categoryId: 'investments', name: 'Baby 529',
+      startingBalance: 0, monthlyContribution: 500, annualGrowthPercent: 8,
+      startMonth: '2027-03',
+    }]
+    const context = whatIfContext()
+    const before = simulateWhatIf(context, { changes, metric: 'value_at_month', month: '2027-01' })
+    const after = simulateWhatIf(context, { changes, metric: 'value_at_month', month: '2040-03' })
+
+    // Before it opens, the hypothetical matches the baseline exactly.
+    const beforeDelta = before.evidence.find(record => record.metric === 'whatIfDelta')
+    expect(beforeDelta.value).toBe(0)
+    // Long after, the gap is the account's own accumulated value.
+    const afterDelta = after.evidence.find(record => record.metric === 'whatIfDelta')
+    expect(afterDelta.value).toBeGreaterThan(100000)
+    expect(after.appliedChanges[0].startMonth).toBe('2027-03')
+  })
+
   it('surfaces validation failures as reasons, not partial application', () => {
     const result = simulateWhatIf(whatIfContext(), {
       changes: [

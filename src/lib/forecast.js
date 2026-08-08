@@ -61,6 +61,9 @@ export function buildAccountModels(categories, snapshots, contributions, history
         base,
         contribution,
         annual: (Number(account.growth) || 0) / 100,
+        // Set only by what-if accounts that open partway through the
+        // forecast; undefined means "already open at the forecast origin".
+        startMonth: account.startMonth || null,
       }
     }
   }
@@ -74,7 +77,10 @@ export function generateForecast(categories, models, overrides, contributionOver
   if (!lastMonth || count < 1) return []
 
   const running = {}
-  Object.entries(models || {}).forEach(([id, model]) => { running[id] = model.base })
+  Object.entries(models || {}).forEach(([id, model]) => {
+    // An account that opens later holds nothing until its start month.
+    running[id] = model.startMonth ? 0 : model.base
+  })
 
   const output = []
   for (let offset = 1; offset <= count; offset += 1) {
@@ -91,6 +97,13 @@ export function generateForecast(categories, models, overrides, contributionOver
         let value
         if (balanceOverrides[account.id] != null) {
           value = balanceOverrides[account.id]
+        } else if (model.startMonth && month < model.startMonth) {
+          // Not open yet — contributes nothing to the total.
+          value = 0
+        } else if (model.startMonth && month === model.startMonth) {
+          // Opens with its balance; growth and contributions start next month,
+          // exactly as they do from a recorded balance.
+          value = model.base
         } else {
           const monthlyRate = Math.pow(1 + model.annual, 1 / 12) - 1
           const contribution = category.contributing

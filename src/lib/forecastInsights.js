@@ -564,7 +564,19 @@ export function validateWhatIfChanges(data, changes, currentMonth = getCurrentMo
       if (contribution < 0 && category.type !== 'liability') {
         return whatIfError('Negative contributions are only supported on liability accounts (extra payments).')
       }
-      normalized.push({ op: 'add_account', categoryId: category.id, categoryName: category.name, name, startingBalance, monthlyContribution: contribution, annualGrowthPercent: growth })
+      // Optional: the account opens partway through the forecast rather than
+      // at its origin. Omitted means it opens immediately.
+      let startMonth = null
+      if (change.startMonth != null && String(change.startMonth).trim() !== '') {
+        const offset = monthIndex(change.startMonth) != null
+          ? monthIndex(change.startMonth) - monthIndex(coverage.lastRecordedMonth)
+          : null
+        if (offset == null || offset < 1 || offset > MAX_FORECAST_MONTHS) {
+          return whatIfError('A start month must be a future month within the forecast horizon.')
+        }
+        startMonth = change.startMonth
+      }
+      normalized.push({ op: 'add_account', categoryId: category.id, categoryName: category.name, name, startingBalance, monthlyContribution: contribution, annualGrowthPercent: growth, startMonth })
       continue
     }
 
@@ -646,6 +658,7 @@ export function applyWhatIfChanges(data, changes, {
         growth: String(change.annualGrowthPercent),
         monthlyContribution: change.monthlyContribution,
         startingBalance: change.startingBalance,
+        ...(change.startMonth ? { startMonth: change.startMonth } : {}),
       })
       applied.push({ ...change, accountId: id })
       return

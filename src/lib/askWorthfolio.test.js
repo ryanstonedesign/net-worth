@@ -140,6 +140,7 @@ describe('Ask Worthfolio local orchestration', () => {
     const ctx = context()
     const changes = [
       { op: 'add_account', categoryId: 'assets', name: 'Roth IRA', startingBalance: 1000, monthlyContribution: 500, annualGrowthPercent: 7 },
+      { op: 'add_account', categoryId: 'assets', name: 'Baby 529', startingBalance: 0, monthlyContribution: 500, annualGrowthPercent: 8, startMonth: '2027-03' },
       { op: 'set_growth', accountId: 'savings', annualGrowthPercent: 9 },
       { op: 'one_time_change', accountId: 'savings', month: '2028-01', amount: 20000 },
     ]

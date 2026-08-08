@@ -54,6 +54,7 @@ const toolDefinitions = [
             startingBalance: { type: 'number', description: 'Opening balance; 0 if none stated.' },
             monthlyContribution: { type: 'number', description: 'Monthly contribution; 0 if none stated.' },
             annualGrowthPercent: { type: 'number', description: 'Annual growth percent, e.g. 7 for 7%.' },
+            startMonth: { type: ['string', 'null'], description: 'Future YYYY-MM month the account opens, when the question states one ("starting in March 2027"). Null means it opens at the start of the forecast.' },
           }),
           whatIfOp('set_growth', {
             accountId: stringField('Existing account id from the manifest.'),
@@ -275,6 +276,7 @@ For "last year", default to the last recorded month and the closest recorded mon
 For future relative dates, resolve them from coverage.lastRecordedMonth, not from the calendar month.
 Route hypothetical "what if" questions to simulate_what_if. Copy every amount, rate, and date verbatim from the question; if a needed amount, rate, account, or horizon is not stated, use respond_without_data with needs_clarification instead of inventing one.
 For "what if" questions about reaching the goal, use metric goal_crossing; otherwise use value_at_month with the resolved month.
+A hypothetical account that opens on a stated future date is supported: put that month in add_account.startMonth rather than declining.
 simulate_what_if only simulates: it never creates, saves, or modifies real data.
 Never provide financial advice.`
 
