@@ -1361,10 +1361,11 @@ a { text-decoration: none; color: inherit; }
   width: 100%;
   max-width: 560px;
   margin: 0 auto;
-  padding: 32px 0;
 }
-.ask-consent-icon,
-.ask-empty-mark {
+.ask-consent { padding: 32px 0; }
+/* The empty state is just the starter list, so it leads with the buttons. */
+.ask-empty { padding: 8px 0 32px; }
+.ask-consent-icon {
   width: 48px;
   height: 48px;
   display: flex;
@@ -1376,16 +1377,14 @@ a { text-decoration: none; color: inherit; }
   background: color-mix(in srgb, var(--c-secondary) 12%, white);
 }
 .ask-consent-icon svg,
-.ask-empty-mark svg { width: 26px; height: 26px; }
-.ask-consent h2,
-.ask-empty h2 {
+.ask-consent-icon svg { width: 26px; height: 26px; }
+.ask-consent h2 {
   margin: 0 0 10px;
   font-family: var(--font-title);
   font-size: var(--text-subheading-lg);
   letter-spacing: var(--tracking-subheading-lg);
 }
-.ask-consent > p,
-.ask-empty > p { margin: 0; color: var(--c-ink-mute); font-size: 15px; line-height: 1.55; }
+.ask-consent > p { margin: 0; color: var(--c-ink-mute); font-size: 15px; line-height: 1.55; }
 .ask-consent-card {
   margin-top: 24px;
   padding: 18px;
@@ -1397,7 +1396,7 @@ a { text-decoration: none; color: inherit; }
 .ask-consent-card ul { margin: 12px 0 0; padding-left: 20px; color: var(--c-ink-mute); line-height: 1.5; }
 .ask-consent-card li + li { margin-top: 8px; }
 .ask-consent-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
-.ask-starters { display: grid; gap: 10px; margin-top: 24px; }
+.ask-starters { display: grid; gap: 10px; }
 .ask-starters button {
   width: 100%;
   padding: 14px 16px;
@@ -1484,6 +1483,11 @@ a { text-decoration: none; color: inherit; }
 .ask-compose textarea {
   flex: 1;
   min-width: 0;
+  /* Match the send button's height and split the leftover space above and
+     below the first line (36 − 21px line box = 7.5px each), so a one-line
+     question sits centred instead of hugging the bottom edge. */
+  min-height: 36px;
+  padding: 7.5px 0;
   /* Height is set from content in JS; this is the ceiling it scrolls past.
      Keep in sync with MAX_COMPOSE_HEIGHT in AskWorthfolio.jsx. */
   max-height: 160px;

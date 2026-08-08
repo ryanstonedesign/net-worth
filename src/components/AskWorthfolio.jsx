@@ -260,9 +260,6 @@ export default function AskWorthfolio({ onClose, context, userKey, signedIn, onS
             <div className="ask-scroll" aria-live="polite">
               {messages.length === 0 && (
                 <div className="ask-empty">
-                  <div className="ask-empty-mark"><SparkleIcon /></div>
-                  <h2>What would you like to understand?</h2>
-                  <p>Choose a question or ask your own. Worthfolio calculates the numbers before explaining them.</p>
                   <div className="ask-starters">
                     {STARTER_QUESTIONS.map(starter => (
                       <button key={starter.id} onClick={() => runStarter(starter)}>{starter.label}</button>
