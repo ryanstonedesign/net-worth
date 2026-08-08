@@ -14,15 +14,8 @@ import {
 } from '../lib/askWorthfolio'
 import { formatMonthDisplay } from '../utils'
 
-const CAVEAT_LABELS = {
-  FORECAST_ASSUMPTIONS: 'Assumes your saved growth and contributions continue.',
-  LONG_RANGE_FORECAST: 'Long-range projections show what the assumptions imply, not a prediction.',
-  STALE_DATA: 'This forecast starts from an older recorded balance month.',
-  INCOMPLETE_DATA: 'Some recorded months are incomplete.',
-  LIABILITY_MODEL: 'This is Worthfolio’s modeled balance path, not a payment schedule.',
-  BALANCE_CHANGE_NOT_RETURN: 'Balance change includes deposits and withdrawals; it is not investment return.',
-  HYPOTHETICAL_NOT_SAVED: 'This is a simulation — nothing changes unless you save it as a scenario.',
-}
+// Height the compose box grows to before it starts scrolling instead.
+const MAX_COMPOSE_HEIGHT = 160
 
 function SparkleIcon() {
   return (
@@ -64,17 +57,11 @@ function AnswerResult({ result }) {
                 <span>{formatMonthDisplay(record.month)}</span>
                 {record.scenarioName && <span>{record.scenarioName}</span>}
               </div>
-              {record.quality?.warnings?.map(warning => (
-                <div className="ask-evidence-warning" key={warning}>{warning}</div>
-              ))}
             </div>
           ))}
         </div>
       )}
       {result.answer.explanation && <p className="ask-answer-explanation">{result.answer.explanation}</p>}
-      {(result.answer.caveatCodes || []).map(code => CAVEAT_LABELS[code] && (
-        <div className="ask-caveat" key={code}>{CAVEAT_LABELS[code]}</div>
-      ))}
     </div>
   )
 }
@@ -154,6 +141,21 @@ export default function AskWorthfolio({ onClose, context, userKey, signedIn, onS
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end' })
   }, [messages, status])
+
+  // Desktop docks the panel beside the page instead of over it; the shell
+  // reads this class to make room. Harmless on mobile, where the CSS ignores it.
+  useEffect(() => {
+    document.body.classList.add('ask-docked')
+    return () => document.body.classList.remove('ask-docked')
+  }, [])
+
+  // Grow the compose box with its content, then scroll past the ceiling.
+  useEffect(() => {
+    const field = inputRef.current
+    if (!field) return
+    field.style.height = 'auto'
+    field.style.height = `${Math.min(field.scrollHeight, MAX_COMPOSE_HEIGHT)}px`
+  }, [draft, enabled])
 
   const persist = next => {
     const saved = saveAskThread(userKey, scenarioId, next)
@@ -252,6 +254,7 @@ export default function AskWorthfolio({ onClose, context, userKey, signedIn, onS
             <div className="ask-scenario">{context.activeScenario.name}</div>
           </div>
           <div className="ask-head-actions">
+            {enabled && <button onClick={disable}>Disable</button>}
             {enabled && messages.length > 0 && <button onClick={clear}>Clear</button>}
             <button className="btn-icon" onClick={onClose} aria-label="Close Ask Worthfolio">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -328,10 +331,6 @@ export default function AskWorthfolio({ onClose, context, userKey, signedIn, onS
                   </svg>
                 </button>
               </form>
-              <div className="ask-compose-meta">
-                <span>Answers use {context.activeScenario.name}</span>
-                <button onClick={disable}>Disable</button>
-              </div>
             </footer>
           </>
         )}
