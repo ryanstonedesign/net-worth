@@ -4,7 +4,6 @@ import {
   STARTER_QUESTIONS,
   answerStarterQuestion,
   askWorthfolio,
-  clearAllAskThreads,
   clearAskThread,
   deriveWhatIfName,
   hasAskConsent,
@@ -107,7 +106,6 @@ function Consent({ onEnable, onClose }) {
           <li>Requests pass through Worthfolio’s secure gateway to OpenAI.</li>
           <li>OpenAI may retain API content for up to 30 days for abuse monitoring, depending on Worthfolio’s account controls. API data is not used to train models by default.</li>
           <li>Answers explain your data and are not financial advice.</li>
-          <li>You can disable this feature and clear this device’s conversation at any time.</li>
         </ul>
       </div>
       <div className="ask-consent-actions">
@@ -237,14 +235,6 @@ export default function AskWorthfolio({ onClose, context, userKey, signedIn, onS
     setMessages([])
   }
 
-  const disable = () => {
-    if (!window.confirm('Disable Ask Worthfolio and clear every conversation on this device?')) return
-    clearAllAskThreads(userKey)
-    setMessages([])
-    setAskConsent(userKey, false)
-    setEnabled(false)
-  }
-
   return createPortal(
     <div className="ask-overlay" onClick={event => { if (event.target === event.currentTarget && !busy) onClose() }}>
       <section className="ask-panel" role="dialog" aria-modal="true" aria-label="Ask Worthfolio">
@@ -254,7 +244,6 @@ export default function AskWorthfolio({ onClose, context, userKey, signedIn, onS
             <div className="ask-scenario">{context.activeScenario.name}</div>
           </div>
           <div className="ask-head-actions">
-            {enabled && <button onClick={disable}>Disable</button>}
             {enabled && messages.length > 0 && <button onClick={clear}>Clear</button>}
             <button className="btn-icon" onClick={onClose} aria-label="Close Ask Worthfolio">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
