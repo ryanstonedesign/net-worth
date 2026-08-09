@@ -224,6 +224,7 @@ textarea {
 .auth-card,
 .ask-panel,
 .cat-card.card,
+.summary-cell.card,
 .settings-card,
 .side-nav-item.active {
   position: relative;
@@ -238,6 +239,7 @@ textarea {
 .auth-card,
 .ask-panel,
 .cat-card.card,
+.summary-cell.card,
 .settings-card,
 .side-nav-item.active {
   isolation: isolate;
@@ -252,6 +254,7 @@ textarea {
 .auth-card::before,
 .ask-panel::before,
 .cat-card.card::before,
+.summary-cell.card::before,
 .settings-card::before,
 .side-nav-item.active::before,
 .btn-secondary::before,

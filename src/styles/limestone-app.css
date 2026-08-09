@@ -410,8 +410,14 @@
   color: var(--c-ink-mute);
 }
 
+/* Pinned to the tap-target height so the row cannot reflow. Which control sits
+   here changes with the month — Reset on a month you have edited, the estimate
+   note on a future one — and they resolve to different heights, because the
+   info button pulls itself in with negative margins and Reset does not. At the
+   old 24px floor the line was 44px in one case and 32px in the other, and
+   everything below it, chart included, shifted 12px up on future months. */
 .hero-delta-line {
-  min-height: 24px;
+  min-height: 44px;
   gap: var(--space-2);
   font-family: var(--font-interface);
   font-size: 14px;
@@ -596,28 +602,34 @@
   font-size: 15px;
 }
 
+/* Assets and liabilities are records like the category cards, so they are cut
+   from the same slab rather than being ruled off inside one shared plane. Side
+   by side, sharing the gutter width the cards below them use. */
 .summary-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0;
+  gap: var(--space-3);
   margin: var(--space-6) 20px;
   padding: 0;
   background: transparent;
-  border-top: 1px solid var(--c-border);
-  border-bottom: 1px solid var(--c-border);
+  border: 0;
 }
 
 .summary-cell.card {
+  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) 85%, transparent);
   min-width: 0;
-  padding: 18px 16px;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-}
-
-.summary-cell + .summary-cell {
-  border-left: 1px solid var(--c-border);
+  padding: 16px 18px;
+  background-color: var(--slab-fill);
+  background-image:
+    linear-gradient(var(--slab-grain-veil), var(--slab-grain-veil)),
+    var(--texture-limestone);
+  background-position: center;
+  background-size: var(--slab-grain-size);
+  background-repeat: repeat;
+  background-blend-mode: var(--slab-grain-blend);
+  border: 1px solid var(--surface-slab-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--surface-slab-shadow);
 }
 
 .summary-cell-label {
@@ -1101,6 +1113,7 @@
 @media (prefers-contrast: more) {
   .range-pills,
   .cat-card.card,
+  .summary-cell.card,
   .cat-card-add-icon,
   .side-nav-item.active,
   .side-nav-new svg,
@@ -1121,8 +1134,8 @@
   }
 
   .range-pills,
-  .summary-row,
   .cat-card.card,
+  .summary-cell.card,
   .cat-card-add,
   .cat-card-add-icon,
   .side-nav-item.active,
