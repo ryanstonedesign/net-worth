@@ -129,7 +129,13 @@ textarea {
    applied by selector list. Elements that cannot host a pseudo-element —
    input, select, and the inline svg tiles — keep the background-layer recipe
    instead. Surfaces with a transparent fill are deliberately absent: there
-   would be nothing for the grain to multiply against but the page. */
+   would be nothing for the grain to multiply against but the page.
+
+   Every surface here is anchored, because the overlay's inset resolves against
+   the nearest positioned ancestor — an unanchored surface paints its grain
+   across whatever ancestor happens to be positioned instead of across itself.
+   Anchoring by default and restoring the few that carry their own positioning
+   just below is the safe direction to get this wrong in. */
 .modal-sheet,
 .modal-foot,
 .popover-menu,
@@ -151,30 +157,22 @@ textarea {
 .fab,
 .settings-fab,
 .back-to-month,
-.cat-card-edit {
+.cat-card-edit,
+.btn-primary,
+.top-nav-ask,
+.ask-compose form > button {
+  position: relative;
   isolation: isolate;
 }
 
-/* Only the statically positioned ones need anchoring; .popover-menu and
-   .settings-fab are already fixed and must keep that. */
-.modal-sheet,
-.modal-foot,
-.auth-card,
-.ask-panel,
-.nw-chart-tooltip,
-.sync-card,
-.import-preview,
-.import-row,
-.recovery-phrase,
-.month-selector,
-.range-pills,
-.range-pill.active,
-.btn-secondary,
-.btn-icon,
-.fab,
-.back-to-month,
-.cat-card-edit {
-  position: relative;
+/* Surfaces that supply their own positioning and must keep it. */
+.popover-menu,
+.type-toggle-thumb {
+  position: absolute;
+}
+
+.settings-fab {
+  position: fixed;
 }
 
 .modal-sheet::after,
@@ -210,19 +208,8 @@ textarea {
   opacity: var(--grain-strength);
 }
 
-/* Forest actions carry the grain too, on the ink recipe. .top-nav-ask is fixed
-   and keeps that; the rest need anchoring. */
-.btn-primary,
-.top-nav-ask,
-.ask-compose form > button {
-  isolation: isolate;
-}
-
-.btn-primary,
-.ask-compose form > button {
-  position: relative;
-}
-
+/* Forest actions carry the grain too, on the ink recipe. They are anchored
+   with the rest of the grain surfaces above. */
 .btn-primary::after,
 .top-nav-ask::after,
 .ask-compose form > button::after {
