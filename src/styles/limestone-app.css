@@ -568,10 +568,6 @@
   box-shadow: var(--surface-flush-shadow), 0 1px 3px var(--shade-edge);
 }
 
-.range-pill.active::after {
-  display: none;
-}
-
 .custom-range-row {
   padding-top: var(--space-3);
 }

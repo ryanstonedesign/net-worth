@@ -121,6 +121,95 @@ textarea {
   box-shadow: var(--rule-engraved-lip);
 }
 
+/* ── Stone grain on every painted surface ──────────────────────────────────
+   Grain belongs to the material, not to one depth role, so sheets, popovers,
+   the auth card, panels, rails, and raised controls all wear it — not just
+   slabs. This overlay multiplies over whatever fill the element already has,
+   so unlike the slab veil it needs no per-surface colour derivation and can be
+   applied by selector list. Elements that cannot host a pseudo-element —
+   input, select, and the inline svg tiles — keep the background-layer recipe
+   instead. Surfaces with a transparent fill are deliberately absent: there
+   would be nothing for the grain to multiply against but the page. */
+.modal-sheet,
+.modal-foot,
+.popover-menu,
+.auth-card,
+.ask-panel,
+.nw-chart-tooltip,
+.sync-card,
+.import-preview,
+.import-row,
+.recovery-phrase,
+.month-selector,
+.range-pills,
+.range-pill.active,
+.type-toggle,
+.sign-toggle,
+.type-toggle-thumb,
+.btn-secondary,
+.btn-icon,
+.fab,
+.settings-fab,
+.back-to-month,
+.cat-card-edit {
+  isolation: isolate;
+}
+
+/* Only the statically positioned ones need anchoring; .popover-menu and
+   .settings-fab are already fixed and must keep that. */
+.modal-sheet,
+.modal-foot,
+.auth-card,
+.ask-panel,
+.nw-chart-tooltip,
+.sync-card,
+.import-preview,
+.import-row,
+.recovery-phrase,
+.month-selector,
+.range-pills,
+.range-pill.active,
+.btn-secondary,
+.btn-icon,
+.fab,
+.back-to-month,
+.cat-card-edit {
+  position: relative;
+}
+
+.modal-sheet::after,
+.modal-foot::after,
+.popover-menu::after,
+.auth-card::after,
+.ask-panel::after,
+.nw-chart-tooltip::after,
+.sync-card::after,
+.import-preview::after,
+.import-row::after,
+.recovery-phrase::after,
+.month-selector::after,
+.range-pills::after,
+.range-pill.active::after,
+.type-toggle::after,
+.sign-toggle::after,
+.type-toggle-thumb::after,
+.btn-secondary::after,
+.btn-icon::after,
+.fab::after,
+.settings-fab::after,
+.back-to-month::after,
+.cat-card-edit::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: var(--texture-limestone) center / var(--texture-limestone-tile) repeat;
+  mix-blend-mode: multiply;
+  opacity: var(--grain-strength);
+}
+
 .btn {
   min-height: 44px;
   border-radius: var(--radius-sm);
@@ -181,12 +270,23 @@ textarea {
   box-shadow: var(--surface-raised-shadow);
 }
 
+/* Recessed fields. A form control cannot host a pseudo-element, so the grain
+   is composited into the background layers here instead of overlaid, veiled to
+   the recessed fill the way a slab is veiled to its own. */
 .input,
 .custom-range-input,
 .update-amount-input {
+  --slab-grain-veil: color-mix(in srgb, var(--c-surface-muted) 85%, transparent);
   min-height: 48px;
   color: var(--c-ink);
-  background: var(--c-surface-muted);
+  background-color: var(--c-surface-muted);
+  background-image:
+    linear-gradient(var(--slab-grain-veil), var(--slab-grain-veil)),
+    var(--texture-limestone);
+  background-position: center;
+  background-size: var(--slab-grain-size);
+  background-repeat: repeat;
+  background-blend-mode: var(--slab-grain-blend);
   border: 1px solid var(--color-line-strong);
   border-radius: var(--radius-sm);
   box-shadow: var(--surface-recessed-shadow);

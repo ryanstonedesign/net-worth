@@ -107,6 +107,9 @@
      local ground. Set --texture-limestone to none to retire the grain. */
   --slab-grain-veil: color-mix(in srgb, var(--slab-fill) 85%, transparent);
   --slab-grain-size: auto, var(--texture-limestone-tile);
+  /* Strength of the grain overlay worn by every painted surface. Matches the
+     15% the slab veil passes, so a slab and a sheet read as the same stone. */
+  --grain-strength: 0.15;
   --slab-grain-blend: normal, multiply;
 
   /* Slab: a plane cut from the canvas and set on top of it. It sits at the

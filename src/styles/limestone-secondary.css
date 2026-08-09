@@ -119,10 +119,12 @@
   letter-spacing: 0.035em;
 }
 
+/* Background-color only — a shorthand here would drop the grain layers the
+   base .input rule composites in. */
 .modal-sheet .input,
 .auth-card .input {
   color: var(--c-ink);
-  background: var(--c-surface-muted);
+  background-color: var(--c-surface-muted);
   border: 1px solid var(--color-line-strong);
   border-radius: var(--radius-sm);
   box-shadow: var(--surface-recessed-shadow);
