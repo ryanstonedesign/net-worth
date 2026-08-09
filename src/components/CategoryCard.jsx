@@ -152,10 +152,7 @@ export default function CategoryCard({ category, snapshot, contributions = {}, c
           <div className="cat-account-total">
             <span className="cat-total-label">Total</span>
             <span
-              className="cat-total-amount"
-              style={estimated
-                ? { color: 'var(--c-ink-mute)', opacity: 0.75 }
-                : { color: category.type === 'liability' ? 'var(--c-danger)' : 'var(--c-ink)' }}
+              className={`cat-total-amount${estimated ? ' estimated' : ''}${category.type === 'liability' ? ' liability' : ''}`}
             >
               {formatCurrency(total)}{estimated ? ' (est)' : ''}
             </span>

@@ -18,35 +18,28 @@ function CustomTooltip({ active, payload }) {
   if (value == null) return null
 
   return (
-    <div style={{
-      background: 'var(--c-surface)',
-      borderRadius: 'var(--r-card)',
-      padding: '8px 16px',
-      boxShadow: 'var(--shadow-md), var(--shadow-sm)',
-      border: 'none',
-      fontFamily: 'var(--font)',
-    }}>
-      <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--c-ink-mute)', marginBottom: 4 }}>
+    <div className="nw-chart-tooltip">
+      <div className="nw-chart-tooltip__label">
         {formatMonthDisplay(point.month)}{isForecast ? ' · Est.' : ''}
       </div>
-      <div style={{
-        fontSize: 17, fontWeight: 600, letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums',
-        color: isForecast ? 'var(--c-ink-mute)' : 'var(--c-ink)',
-      }}>
+      <div className={`nw-chart-tooltip__value${isForecast ? ' estimated' : ''}`}>
         {formatCurrency(value)}
       </div>
     </div>
   )
 }
 
-// Goal line colors: orange when a goal is set; with none set the placeholder
-// uses the app's border color for the line and secondary ink for the CTA text
-// (hex because SVG presentation attributes can't read CSS vars — matches
-// --c-border / --c-ink-mute in index.css).
-const GOAL_COLOR = '#ec652b'
-const UNSET_LINE_COLOR = '#e3e4e8'
-const UNSET_TEXT_COLOR = '#7c7f88'
-const UNSET_DOT_COLOR = '#cbcccf' /* --color-mist — tertiary grey */
+// SVG presentation attributes accept CSS custom properties, keeping all chart
+// materials connected to the live theme rather than baking palette values into
+// the component.
+const HISTORY_COLOR = 'var(--chart-history)'
+const PROJECTION_COLOR = 'var(--chart-projection)'
+const GOAL_COLOR = 'var(--chart-goal)'
+const UNSET_LINE_COLOR = 'var(--chart-grid)'
+const UNSET_TEXT_COLOR = 'var(--chart-axis)'
+const UNSET_DOT_COLOR = 'var(--color-line-strong)'
+const MARKER_FILL = 'var(--chart-marker-fill)'
+const CROSSHAIR_COLOR = 'var(--chart-crosshair)'
 
 // Label for the goal reference line. The line is the single goal element on
 // the dashboard — it shows the target, the time remaining, and (via onClick)
@@ -74,7 +67,7 @@ function GoalLabel({ viewBox, label, fill = GOAL_COLOR, onClick }) {
         fill={fill}
         fontSize={10}
         fontWeight={500}
-        fontFamily="Inter, system-ui, sans-serif"
+        fontFamily="var(--font-interface)"
       >
         {label}
       </text>
@@ -96,7 +89,10 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
   // Latch the draw decision at mount so later prop changes don't replay it.
   const animateRef = useRef(null)
   if (animateRef.current === null) animateRef.current = !!animateDraw
-  const animate = animateRef.current
+  const reduceMotion = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    : false
+  const animate = animateRef.current && !reduceMotion
 
   const dataSig = (data || []).map(d => `${d.month}:${d.netWorth}`).join('|')
   const forecastSig = forecastData.map(d => `${d.month}:${d.netWorth}`).join('|')
@@ -119,7 +115,7 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
   const [dotsVisible, setDotsVisible] = useState(!animate)
   useEffect(() => {
     if (!animate) return
-    const t = setTimeout(() => setDotsVisible(true), 1200)
+    const t = setTimeout(() => setDotsVisible(true), 760)
     return () => clearTimeout(t)
   }, [animate])
   const drawAnimationActive = animate && !dotsVisible
@@ -153,7 +149,7 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
                 fill={hasGoal ? GOAL_COLOR : UNSET_TEXT_COLOR}
                 fontSize={10}
                 fontWeight={500}
-                fontFamily="Inter, system-ui, sans-serif"
+                fontFamily="var(--font-interface)"
               >
                 {label}
               </text>
@@ -195,7 +191,6 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
   const lastHistorical = data[data.length - 1]
   const endPoint = hasForecast ? forecastData[forecastData.length - 1] : lastHistorical
   const isUp = endPoint.netWorth >= data[0].netWorth
-  const color = isUp ? '#167e6c' : '#dc2626'
   const gradId = isUp ? 'nwGradUp' : 'nwGradDown'
   const fGradId = isUp ? 'nwForecastUp' : 'nwForecastDown'
 
@@ -229,12 +224,12 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
     const isSelected = payload.month === selectedMonth
     if (isSelected) return (
       <g className="nw-dot-appear">
-        <circle cx={cx} cy={cy} r={9} fill={color} opacity={0.22} className="dot-pulse-ring" />
-        <circle cx={cx} cy={cy} r={5} fill={color} />
+        <circle cx={cx} cy={cy} r={9} fill={HISTORY_COLOR} opacity={0.14} className="dot-pulse-ring" />
+        <circle cx={cx} cy={cy} r={4.5} fill={HISTORY_COLOR} stroke={MARKER_FILL} strokeWidth={1.5} />
       </g>
     )
     if (!showDotAt(index)) return null
-    return <circle className="nw-dot-appear" cx={cx} cy={cy} r={3.5} fill={color} />
+    return <circle className="nw-dot-appear" cx={cx} cy={cy} r={2.75} fill={HISTORY_COLOR} />
   }
 
   // Dot renderer for the forecast area (skip junction point — historical area owns it)
@@ -244,12 +239,12 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
     const isSelected = payload.month === selectedMonth
     if (isSelected) return (
       <g className="nw-dot-appear">
-        <circle cx={cx} cy={cy} r={8} fill={color} opacity={0.18} className="dot-pulse-ring" />
-        <circle cx={cx} cy={cy} r={4.5} fill={color} opacity={0.65} />
+        <circle cx={cx} cy={cy} r={8} fill={PROJECTION_COLOR} opacity={0.14} className="dot-pulse-ring" />
+        <circle cx={cx} cy={cy} r={4} fill={PROJECTION_COLOR} stroke={MARKER_FILL} strokeWidth={1.5} />
       </g>
     )
     if (!showDotAt(index)) return null
-    return <circle className="nw-dot-appear" cx={cx} cy={cy} r={3} fill={color} opacity={0.45} />
+    return <circle className="nw-dot-appear" cx={cx} cy={cy} r={2.5} fill={PROJECTION_COLOR} opacity={0.72} />
   }
 
   return (
@@ -265,30 +260,30 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
       >
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity={0.28} />
-            <stop offset="100%" stopColor={color} stopOpacity={0} />
+            <stop offset="0%" stopColor={HISTORY_COLOR} stopOpacity={0.075} />
+            <stop offset="100%" stopColor={HISTORY_COLOR} stopOpacity={0} />
           </linearGradient>
           <linearGradient id={fGradId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity={0.1} />
-            <stop offset="100%" stopColor={color} stopOpacity={0} />
+            <stop offset="0%" stopColor={PROJECTION_COLOR} stopOpacity={0.04} />
+            <stop offset="100%" stopColor={PROJECTION_COLOR} stopOpacity={0} />
           </linearGradient>
         </defs>
         <YAxis domain={yDomain} hide />
         <Tooltip
           content={<CustomTooltip />}
-          cursor={{ stroke: 'rgba(17,26,74,0.15)', strokeWidth: 1, strokeDasharray: '4 3' }}
+          cursor={{ stroke: CROSSHAIR_COLOR, strokeOpacity: 0.38, strokeWidth: 1, strokeDasharray: '3 3' }}
         />
         <Area
           type="monotone"
           dataKey="historical"
-          stroke={color}
-          strokeWidth={2.5}
+          stroke={HISTORY_COLOR}
+          strokeWidth={2.25}
           fill={`url(#${gradId})`}
           dot={historicalDot}
-          activeDot={{ r: 6, fill: color, stroke: 'white', strokeWidth: 2 }}
+          activeDot={{ r: 5, fill: HISTORY_COLOR, stroke: MARKER_FILL, strokeWidth: 2 }}
           isAnimationActive={drawAnimationActive}
           animationBegin={0}
-          animationDuration={1100}
+          animationDuration={720}
           animationEasing="ease-out"
           connectNulls={false}
         />
@@ -296,16 +291,16 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
           <Area
             type="monotone"
             dataKey="forecast"
-            stroke={color}
-            strokeWidth={2}
-            strokeOpacity={0.45}
-            strokeDasharray="6 4"
+            stroke={PROJECTION_COLOR}
+            strokeWidth={1.75}
+            strokeOpacity={0.9}
+            strokeDasharray="5 4"
             fill={`url(#${fGradId})`}
             dot={forecastDot}
-            activeDot={{ r: 5, fill: color, fillOpacity: 0.7, stroke: 'white', strokeWidth: 2 }}
+            activeDot={{ r: 4.5, fill: PROJECTION_COLOR, stroke: MARKER_FILL, strokeWidth: 2 }}
             isAnimationActive={drawAnimationActive}
             animationBegin={0}
-            animationDuration={1100}
+            animationDuration={720}
             animationEasing="ease-out"
             connectNulls={false}
           />

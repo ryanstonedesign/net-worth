@@ -1,465 +1,387 @@
 import { useEffect, useRef, useState } from 'react'
+import BrandLockup from './BrandLockup'
+import LandingNav from './landing/LandingNav'
+import LandingSection from './landing/LandingSection'
+import ProjectionPreview from './landing/ProjectionPreview'
+import ResponsiveArtwork from './landing/ResponsiveArtwork'
+import heroAvif from '../assets/worthfolio/art/hero-nature-valley-v2.avif'
+import heroWebp from '../assets/worthfolio/art/hero-nature-valley-v2.webp'
+import historyAvif from '../assets/worthfolio/art/illustration-history-v1.avif'
+import historyWebp from '../assets/worthfolio/art/illustration-history-v1.webp'
+import scenariosAvif from '../assets/worthfolio/art/illustration-scenarios-v1.avif'
+import scenariosWebp from '../assets/worthfolio/art/illustration-scenarios-v1.webp'
+import compoundingAvif from '../assets/worthfolio/art/illustration-compounding-v1.avif'
+import compoundingWebp from '../assets/worthfolio/art/illustration-compounding-v1.webp'
 
-/* ─────────────────────────── Inline icons ───────────────────────────
-   Stroked line icons matching the app's existing iconography (24px grid,
-   2px strokes, round caps). Kept local so the landing page is fully
-   self-contained. */
-const Icon = {
-  Lock: (p) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
-      <rect x="3" y="11" width="18" height="11" rx="2.5" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    </svg>
-  ),
-  Trend: (p) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
-      <path d="M3 17l5-5 4 3 8-9" /><path d="M16 6h5v5" />
-    </svg>
-  ),
-  Target: (p) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
-      <circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" />
-    </svg>
-  ),
-  Layers: (p) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
-      <path d="M12 3 3 8l9 5 9-5-9-5Z" /><path d="m3 13 9 5 9-5" />
-    </svg>
-  ),
-  Doc: (p) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
-      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z" /><path d="M14 3v5h5" /><path d="M9 13h6M9 17h6" />
-    </svg>
-  ),
-  Devices: (p) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
-      <rect x="2" y="4" width="14" height="10" rx="1.5" /><path d="M2 18h10" /><rect x="16" y="9" width="6" height="11" rx="1.5" />
-    </svg>
-  ),
-  Arrow: (p) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" {...p}>
-      <path d="M5 12h14" /><path d="m13 6 6 6-6 6" />
-    </svg>
-  ),
-}
-
-/* Halftone dot field — Column's signature decorative element. A grid of
-   2–4px dots spaced ~9px apart, colored along the spectrum gradient
-   orange → violet → blue → sky cyan → seafoam → yellow. The gradient lives
-   only on this illustration, never on UI elements. */
-const HALFTONE_STOPS = ['#d65620', '#9f7aee', '#4575cd', '#71d2f0', '#44b48b', '#f4df69']
-function halftoneColor(t) {
-  return HALFTONE_STOPS[Math.round(t * (HALFTONE_STOPS.length - 1))]
-}
-function HalftoneField({ cols = 90, rows = 48, gap = 9 }) {
-  const dots = []
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      // Deterministic pseudo-random size variation, 1–2px radius (2–4px dots).
-      const h = Math.sin(c * 12.9898 + r * 78.233) * 43758.5453
-      const rand = h - Math.floor(h)
-      dots.push(
-        <circle
-          key={`${r}-${c}`}
-          cx={c * gap + gap / 2}
-          cy={r * gap + gap / 2}
-          r={1 + rand}
-          fill={halftoneColor(c / (cols - 1))}
-        />
-      )
-    }
-  }
-  return (
-    <svg
-      className="lp-halftone"
-      viewBox={`0 0 ${cols * gap} ${rows * gap}`}
-      preserveAspectRatio="xMidYMid slice"
-      aria-hidden="true"
-    >
-      {dots}
-    </svg>
-  )
-}
-
-/* A mini net-worth line chart: a solid "history" leg that hands off to a
-   dashed "forecast" leg, with an optional goal line. Pure SVG so it stays
-   crisp at any tile size and needs no chart dependency. */
-function MiniChart({ history, forecast, goal, width = 320, height = 120, pad = 6 }) {
-  const all = [...history, ...forecast]
-  const min = Math.min(...all) * 0.96
-  const max = Math.max(...all, goal ?? -Infinity) * 1.02
-  const span = max - min || 1
-  const n = all.length
-  const x = (i) => pad + (i / (n - 1)) * (width - pad * 2)
-  const y = (v) => pad + (1 - (v - min) / span) * (height - pad * 2)
-
-  const histPts = history.map((v, i) => `${x(i)},${y(v)}`).join(' ')
-  // Forecast continues from the last history point.
-  const fStart = history.length - 1
-  const fcPts = forecast.map((v, i) => `${x(fStart + 1 + i)},${y(v)}`)
-  const fcLine = [`${x(fStart)},${y(history[fStart])}`, ...fcPts].join(' ')
-  const lastX = x(n - 1)
-  const lastY = y(all[n - 1])
-  const areaPts = `${pad},${height - pad} ${histPts} ${fcPts.join(' ')} ${lastX},${height - pad}`
-
-  return (
-    <svg viewBox={`0 0 ${width} ${height}`} width="100%" height="100%" preserveAspectRatio="none" aria-hidden="true">
-      <defs>
-        <linearGradient id="lp-fill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--c-primary)" stopOpacity="0.22" />
-          <stop offset="100%" stopColor="var(--c-primary)" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <polygon points={areaPts} fill="url(#lp-fill)" />
-      {goal != null && (
-        <line x1={pad} y1={y(goal)} x2={width - pad} y2={y(goal)}
-          stroke="var(--c-tertiary)" strokeWidth="1.5" strokeDasharray="2 4" opacity="0.7" />
-      )}
-      <polyline points={histPts} fill="none" stroke="var(--c-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-      <polyline points={fcLine} fill="none" stroke="var(--c-secondary)" strokeWidth="2.5" strokeDasharray="3 5" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
-      <circle cx={lastX} cy={lastY} r="3.5" fill="var(--c-secondary)" stroke="#fff" strokeWidth="1.5" />
-    </svg>
-  )
-}
-
-/* The phone-framed dashboard preview used in the hero and the "closer look"
-   gallery. A faithful-but-static recreation of the real Dashboard so visitors
-   see the actual product surface without needing data. */
-function PhoneMock() {
-  return (
-    <div className="lp-phone" role="img" aria-label="Worthfolio dashboard preview">
-      <div className="lp-phone-screen">
-        <div className="lp-phone-nav">
-          <span className="lp-dot-row"><i /><i /><i /></span>
-          <span className="lp-phone-name">Main</span>
-          <span className="lp-phone-gear" />
-        </div>
-
-        <div className="lp-mock-hero">
-          <div className="lp-mock-eyebrow">Net worth</div>
-          <div className="lp-mock-amount">$284,920</div>
-          <div className="lp-mock-delta">+$3,140 this month</div>
-          <div className="lp-mock-goal">~2 years to goal ›</div>
-        </div>
-
-        <div className="lp-mock-chart">
-          <MiniChart
-            history={[150, 168, 175, 190, 205, 218, 240, 261, 285]}
-            forecast={[300, 318, 339, 360, 384]}
-            goal={372}
-            height={120}
-          />
-        </div>
-
-        <div className="lp-mock-summary">
-          <div className="lp-mock-summary-cell">
-            <span className="lp-mock-summary-label assets">Assets</span>
-            <span className="lp-mock-summary-amt">$331,400</span>
-          </div>
-          <div className="lp-mock-summary-cell">
-            <span className="lp-mock-summary-label liab">Liabilities</span>
-            <span className="lp-mock-summary-amt">$46,480</span>
-          </div>
-        </div>
-
-        <div className="lp-mock-cat">
-          <div className="lp-mock-cat-head">
-            <span className="lp-mock-cat-icon" style={{ background: 'rgba(22,126,108,0.1)', color: 'var(--c-tertiary)' }}>📈</span>
-            <span className="lp-mock-cat-name">Investments</span>
-            <span className="lp-mock-cat-total">$182,300</span>
-          </div>
-          <div className="lp-mock-cat-row"><span>Brokerage</span><b>$121,800</b></div>
-          <div className="lp-mock-cat-row"><span>Roth IRA</span><b>$60,500</b></div>
-        </div>
-
-        <div className="lp-mock-cat">
-          <div className="lp-mock-cat-head">
-            <span className="lp-mock-cat-icon" style={{ background: 'rgba(17,26,74,0.06)', color: 'var(--c-primary)' }}>🏦</span>
-            <span className="lp-mock-cat-name">Cash</span>
-            <span className="lp-mock-cat-total">$28,640</span>
-          </div>
-          <div className="lp-mock-cat-row"><span>Checking</span><b>$6,140</b></div>
-          <div className="lp-mock-cat-row"><span>High-yield savings</span><b>$22,500</b></div>
-        </div>
-
-        <div className="lp-phone-pill">
-          <span className="lp-phone-pill-arrow">‹</span>
-          <span>June 2026</span>
-          <span className="lp-phone-pill-arrow">›</span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-const FEATURES = [
+const PRODUCT_TRUTHS = [
   {
-    key: 'networth', cls: 'lp-tile--xl', icon: Icon.Layers, accent: 'var(--c-primary)',
-    title: 'Every account, one number',
-    body: 'Group checking, brokerage, property, loans and cards into categories. Worthfolio rolls it all into a single net-worth figure that updates as you do.',
+    number: '01',
+    title: 'Record monthly account values',
+    body: 'Choose what belongs in your picture and update it on your cadence.',
   },
   {
-    key: 'forecast', cls: 'lp-tile--wide', icon: Icon.Trend, accent: 'var(--c-secondary)',
-    title: 'Forecast where you’re headed',
-    body: 'Set growth rates and monthly contributions and watch the dashed line project your net worth months — or decades — ahead.',
+    number: '02',
+    title: 'Preserve a clear financial history',
+    body: 'Keep each recorded month distinct from the possibilities ahead.',
   },
   {
-    key: 'goals', cls: '', icon: Icon.Target, accent: 'var(--c-tertiary)',
-    title: 'Goals with a timeline',
-    body: 'Pick a target and see exactly how long it takes to get there.',
-  },
-  {
-    key: 'scenarios', cls: '', icon: Icon.Layers, accent: 'var(--c-secondary)',
-    title: 'Compare scenarios',
-    body: 'Fork your finances to test “what if” — save more, pay off a loan, change jobs.',
-  },
-  {
-    key: 'encryption', cls: 'lp-tile--wide', icon: Icon.Lock, accent: 'var(--c-primary)',
-    title: 'End-to-end encrypted, by design',
-    body: 'Your data is encrypted on your device before it ever leaves. Not even we can read it — and a recovery phrase means only you ever can.',
-  },
-  {
-    key: 'import', cls: '', icon: Icon.Doc, accent: 'var(--c-tertiary)',
-    title: 'Import statements',
-    body: 'Drop in a PDF or paste a table and let Worthfolio sort it into categories.',
-  },
-  {
-    key: 'sync', cls: '', icon: Icon.Devices, accent: 'var(--c-primary)',
-    title: 'Synced everywhere',
-    body: 'Pick up on any device. Your encrypted vault follows you, always in sync.',
+    number: '03',
+    title: 'Explore adjustable scenarios',
+    body: 'Change contributions, growth rates, and time horizons without hiding the assumptions.',
   },
 ]
 
-/* Small bespoke visuals that live inside select bento tiles. */
-function TileVisual({ k }) {
-  if (k === 'networth') {
-    return (
-      <div className="lp-tv lp-tv-networth">
-        <div className="lp-tv-eyebrow">Net worth</div>
-        <div className="lp-tv-amount">$284,920</div>
-        <div className="lp-tv-delta">+$3,140 this month</div>
-        <div className="lp-tv-bars">
-          {[42, 58, 50, 71, 64, 83, 96].map((h, i) => (
-            <span key={i} style={{ height: `${h}%` }} />
-          ))}
-        </div>
-      </div>
-    )
-  }
-  if (k === 'forecast') {
-    return (
-      <div className="lp-tv lp-tv-chart">
-        <MiniChart
-          history={[120, 138, 150, 166, 180, 200]}
-          forecast={[214, 232, 252, 274, 298]}
-          goal={285}
-          height={104}
-        />
-      </div>
-    )
-  }
-  if (k === 'goals') {
-    return (
-      <div className="lp-tv lp-tv-goal">
-        <div className="lp-ring">
-          <svg viewBox="0 0 36 36" aria-hidden="true">
-            <circle className="lp-ring-track" cx="18" cy="18" r="15.5" />
-            <circle className="lp-ring-fill" cx="18" cy="18" r="15.5" />
-          </svg>
-          <span className="lp-ring-label">68%</span>
-        </div>
-        <div className="lp-tv-goal-meta">
-          <b>~2 years</b>
-          <span>to $500k</span>
-        </div>
-      </div>
-    )
-  }
-  if (k === 'scenarios') {
-    return (
-      <div className="lp-tv lp-tv-scenarios">
-        <span className="lp-chip lp-chip-3">Pay off mortgage</span>
-        <span className="lp-chip lp-chip-2">Save 20%</span>
-        <span className="lp-chip lp-chip-1">Current plan</span>
-      </div>
-    )
-  }
-  if (k === 'import') {
-    return (
-      <div className="lp-tv lp-tv-import">
-        <span className="lp-import-doc"><Icon.Doc width={20} height={20} /> statement.pdf</span>
-        <Icon.Arrow className="lp-import-arrow" width={20} height={20} />
-        <div className="lp-import-rows">
-          <span><i style={{ background: 'var(--c-primary)' }} /> Checking</span>
-          <span><i style={{ background: 'var(--c-tertiary)' }} /> Savings</span>
-          <span><i style={{ background: 'var(--c-secondary)' }} /> Card</span>
-        </div>
-      </div>
-    )
-  }
-  if (k === 'encryption') {
-    return (
-      <div className="lp-tv lp-tv-enc">
-        <span className="lp-enc-badge"><Icon.Lock width={22} height={22} /></span>
-        <code className="lp-enc-cipher">a9f3·c1d8·7b40·e2aa·5f91·0c6d·3e88·b4f2</code>
-        <span className="lp-enc-tag">AES-256 · your keys only</span>
-      </div>
-    )
-  }
-  if (k === 'sync') {
-    return (
-      <div className="lp-tv lp-tv-sync">
-        <Icon.Devices width={64} height={64} />
-        <span className="lp-sync-ping" />
-      </div>
-    )
-  }
-  return null
-}
+const MONTHLY_RECORD = [
+  { month: 'Jan', value: '$271,840' },
+  { month: 'Feb', value: '$274,190' },
+  { month: 'Mar', value: '$276,060' },
+  { month: 'Apr', value: '$279,510' },
+  { month: 'May', value: '$281,780' },
+  { month: 'Jun', value: '$284,920' },
+]
+
+const ACCOUNT_ROWS = [
+  { name: 'Checking', group: 'Cash', value: '$8,250' },
+  { name: 'Savings', group: 'Cash', value: '$38,500' },
+  { name: 'Brokerage', group: 'Investments', value: '$167,400' },
+  { name: 'Retirement', group: 'Investments', value: '$119,300' },
+  { name: 'Mortgage', group: 'Liability', value: '−$48,530', liability: true },
+]
+
+const STEPS = [
+  {
+    number: '01',
+    title: 'Add accounts',
+    body: 'Organize the accounts and assets you want to include, alongside what you owe.',
+  },
+  {
+    number: '02',
+    title: 'Record a monthly snapshot',
+    body: 'Enter the current value of each account to add another point to your history.',
+  },
+  {
+    number: '03',
+    title: 'Compare projections',
+    body: 'Try different assumptions and see how each possible path relates to the same recorded past.',
+  },
+]
+
+const PRINCIPLES = [
+  ['The full history', 'See more than today’s balance by keeping every recorded month in view.'],
+  ['Visible assumptions', 'Know which contribution, growth rate, and horizon shape each projection.'],
+  ['Deliberate reflection', 'A monthly rhythm creates space to notice change without watching every tick.'],
+  ['The long view', 'A calm, legible surface keeps attention on years rather than minutes.'],
+]
 
 export default function LandingPage({ onGetStarted, onSignIn }) {
   const [scrolled, setScrolled] = useState(false)
   const scrollerRef = useRef(null)
 
-  // Toggle the frosted-nav state once the hero has scrolled past.
   useEffect(() => {
-    const el = scrollerRef.current
-    if (!el) return
-    const onScroll = () => setScrolled(el.scrollTop > 24)
-    el.addEventListener('scroll', onScroll, { passive: true })
-    return () => el.removeEventListener('scroll', onScroll)
+    const scroller = scrollerRef.current
+    if (!scroller) return undefined
+
+    const handleScroll = () => setScrolled(scroller.scrollTop > 20)
+    handleScroll()
+    scroller.addEventListener('scroll', handleScroll, { passive: true })
+    return () => scroller.removeEventListener('scroll', handleScroll)
   }, [])
 
   return (
-    <div className="lp" ref={scrollerRef}>
-      {/* ── Top bar ── */}
-      <header className={`lp-nav${scrolled ? ' lp-nav--scrolled' : ''}`}>
-        <div className="lp-nav-inner">
-          <a className="lp-brand" href="#top">
-            <span className="lp-logo" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M4 16l4-5 4 3 4-7 4 5" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </span>
-            Worthfolio
-          </a>
-          <nav className="lp-nav-actions">
-            <button className="lp-link" onClick={onSignIn}>Sign in</button>
-            <button className="btn btn-primary btn-sm" onClick={onGetStarted}>Get started</button>
-          </nav>
-        </div>
-      </header>
+    <div className="lp lp-stone" ref={scrollerRef}>
+      <LandingNav
+        scrolled={scrolled}
+        onGetStarted={onGetStarted}
+        onSignIn={onSignIn}
+      />
 
-      <main className="lp-main" id="top">
-        {/* ── Hero ── */}
-        <section className="lp-hero">
-          <HalftoneField />
-          <div className="lp-hero-copy">
-            <span className="lp-tag"><i aria-hidden="true" /> Private by design</span>
-            <h1 className="lp-hero-title">Know what you’re worth — and where you’re headed.</h1>
-            <p className="lp-hero-sub">
-              Track every account, project your future net worth, and watch your
-              wealth take shape. End-to-end encrypted and synced across all your
-              devices.
-            </p>
-            <div className="lp-hero-cta">
-              <button className="btn btn-primary lp-cta-lg" onClick={onGetStarted}>
-                Get started free <Icon.Arrow width={16} height={16} />
-              </button>
-              <button className="btn btn-secondary lp-cta-lg" onClick={onSignIn}>Sign in</button>
+      <main className="lp-stone-main" id="top">
+        <section className="lp-stone-hero" aria-labelledby="lp-hero-title">
+          <div className="lp-stone-shell lp-stone-hero__grid">
+            <div className="lp-stone-hero__copy">
+              <p className="lp-stone-overline">Wealth planning, through time.</p>
+              <h1 id="lp-hero-title">See the shape of your wealth.</h1>
+              <p className="lp-stone-hero__lede">
+                Record where you are each month, explore what could come next,
+                and keep the long view in focus.
+              </p>
+              <div className="lp-stone-hero__actions">
+                <button
+                  className="lp-stone-action lp-stone-action--primary"
+                  type="button"
+                  onClick={onGetStarted}
+                >
+                  Start your Worthfolio
+                  <span aria-hidden="true">→</span>
+                </button>
+                <a className="lp-stone-action lp-stone-action--quiet" href="#how-it-works">
+                  See how it works
+                </a>
+              </div>
             </div>
-            <p className="lp-hero-fineprint">
-              <Icon.Lock width={12} height={12} /> Free to start · No bank logins · Your keys, your data
-            </p>
-          </div>
-          <div className="lp-hero-art">
-            <PhoneMock />
+
+            <figure className="lp-stone-hero__art">
+              <ResponsiveArtwork
+                avif={heroAvif}
+                webp={heroWebp}
+                width="1672"
+                height="941"
+                alt="A limestone relief of a long path winding through a mountain valley toward the horizon"
+                priority
+              />
+              <figcaption>A long view, shaped one month at a time.</figcaption>
+            </figure>
           </div>
         </section>
 
-        {/* ── Trust stats ── */}
-        <section className="lp-stats" aria-label="Worthfolio at a glance">
-          <div className="lp-stat"><div className="lp-stat-num">AES-256</div><div className="lp-stat-label">Encrypted on your device</div></div>
-          <div className="lp-stat"><div className="lp-stat-num">0</div><div className="lp-stat-label">Bank logins required</div></div>
-          <div className="lp-stat"><div className="lp-stat-num">30 yrs</div><div className="lp-stat-label">Of forecast, if you want it</div></div>
-          <div className="lp-stat"><div className="lp-stat-num">100%</div><div className="lp-stat-label">Yours — export any time</div></div>
-        </section>
-
-        {/* ── Bento features ── */}
-        <section className="lp-section">
-          <div className="lp-section-head">
-            <span className="lp-kicker">Everything in one place</span>
-            <h2 className="lp-section-title">A complete picture of your money</h2>
-            <p className="lp-section-sub">
-              From today’s balance to a decades-long forecast — Worthfolio brings
-              your whole financial life into one calm, private dashboard.
-            </p>
+        <LandingSection
+          id="product"
+          className="lp-stone-truth"
+          labelledBy="lp-product-title"
+        >
+          <div className="lp-stone-section-heading lp-stone-section-heading--wide">
+            <p className="lp-stone-overline">What Worthfolio does</p>
+            <h2 id="lp-product-title">A financial record with time built in.</h2>
           </div>
-
-          <div className="lp-bento">
-            {FEATURES.map((f) => (
-              <article key={f.key} className={`card lp-tile ${f.cls}`}>
-                <div className="lp-tile-icon" style={{ color: f.accent, background: `color-mix(in srgb, ${f.accent} 14%, transparent)` }}>
-                  <f.icon width={22} height={22} />
-                </div>
-                <h3 className="lp-tile-title">{f.title}</h3>
-                <p className="lp-tile-body">{f.body}</p>
-                <TileVisual k={f.key} />
-              </article>
+          <ol className="lp-stone-truth__list">
+            {PRODUCT_TRUTHS.map((item) => (
+              <li key={item.number}>
+                <span className="lp-stone-index" aria-hidden="true">{item.number}</span>
+                <h3>{item.title}</h3>
+                <p>{item.body}</p>
+              </li>
             ))}
-          </div>
-        </section>
+          </ol>
+        </LandingSection>
 
-        {/* ── Closer look ── */}
-        <section className="lp-section lp-look">
-          <div className="lp-section-head">
-            <span className="lp-kicker">A closer look</span>
-            <h2 className="lp-section-title">Designed to feel effortless</h2>
-            <p className="lp-section-sub">
-              A calm, banking-grade interface that makes checking in on your net
-              worth something you’ll actually want to do.
+        <LandingSection
+          id="history"
+          className="lp-stone-feature"
+          labelledBy="lp-history-title"
+        >
+          <div className="lp-stone-feature__copy">
+            <p className="lp-stone-overline">Monthly history</p>
+            <h2 id="lp-history-title">A record you own, one month at a time.</h2>
+            <p>
+              Enter account values deliberately and Worthfolio places each
+              snapshot into a continuous history. You decide what to track and
+              when to update it.
+            </p>
+            <p>
+              Recorded months stay visually distinct from calculated future
+              possibilities, so the past never blurs into a projection.
             </p>
           </div>
-          <div className="lp-look-stage">
-            <PhoneMock />
-            <ul className="lp-look-points">
-              <li><span className="lp-look-dot" style={{ background: 'var(--color-indigo-navy)' }} /> Live net-worth ticker with month-over-month change</li>
-              <li><span className="lp-look-dot" style={{ background: 'var(--color-seafoam-600)' }} /> Interactive trend chart with a dashed forecast</li>
-              <li><span className="lp-look-dot" style={{ background: 'var(--color-seafoam-700)' }} /> Assets and liabilities split at a glance</li>
-              <li><span className="lp-look-dot" style={{ background: 'var(--color-deep-sea)' }} /> Scroll any month, past or projected</li>
-            </ul>
-          </div>
-        </section>
 
-        {/* ── Final CTA — dark inversion surface with the page's single
-            Signal Orange accent ── */}
-        <section className="lp-final">
-          <div className="lp-final-card">
-            <h2 className="lp-final-title">Start building your Worthfolio</h2>
-            <p className="lp-final-sub">
-              Create an encrypted vault in seconds. Free to start, and your data
-              never leaves your control.
+          <div className="lp-stone-feature__visual">
+            <ResponsiveArtwork
+              avif={historyAvif}
+              webp={historyWebp}
+              width="1448"
+              height="1086"
+              alt="Limestone layers crossed by a dark green line with a sequence of monthly points"
+            />
+            <div className="lp-stone-history-proof" aria-label="Illustrative six-month worth history">
+              <div className="lp-stone-history-proof__heading">
+                <span>Recorded history</span>
+                <strong>Jan–Jun</strong>
+              </div>
+              <ol>
+                {MONTHLY_RECORD.map((item, index) => (
+                  <li key={item.month} className={index === MONTHLY_RECORD.length - 1 ? 'is-current' : ''}>
+                    <span>{item.month}</span>
+                    <i aria-hidden="true" />
+                    <strong>{item.value}</strong>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
+        </LandingSection>
+
+        <LandingSection
+          id="scenarios"
+          className="lp-stone-scenarios"
+          labelledBy="lp-scenarios-title"
+        >
+          <div className="lp-stone-feature lp-stone-feature--reverse">
+            <div className="lp-stone-feature__copy">
+              <p className="lp-stone-overline">Scenario studio</p>
+              <h2 id="lp-scenarios-title">Explore the paths, and see what shapes them.</h2>
+              <p>
+                Begin with the same recorded history, then compare possible
+                directions. Every scenario keeps its contribution, annual growth
+                rate, starting balance, and horizon in sight.
+              </p>
+              <p>
+                Change one assumption at a time or create a different set. The
+                result remains a conditional projection—not a promise.
+              </p>
+            </div>
+            <ResponsiveArtwork
+              className="lp-stone-feature__visual"
+              avif={scenariosAvif}
+              webp={scenariosWebp}
+              width="1448"
+              height="1086"
+              alt="A carved path branching into several routes, with one path inlaid in deep green"
+            />
+          </div>
+          <ProjectionPreview />
+        </LandingSection>
+
+        <LandingSection
+          id="accounts"
+          className="lp-stone-accounts"
+          labelledBy="lp-accounts-title"
+        >
+          <div className="lp-stone-accounts__intro">
+            <p className="lp-stone-overline">One inspectable total</p>
+            <h2 id="lp-accounts-title">See the accounts behind your worth.</h2>
+            <p>
+              Assets and liabilities remain individually legible while rolling
+              into one current total. Nothing is hidden behind a single number.
             </p>
-            <div className="lp-hero-cta lp-final-cta">
-              <button className="btn btn-accent lp-cta-lg" onClick={onGetStarted}>
-                Get started free <Icon.Arrow width={16} height={16} />
+          </div>
+
+          <div className="lp-stone-rollup" data-surface="recessed">
+            <table>
+              <caption>Illustrative account rollup</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Account</th>
+                  <th scope="col">Group</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ACCOUNT_ROWS.map((row) => (
+                  <tr key={row.name}>
+                    <th scope="row">{row.name}</th>
+                    <td>{row.group}</td>
+                    <td className={row.liability ? 'is-liability' : ''}>{row.value}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th scope="row" colSpan="2">Total worth</th>
+                  <td>$284,920</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </LandingSection>
+
+        <LandingSection
+          id="compounding"
+          className="lp-stone-feature lp-stone-compounding"
+          labelledBy="lp-compounding-title"
+        >
+          <ResponsiveArtwork
+            className="lp-stone-feature__visual"
+            avif={compoundingAvif}
+            webp={compoundingWebp}
+            width="1448"
+            height="1086"
+            alt="A limestone staircase following a deep green path toward a circular opening"
+          />
+          <div className="lp-stone-feature__copy">
+            <p className="lp-stone-overline">Consistency and time</p>
+            <h2 id="lp-compounding-title">Small steps become a longer path.</h2>
+            <p>
+              A monthly record makes gradual change visible. Scenario projections
+              let you study how contributions, time, and an assumed growth rate
+              can interact over years.
+            </p>
+            <p>
+              Worthfolio does not predict returns. It gives your assumptions a
+              clear place to be seen, changed, and compared.
+            </p>
+          </div>
+        </LandingSection>
+
+        <LandingSection
+          id="how-it-works"
+          className="lp-stone-walkthrough"
+          labelledBy="lp-how-title"
+        >
+          <div className="lp-stone-section-heading">
+            <p className="lp-stone-overline">How it works</p>
+            <h2 id="lp-how-title">A simple rhythm for the long view.</h2>
+          </div>
+          <ol className="lp-stone-steps">
+            {STEPS.map((step) => (
+              <li key={step.number}>
+                <span className="lp-stone-step-number" aria-hidden="true">{step.number}</span>
+                <div>
+                  <h3>{step.title}</h3>
+                  <p>{step.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </LandingSection>
+
+        <LandingSection
+          id="principles"
+          className="lp-stone-principles"
+          labelledBy="lp-principles-title"
+        >
+          <div className="lp-stone-section-heading lp-stone-section-heading--wide">
+            <p className="lp-stone-overline">Built around perspective</p>
+            <h2 id="lp-principles-title">Your financial life deserves a quieter frame.</h2>
+          </div>
+          <ul className="lp-stone-principles__list">
+            {PRINCIPLES.map(([title, body], index) => (
+              <li key={title}>
+                <span className="lp-stone-index" aria-hidden="true">0{index + 1}</span>
+                <h3>{title}</h3>
+                <p>{body}</p>
+              </li>
+            ))}
+          </ul>
+        </LandingSection>
+
+        <section className="lp-stone-final" aria-labelledby="lp-final-title">
+          <div className="lp-stone-shell">
+            <div className="lp-stone-final__plane">
+              <p className="lp-stone-overline">Build with the long view</p>
+              <h2 id="lp-final-title">Make time part of the picture.</h2>
+              <p>
+                Begin a monthly record, then explore possible paths with the
+                assumptions kept in plain sight.
+              </p>
+              <button
+                className="lp-stone-action lp-stone-action--light"
+                type="button"
+                onClick={onGetStarted}
+              >
+                Start your Worthfolio
+                <span aria-hidden="true">→</span>
               </button>
-              <button className="btn btn-secondary lp-cta-lg" onClick={onSignIn}>I already have an account</button>
             </div>
           </div>
         </section>
-
-        <footer className="lp-footer">
-          <span className="lp-brand lp-brand--sm">
-            <span className="lp-logo" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M4 16l4-5 4 3 4-7 4 5" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </span>
-            Worthfolio
-          </span>
-          <span className="lp-footer-note">Your wealth, encrypted and in focus.</span>
-        </footer>
       </main>
+
+      <footer className="lp-stone-footer">
+        <div className="lp-stone-shell lp-stone-footer__inner">
+          <div className="lp-stone-footer__brand">
+            <BrandLockup as="a" href="#top" compact flat />
+            <p>A calm record of your financial life, through time.</p>
+          </div>
+          <nav aria-label="Footer navigation">
+            <a href="#product">Product</a>
+            <a href="#how-it-works">How it works</a>
+            <a href="#principles">Principles</a>
+          </nav>
+          <p className="lp-stone-footer__disclosure">
+            Examples on this page are illustrative. Projections are calculated
+            from assumptions you choose; they are not guarantees or financial advice.
+          </p>
+        </div>
+      </footer>
     </div>
   )
 }

@@ -1,7 +1,6 @@
-import { useState, useRef, useEffect } from 'react'
+import { lazy, Suspense, useState, useRef, useEffect } from 'react'
 import MonthSelector from '../components/MonthSelector'
 import CategoryCard from '../components/CategoryCard'
-import NetWorthChart from '../components/NetWorthChart'
 import RollingNumber from '../components/RollingNumber'
 import EditCategorySheet from '../components/EditCategorySheet'
 import Modal from '../components/Modal'
@@ -13,6 +12,8 @@ import {
   generateForecast,
   monthIndex,
 } from '../lib/forecast'
+
+const NetWorthChart = lazy(() => import('../components/NetWorthChart'))
 
 const RANGE_OPTIONS = ['1M', '3M', '6M', '1Y', 'custom']
 const RANGE_COUNTS   = { '1M': 2,  '3M': 3,  '6M': 6,  '1Y': 12 }
@@ -229,7 +230,7 @@ export default function Dashboard({
     : null
 
   return (
-    <div>
+    <div className="dashboard">
       {/* Hero — left aligned */}
       <div className="hero">
         <div className="hero-eyebrow">Net worth</div>
@@ -258,8 +259,10 @@ export default function Dashboard({
       {/* Trend line + forecast. The goal line on the chart is the single goal
           element — it shows the target, the time to reach it, and opens the
           editor; with no data yet it still renders as the set-a-goal CTA. */}
-      <div style={{ padding: '20px 20px 0' }}>
-        <NetWorthChart key={timeRange} data={filteredHistory} forecastData={forecastData} selectedMonth={selectedMonth} height={180} goal={goal} goalEta={goalEta} onGoalClick={() => setGoalOpen(true)} onSelectMonth={onMonthChange} animateDraw={chartAnimate} emptyPointCount={RANGE_COUNTS[timeRange] ?? 12} />
+      <div className="net-worth-chart-well">
+        <Suspense fallback={<div className="net-worth-chart-loading" aria-hidden="true" />}>
+          <NetWorthChart key={timeRange} data={filteredHistory} forecastData={forecastData} selectedMonth={selectedMonth} height={180} goal={goal} goalEta={goalEta} onGoalClick={() => setGoalOpen(true)} onSelectMonth={onMonthChange} animateDraw={chartAnimate} emptyPointCount={RANGE_COUNTS[timeRange] ?? 12} />
+        </Suspense>
       </div>
 
       {/* Time range filter — always shown so first-time users see the full

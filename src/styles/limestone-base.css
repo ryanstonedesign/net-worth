@@ -1,0 +1,256 @@
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("../assets/worthfolio/fonts/InstrumentSerif-Regular.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Inter;
+  src: url("../assets/worthfolio/fonts/InterVariable.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+}
+
+html,
+body {
+  background: var(--c-bg);
+}
+
+body {
+  font-family: var(--font-interface);
+  color: var(--text-primary, var(--c-ink));
+  font-feature-settings: "cv11" 1, "tnum" 1, "lnum" 1;
+}
+
+::selection {
+  color: var(--color-on-dark);
+  background: var(--color-forest);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-interface);
+}
+
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-focus) !important;
+  outline-offset: 3px;
+}
+
+.app-bg,
+.app-shell,
+.side-nav,
+.lp,
+.auth-shell {
+  background-color: var(--c-bg);
+}
+
+.app-bg::after,
+.app-shell::after,
+.lp::after,
+.auth-shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: url("../assets/worthfolio/texture/limestone-surface.webp") center / 1024px 1024px repeat;
+  mix-blend-mode: multiply;
+  opacity: 0.06;
+}
+
+.app-bg,
+.app-shell,
+.lp,
+.auth-shell {
+  isolation: isolate;
+}
+
+.card,
+[data-surface="recessed"] {
+  background: var(--c-surface-muted);
+  border: 1px solid color-mix(in srgb, var(--c-border) 82%, transparent);
+  border-radius: var(--radius-md);
+  box-shadow: var(--surface-recessed-shadow);
+}
+
+.card {
+  border-color: var(--card-border-color);
+}
+
+[data-surface="flush"] {
+  background: var(--c-bg);
+  box-shadow: var(--surface-flush-shadow);
+}
+
+[data-surface="raised"] {
+  background: var(--c-surface);
+  border: 1px solid color-mix(in srgb, var(--c-border) 72%, transparent);
+  border-radius: var(--radius-md);
+  box-shadow: var(--surface-raised-shadow);
+}
+
+.btn {
+  min-height: 44px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  transition:
+    transform var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    background var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.btn-primary {
+  color: var(--color-on-dark);
+  background: var(--c-primary);
+  box-shadow: var(--shadow-btn-primary);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  background: var(--color-forest-hover);
+}
+
+.btn-primary:active {
+  transform: none;
+  background: var(--color-forest-pressed);
+  box-shadow: var(--surface-pressed-shadow);
+}
+
+.btn-secondary {
+  color: var(--c-primary);
+  background: var(--c-surface);
+  border-color: var(--color-line-strong);
+  box-shadow: var(--surface-raised-shadow);
+}
+
+.btn-secondary:hover,
+.btn-tertiary:hover {
+  background: color-mix(in srgb, var(--c-primary) 6%, var(--c-surface));
+}
+
+.btn-destructive {
+  color: var(--c-danger);
+  border-color: color-mix(in srgb, var(--c-danger) 74%, var(--c-border));
+}
+
+.btn:disabled {
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-icon,
+.fab,
+.settings-fab {
+  color: var(--c-ink);
+  background: var(--c-surface);
+  border: 1px solid color-mix(in srgb, var(--c-border) 72%, transparent);
+  box-shadow: var(--surface-raised-shadow);
+}
+
+.input,
+.select,
+.custom-range-input,
+.update-amount-input {
+  min-height: 48px;
+  color: var(--c-ink);
+  background: var(--c-surface-muted);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--surface-recessed-shadow);
+}
+
+.input:focus,
+.select:focus,
+.custom-range-input:focus,
+.update-amount-input:focus {
+  border-color: var(--color-focus);
+  box-shadow: var(--surface-recessed-shadow);
+}
+
+:is(.input, .input-secondary, .custom-range-input, .update-amount-input, .cat-account-input, .cat-contrib-input)::placeholder {
+  color: var(--c-ink-mute);
+  opacity: 1;
+}
+
+.form-label {
+  color: var(--c-ink-body);
+  letter-spacing: 0.015em;
+}
+
+.type-toggle,
+.sign-toggle {
+  background: var(--c-surface-muted);
+  border: 1px solid var(--c-border);
+  box-shadow: var(--surface-recessed-shadow);
+}
+
+.type-toggle-thumb {
+  background: var(--c-surface);
+  box-shadow: var(--surface-flush-shadow), 0 1px 3px var(--shade-edge);
+}
+
+.modal-overlay {
+  background: rgba(19, 34, 28, 0.24);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.modal-sheet {
+  background: var(--c-surface);
+  border: 1px solid color-mix(in srgb, var(--c-border) 72%, transparent);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--surface-raised-shadow);
+}
+
+.modal-title,
+.auth-title {
+  font-family: var(--font-interface);
+  color: var(--c-ink);
+}
+
+.brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--c-ink);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.brand-lockup__picture,
+.brand-lockup__mark {
+  display: block;
+  width: var(--brand-mark-size, 44px);
+  height: var(--brand-mark-size, 44px);
+  flex: 0 0 var(--brand-mark-size, 44px);
+}
+
+.brand-lockup__wordmark {
+  font-family: var(--font-display);
+  font-size: var(--brand-wordmark-size, 20px);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.brand-lockup--compact {
+  --brand-mark-size: 34px;
+  --brand-wordmark-size: 17px;
+  gap: 10px;
+}
+
+.numeric,
+td,
+[data-financial-value] {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1, "zero" 1;
+}
