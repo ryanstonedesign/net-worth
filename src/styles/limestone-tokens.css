@@ -31,6 +31,19 @@
   --font-interface: var(--font);
   --font-display: var(--font-title);
 
+  /* Display role — the largest type in the system. The hero net-worth value and
+     the style tile's Display specimen both read from here so the specimen
+     cannot drift from the thing it documents. Instrument Serif ships a single
+     400 cut, so the weight is 400 despite older specs quoting 700. */
+  --text-display: 48px;
+  --weight-display: 400;
+  --leading-display: 1;
+  --tracking-display: -0.025em;
+
+  /* Light catching a raised edge. Reads as a shallow emboss on ink sitting on
+     the limestone plane. */
+  --text-emboss: 0 1px 0 var(--light-edge);
+
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;

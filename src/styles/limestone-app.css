@@ -326,7 +326,7 @@
   font-weight: 500;
   letter-spacing: 0;
   color: var(--c-ink-body);
-  text-shadow: 0 1px 0 var(--light-edge);
+  text-shadow: var(--text-emboss);
 }
 
 .top-nav-ask {
@@ -378,15 +378,17 @@
   text-shadow: 0 1px 0 var(--light-edge);
 }
 
+/* The hero value is the Display role — same tokens the style tile specimens. */
 .hero-amount {
   max-width: 100%;
   margin-bottom: var(--space-2);
   font-family: var(--font-display);
-  font-size: clamp(42px, 9vw, 64px);
-  font-weight: 400;
-  line-height: 1;
-  letter-spacing: -0.03em;
+  font-size: var(--text-display);
+  font-weight: var(--weight-display);
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
   color: var(--c-ink);
+  text-shadow: var(--text-emboss);
   font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings: "tnum" 1, "lnum" 1;
 }
@@ -939,69 +941,50 @@
   box-shadow: var(--surface-pressed-shadow);
 }
 
-/* ── Restrained financial-number transition ───────────────────────────── */
+/* ── Financial-number transition ───────────────────────────────────────────
+   Each digit is a vertical reel of 0-9 that rolls through the intermediate
+   numerals to reach its target. The window is masked to transparent at top and
+   bottom rather than hard-cropped, so numerals dissolve as they enter and
+   leave — at speed that soft edge is what reads as motion blur. A digit whose
+   value does not change never moves. */
 .roll-num {
-  align-items: baseline;
+  display: inline-flex;
+  align-items: center;
   line-height: 1;
   font-variant-numeric: tabular-nums lining-nums;
 }
 
 .roll-digit {
   position: relative;
-  display: inline-grid;
+  display: inline-block;
   width: 1ch;
-  height: 1em;
+  height: 1.35em;
   overflow: hidden;
-  align-items: center;
-  justify-items: center;
-  -webkit-mask-image: none;
-  mask-image: none;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 80%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 80%, transparent 100%);
 }
 
-.roll-digit-static,
-.roll-digit-in,
-.roll-digit-out {
-  grid-area: 1 / 1;
-  display: inline-flex;
-  height: 1em;
+.reel {
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--duration-reveal) var(--ease-enter);
+}
+
+.reel.no-anim {
+  transition: none;
+}
+
+.reel-cell {
+  display: flex;
+  height: 1.35em;
   align-items: center;
   justify-content: center;
-  line-height: 1;
-}
-
-.roll-digit-in {
-  animation: limestoneDigitIn var(--duration-data) var(--ease-material) both;
-}
-
-.roll-digit-out {
-  animation: limestoneDigitOut var(--duration-data) var(--ease-material) both;
 }
 
 .roll-sep {
-  height: 1em;
-  line-height: 1;
-}
-
-@keyframes limestoneDigitIn {
-  from {
-    opacity: 0;
-    transform: translateY(0.28em);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes limestoneDigitOut {
-  from {
-    opacity: 1;
-    transform: none;
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-0.28em);
-  }
+  display: inline-flex;
+  height: 1.35em;
+  align-items: center;
 }
 
 /* ── Responsive refinement ─────────────────────────────────────────────── */
@@ -1009,10 +992,6 @@
   .hero {
     padding-right: 16px;
     padding-left: 16px;
-  }
-
-  .hero-amount {
-    font-size: clamp(30px, 9vw, 38px);
   }
 
   .net-worth-chart-well,
@@ -1082,14 +1061,12 @@
     animation: none !important;
   }
 
-  .nw-dot-appear,
-  .roll-digit-in,
-  .roll-digit-out {
+  .nw-dot-appear {
     animation: none !important;
   }
 
-  .roll-digit-out {
-    display: none;
+  .reel {
+    transition: none;
   }
 }
 

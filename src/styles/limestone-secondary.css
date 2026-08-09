@@ -1200,10 +1200,10 @@ button.settings-row:active {
 
 .ds-t-display {
   font-family: var(--font-display);
-  font-size: 48px;
-  font-weight: 400;
-  line-height: 1;
-  letter-spacing: -0.025em;
+  font-size: var(--text-display);
+  font-weight: var(--weight-display);
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
 }
 
 .ds-t-title {
