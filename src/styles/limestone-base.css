@@ -208,6 +208,61 @@ textarea {
   opacity: var(--grain-strength);
 }
 
+/* ── Key light on every plane ──────────────────────────────────────────────
+   The grain says what the surface is made of; this says where it is lit from.
+   A single sheen in the top-left corner of each plane, falling away toward the
+   bottom right, so the page, the rail, the sheets, and the cards all read as
+   lit by the same source rather than each being shaded on its own terms.
+
+   Anchored and isolated for the same reason the grain overlay is: the sheen's
+   inset resolves against the nearest positioned ancestor, and a z-index of -1
+   only clears the element's own fill if that element makes a stacking context.
+   Fixed and absolute surfaces are left out of the anchor rule and keep theirs. */
+.app-shell,
+.auth-shell,
+.modal-sheet,
+.auth-card,
+.ask-panel,
+.cat-card.card,
+.settings-card,
+.side-nav-item.active {
+  position: relative;
+}
+
+.app-bg,
+.app-shell,
+.auth-shell,
+.side-nav,
+.modal-sheet,
+.popover-menu,
+.auth-card,
+.ask-panel,
+.cat-card.card,
+.settings-card,
+.side-nav-item.active {
+  isolation: isolate;
+}
+
+.app-bg::before,
+.app-shell::before,
+.auth-shell::before,
+.side-nav::before,
+.modal-sheet::before,
+.popover-menu::before,
+.auth-card::before,
+.ask-panel::before,
+.cat-card.card::before,
+.settings-card::before,
+.side-nav-item.active::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: var(--surface-sheen);
+}
+
 /* Forest actions carry the grain too, on the ink recipe. They are anchored
    with the rest of the grain surfaces above. */
 .btn-primary::after,
