@@ -110,6 +110,19 @@
   /* Strength of the grain overlay worn by every painted surface. Matches the
      15% the slab veil passes, so a slab and a sheet read as the same stone. */
   --grain-strength: 0.15;
+
+  /* The forest actions are the same stone in shadow, but a multiply of a
+     near-white grain barely registers on a dark fill — 0.6 luminance levels,
+     under what an eye resolves — because multiply can only darken. Recentre
+     the texture on mid grey (233 x 0.549 = 128) and blend it soft-light, which
+     varies in both directions and leaves the fill's mean where it was. The
+     higher strength compensates for soft-light's gentler slope. It stops short
+     of matching the light surfaces' absolute variance: the same sd on a fill
+     this dark is several times the relative contrast, so 0.55 lands at 1.57
+     luminance sd against their 1.91 and reads as the same stone rather than
+     as noise. */
+  --grain-ink-recentre: brightness(0.549);
+  --grain-strength-ink: 0.55;
   --slab-grain-blend: normal, multiply;
 
   /* Slab: a plane cut from the canvas and set on top of it. It sits at the

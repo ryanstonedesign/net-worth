@@ -210,6 +210,34 @@ textarea {
   opacity: var(--grain-strength);
 }
 
+/* Forest actions carry the grain too, on the ink recipe. .top-nav-ask is fixed
+   and keeps that; the rest need anchoring. */
+.btn-primary,
+.top-nav-ask,
+.ask-compose form > button {
+  isolation: isolate;
+}
+
+.btn-primary,
+.ask-compose form > button {
+  position: relative;
+}
+
+.btn-primary::after,
+.top-nav-ask::after,
+.ask-compose form > button::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: var(--texture-limestone) center / var(--texture-limestone-tile) repeat;
+  filter: var(--grain-ink-recentre);
+  mix-blend-mode: soft-light;
+  opacity: var(--grain-strength-ink);
+}
+
 .btn {
   min-height: 44px;
   border-radius: var(--radius-sm);
