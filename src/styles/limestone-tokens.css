@@ -89,23 +89,23 @@
   --slab-grain-size: auto, var(--texture-limestone-tile);
   --slab-grain-blend: normal, multiply;
 
-  /* Slab: a plane cut from the canvas and set on top of it. The rim highlight
-     is the rounded chamfer catching light, the inner bottom wash is the
-     stone's thickness, and the two outer shadows are contact plus ambient. */
+  /* Slab: a plane cut from the canvas and set on top of it. It sits at the
+     same height as the other raised instruments, so it casts the same light —
+     identical top edge, contact, and ambient to --shadow-btn-secondary. What
+     separates a slab from a button or a popover is material, not elevation:
+     the grain in its fill and the chamfered rim around its edge. */
   --shadow-slab:
-    inset 0 1px 0 rgba(255, 255, 255, 0.86),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.3),
-    inset 0 -8px 12px -9px rgba(54, 49, 41, 0.24),
-    0 1px 1px var(--shade-edge),
-    0 10px 22px -8px rgba(45, 42, 36, 0.17);
+    inset 0 1px 0 var(--light-edge),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.22),
+    0 1px 2px var(--shade-edge),
+    0 12px 32px var(--shade-ambient);
   --shadow-slab-lifted:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.34),
-    inset 0 -8px 12px -9px rgba(54, 49, 41, 0.22),
-    0 2px 3px var(--shade-edge),
-    0 18px 32px -10px rgba(45, 42, 36, 0.21);
+    inset 0 1px 0 var(--light-edge),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.26),
+    0 1px 2px var(--shade-edge),
+    0 14px 30px color-mix(in srgb, var(--shade-ambient) 88%, transparent);
   --surface-slab-shadow: var(--shadow-slab);
-  --surface-slab-border: color-mix(in srgb, var(--c-border) 62%, transparent);
+  --surface-slab-border: color-mix(in srgb, var(--c-border) 72%, transparent);
 
   /* Engraved rule: a line chiselled into a surface — dark groove with the
      light lip below it. Slabs are divided this way instead of being packed
