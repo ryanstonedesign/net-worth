@@ -13,9 +13,7 @@
    it from every slab at once, the same way the page wash is dropped below. */
 @media (prefers-contrast: more) {
   :root {
-    --slab-grain-image: none;
-    --slab-grain-size: auto;
-    --slab-grain-blend: normal;
+    --texture-limestone: none;
   }
 
   .app-bg::after,
@@ -36,9 +34,7 @@
 
 @media (prefers-reduced-data: reduce) {
   :root {
-    --slab-grain-image: none;
-    --slab-grain-size: auto;
-    --slab-grain-blend: normal;
+    --texture-limestone: none;
   }
 
   .app-bg::after,
@@ -51,9 +47,7 @@
 
 @media print {
   :root {
-    --slab-grain-image: none;
-    --slab-grain-size: auto;
-    --slab-grain-blend: normal;
+    --texture-limestone: none;
   }
 
   .app-bg::after,
@@ -66,9 +60,7 @@
 
 @media (forced-colors: active) {
   :root {
-    --slab-grain-image: none;
-    --slab-grain-size: auto;
-    --slab-grain-blend: normal;
+    --texture-limestone: none;
   }
 
   .app-bg::after,

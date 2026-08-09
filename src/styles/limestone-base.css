@@ -100,8 +100,11 @@ textarea {
    edge, and a small contact shadow. Recesses stay reserved for the controls
    you write into: inputs, selects, and segmented rails. */
 [data-surface="slab"] {
+  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) 85%, transparent);
   background-color: var(--slab-fill);
-  background-image: var(--slab-grain-image);
+  background-image:
+    linear-gradient(var(--slab-grain-veil), var(--slab-grain-veil)),
+    var(--texture-limestone);
   background-position: center;
   background-size: var(--slab-grain-size);
   background-repeat: repeat;
@@ -179,7 +182,6 @@ textarea {
 }
 
 .input,
-.select,
 .custom-range-input,
 .update-amount-input {
   min-height: 48px;
@@ -191,11 +193,44 @@ textarea {
 }
 
 .input:focus,
-.select:focus,
 .custom-range-input:focus,
 .update-amount-input:focus {
   border-color: var(--color-focus);
   box-shadow: var(--surface-recessed-shadow);
+}
+
+/* A select is a control you press open, not a field you write into, so it is a
+   slab like the buttons it sits among rather than a recess like the inputs.
+   The boundary stays at --color-line-strong, matching .btn-secondary, so the
+   control is still identifiable by its edge alone. Two markup variants exist:
+   a bare .select and a .select-wrap holding a select styled as .input. */
+:is(.select, .select-wrap > select) {
+  min-height: 48px;
+  color: var(--c-ink);
+  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) 85%, transparent);
+  background-color: var(--slab-fill);
+  background-image:
+    linear-gradient(var(--slab-grain-veil), var(--slab-grain-veil)),
+    var(--texture-limestone);
+  background-position: center;
+  background-size: var(--slab-grain-size);
+  background-repeat: repeat;
+  background-blend-mode: var(--slab-grain-blend);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-slab);
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+:is(.select, .select-wrap > select):hover {
+  box-shadow: var(--shadow-slab-lifted);
+}
+
+:is(.select, .select-wrap > select):focus {
+  border-color: var(--color-focus);
+  box-shadow: var(--shadow-slab);
 }
 
 :is(.input, .input-secondary, .custom-range-input, .update-amount-input, .cat-account-input, .cat-contrib-input)::placeholder {

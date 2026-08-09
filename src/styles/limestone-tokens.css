@@ -81,11 +81,18 @@
      painted panel. */
   --texture-limestone: url("../assets/worthfolio/texture/limestone-surface.webp");
   --texture-limestone-tile: 256px 256px;
-  --slab-fill: var(--c-surface);
+  /* --slab-ground is the fill a slab takes on a given backdrop; a container
+     that is itself --c-surface raises it so slabs stay a layer above rather
+     than blending into their host. --slab-fill is the per-slab value, so a
+     tinted slab mixes into whatever ground it happens to be sitting on. */
+  --slab-ground: var(--c-surface);
+  --slab-fill: var(--slab-ground);
+  /* Default veil only. Each slab rule re-declares this against its own
+     --slab-fill and builds the gradient inline, because a var() inside a
+     custom property resolves where that property is declared — a composite
+     built here would carry the root fill onto every slab and cancel any
+     local ground. Set --texture-limestone to none to retire the grain. */
   --slab-grain-veil: color-mix(in srgb, var(--slab-fill) 85%, transparent);
-  --slab-grain-image:
-    linear-gradient(var(--slab-grain-veil), var(--slab-grain-veil)),
-    var(--texture-limestone);
   --slab-grain-size: auto, var(--texture-limestone-tile);
   --slab-grain-blend: normal, multiply;
 

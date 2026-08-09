@@ -122,8 +122,11 @@
   height: 32px;
   padding: 7px;
   color: var(--c-primary);
+  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) 85%, transparent);
   background-color: var(--slab-fill);
-  background-image: var(--slab-grain-image);
+  background-image:
+    linear-gradient(var(--slab-grain-veil), var(--slab-grain-veil)),
+    var(--texture-limestone);
   background-position: center;
   background-size: var(--slab-grain-size);
   background-repeat: repeat;
@@ -181,8 +184,11 @@
 }
 
 .side-nav-item.active {
+  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) 85%, transparent);
   background-color: var(--slab-fill);
-  background-image: var(--slab-grain-image);
+  background-image:
+    linear-gradient(var(--slab-grain-veil), var(--slab-grain-veil)),
+    var(--texture-limestone);
   background-position: center;
   background-size: var(--slab-grain-size);
   background-repeat: repeat;
@@ -653,8 +659,11 @@
 
 .cat-card.card {
   padding: 16px 18px;
+  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) 85%, transparent);
   background-color: var(--slab-fill);
-  background-image: var(--slab-grain-image);
+  background-image:
+    linear-gradient(var(--slab-grain-veil), var(--slab-grain-veil)),
+    var(--texture-limestone);
   background-position: center;
   background-size: var(--slab-grain-size);
   background-repeat: repeat;
@@ -862,8 +871,11 @@
   width: 40px;
   height: 40px;
   color: var(--c-primary);
+  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) 85%, transparent);
   background-color: var(--slab-fill);
-  background-image: var(--slab-grain-image);
+  background-image:
+    linear-gradient(var(--slab-grain-veil), var(--slab-grain-veil)),
+    var(--texture-limestone);
   background-position: center;
   background-size: var(--slab-grain-size);
   background-repeat: repeat;

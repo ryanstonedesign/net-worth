@@ -13,6 +13,21 @@
   animation: limestone-fade-in var(--duration-control) var(--ease-standard);
 }
 
+/* Sheets, popovers, and the Ask panel are themselves --c-surface, so a slab at
+   the default ground would vanish into them. Raise the ground inside these
+   containers; everything on the open canvas keeps the base value. */
+.modal-sheet,
+.popover-menu,
+.ask-panel {
+  --slab-ground: color-mix(in srgb, white 55%, var(--c-surface));
+  /* --slab-fill must be re-declared alongside the ground: a var() inside a
+     custom property is substituted where that property is declared, so the
+     :root copy of --slab-fill has already resolved against the root ground
+     and would ignore this one. Same reason each slab rule computes its own
+     --slab-grain-veil. */
+  --slab-fill: var(--slab-ground);
+}
+
 .modal-sheet {
   max-width: 600px;
   color: var(--c-ink);
@@ -104,9 +119,8 @@
   letter-spacing: 0.035em;
 }
 
-.modal-sheet :is(.input, .select),
-.auth-card .input,
-.settings-pop-field .select {
+.modal-sheet .input,
+.auth-card .input {
   color: var(--c-ink);
   background: var(--c-surface-muted);
   border: 1px solid var(--color-line-strong);
@@ -114,14 +128,43 @@
   box-shadow: var(--surface-recessed-shadow);
 }
 
-.modal-sheet :is(.input, .select):focus,
-.auth-card .input:focus,
-.settings-pop-field .select:focus {
+.modal-sheet .input:focus,
+.auth-card .input:focus {
   border-color: var(--color-focus);
   box-shadow: var(--surface-recessed-shadow);
 }
 
-.modal-sheet :is(.input, .select)::placeholder,
+/* Selects are slabs everywhere, including inside sheets and popovers, where
+   the scoped .input recess would otherwise reclaim them. */
+.modal-sheet :is(.select, .select-wrap > select),
+.settings-pop-field .select {
+  color: var(--c-ink);
+  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) 85%, transparent);
+  background-color: var(--slab-fill);
+  background-image:
+    linear-gradient(var(--slab-grain-veil), var(--slab-grain-veil)),
+    var(--texture-limestone);
+  background-position: center;
+  background-size: var(--slab-grain-size);
+  background-repeat: repeat;
+  background-blend-mode: var(--slab-grain-blend);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-slab);
+}
+
+.modal-sheet :is(.select, .select-wrap > select):hover,
+.settings-pop-field .select:hover {
+  box-shadow: var(--shadow-slab-lifted);
+}
+
+.modal-sheet :is(.select, .select-wrap > select):focus,
+.settings-pop-field .select:focus {
+  border-color: var(--color-focus);
+  box-shadow: var(--shadow-slab);
+}
+
+.modal-sheet .input::placeholder,
 .auth-card .input::placeholder {
   color: var(--c-ink-mute);
   opacity: 1;
@@ -317,8 +360,11 @@
 /* One slab holding a stack of rows, rather than a recess per row. */
 .settings-card {
   overflow: hidden;
+  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) 85%, transparent);
   background-color: var(--slab-fill);
-  background-image: var(--slab-grain-image);
+  background-image:
+    linear-gradient(var(--slab-grain-veil), var(--slab-grain-veil)),
+    var(--texture-limestone);
   background-position: center;
   background-size: var(--slab-grain-size);
   background-repeat: repeat;
@@ -355,9 +401,10 @@ button.settings-row:active {
   color: var(--c-ink-mute);
 }
 
-/* A tinted slab, not a painted panel — the grain veil follows --slab-fill. */
+/* A tinted slab, not a painted panel — the grain veil follows --slab-fill, and
+   the tint mixes into the ground so it tracks its backdrop. */
 .settings-card--danger {
-  --slab-fill: color-mix(in srgb, var(--c-danger) 5%, var(--c-surface));
+  --slab-fill: color-mix(in srgb, var(--c-danger) 5%, var(--slab-ground));
   border-color: color-mix(in srgb, var(--c-danger) 48%, var(--c-border));
 }
 
