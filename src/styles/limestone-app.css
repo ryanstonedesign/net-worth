@@ -197,17 +197,6 @@
   box-shadow: var(--shadow-slab);
 }
 
-.side-nav-item.active::before {
-  content: "";
-  position: absolute;
-  top: 8px;
-  bottom: 8px;
-  left: 0;
-  width: 2px;
-  background: var(--c-primary);
-  border-radius: 0 2px 2px 0;
-}
-
 .side-nav-item-name {
   min-height: 46px;
   padding: 8px 10px;
@@ -1140,8 +1129,11 @@
     box-shadow: none;
   }
 
-  .side-nav-item.active::before {
-    background: Highlight;
+  /* Forced colors strips the slab's fill, grain, and shadow, which is all that
+     marks the active scenario now that the accent bar is gone. Carry the state
+     on the border instead so it stays distinguishable. */
+  .side-nav-item.active {
+    border-color: Highlight;
   }
 
   .range-pill.active {
