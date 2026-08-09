@@ -33,9 +33,14 @@
 
   /* Display role — the largest type in the system. The hero net-worth value and
      the style tile's Display specimen both read from here so the specimen
-     cannot drift from the thing it documents. Instrument Serif ships a single
-     400 cut, so the weight is 400 despite older specs quoting 700. */
-  --text-display: 48px;
+     cannot drift from the thing it documents.
+
+     The weight stays 400 because Instrument Serif ships a single cut: asking
+     for 700 does not load a bold, it synthesises one, and on a face this
+     high-contrast that fattens the hairlines to meet the stems and fills in
+     the counters. Presence comes from size instead — hence 60 rather than the
+     48 this role started at. */
+  --text-display: 60px;
   --weight-display: 400;
   --leading-display: 1;
   --tracking-display: -0.025em;

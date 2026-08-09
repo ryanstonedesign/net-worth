@@ -112,7 +112,7 @@ function TokenGroup({ group, onEdit }) {
 // Mirrors the real roles used across the app. Title-tier rows render in the
 // title font; the rest in the body font.
 const TYPE_SCALE = [
-  { role: 'Display', cls: 'ds-t-display', specs: '48 / 700', font: 'Title' },
+  { role: 'Display', cls: 'ds-t-display', specs: '60 / 400', font: 'Title' },
   { role: 'Title', cls: 'ds-t-title', specs: '20 / 700', font: 'Title' },
   { role: 'Heading', cls: 'ds-t-heading', specs: '17 / 700', font: 'Title' },
   { role: 'Subhead', cls: 'ds-t-subhead', specs: '15 / 700', font: 'Title' },
