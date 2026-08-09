@@ -1,0 +1,122 @@
+/* Worthfolio limestone theme. The legacy --c-* hooks stay canonical so the
+   existing local/cloud-synced design editor continues to work. */
+:root {
+  color-scheme: light;
+
+  --color-canvas: #f3efe6;
+  --color-canvas-soft: #f8f5ee;
+  --color-canvas-deep: #e9e3d7;
+  --color-ink: #1e2823;
+  --color-ink-soft: #49534d;
+  --color-ink-muted: #606761;
+  --color-line: #d4cec1;
+  --color-line-strong: #8c877e;
+  --color-forest: #173f32;
+  --color-forest-hover: color-mix(in srgb, var(--c-primary) 88%, white);
+  --color-forest-pressed: color-mix(in srgb, var(--c-primary) 86%, black);
+  --color-moss: #587060;
+  --color-sage: #6b7d6d;
+  --color-projection: #6c796f;
+  --color-positive: #276749;
+  --color-warning: #765719;
+  --color-danger: #9b3f35;
+  --color-info: #315c75;
+  --color-focus: #245d9b;
+  --color-on-dark: #f7f3ea;
+
+  /* The existing editable hooks remain the source of truth so saved and synced
+     theme overrides continue to flow through the new semantic font roles. */
+  --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-title: "Instrument Serif", Georgia, serif;
+  --font-interface: var(--font);
+  --font-display: var(--font-title);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 40px;
+  --space-8: 48px;
+  --space-9: 64px;
+  --space-10: 80px;
+  --space-11: 96px;
+  --space-12: 128px;
+  --space-13: 160px;
+
+  --r-card: 12px;
+  --r-btn: 8px;
+  --radius-xs: 4px;
+  --radius-sm: var(--r-btn);
+  --radius-md: var(--r-card);
+  --radius-lg: 18px;
+  --radius-round: 999px;
+
+  --light-edge: rgba(255, 255, 255, 0.72);
+  --shade-edge: rgba(65, 59, 49, 0.1);
+  --shade-ambient: rgba(45, 42, 36, 0.07);
+  --shade-occlusion: rgba(45, 40, 32, 0.15);
+  --surface-flush-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34);
+  --shadow-card:
+    inset 0 1px 3px rgba(54, 49, 41, 0.13),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.58);
+  --shadow-btn-primary:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 8px 20px rgba(23, 63, 50, 0.14);
+  --shadow-btn-secondary:
+    inset 0 1px 0 var(--light-edge),
+    0 1px 2px var(--shade-edge),
+    0 12px 32px var(--shade-ambient);
+  --surface-raised-shadow: var(--shadow-btn-secondary);
+  --surface-recessed-shadow: var(--shadow-card);
+  --surface-pressed-shadow:
+    inset 0 2px 5px rgba(54, 49, 41, 0.17),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.46);
+
+  --duration-instant: 80ms;
+  --duration-fast: 140ms;
+  --duration-control: 220ms;
+  --duration-surface: 320ms;
+  --duration-data: 480ms;
+  --duration-reveal: 720ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0.2, 1);
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-material: cubic-bezier(0.22, 0.72, 0.18, 1);
+
+  --chart-history: var(--c-primary);
+  --chart-projection: var(--c-secondary);
+  --chart-goal: var(--c-accent);
+  --chart-grid: color-mix(in srgb, var(--c-ink) 10%, transparent);
+  --chart-axis: var(--c-ink-mute);
+  --chart-crosshair: var(--c-ink);
+  --chart-marker-fill: var(--c-bg);
+
+  --z-base: 0;
+  --z-sticky: 10;
+  --z-popover: 30;
+  --z-overlay: 40;
+  --z-modal: 50;
+  --z-toast: 60;
+
+  /* Compatibility hooks consumed by the existing UI and token editor. */
+  --c-primary: var(--color-forest);
+  --c-accent: var(--color-info);
+  --c-secondary: var(--color-moss);
+  --c-tertiary: var(--color-positive);
+  --c-surface: var(--color-canvas-soft);
+  --c-surface-muted: var(--color-canvas-deep);
+  --c-tertiary-muted: #ded8cc;
+  --c-border: var(--color-line);
+  --c-ink: var(--color-ink);
+  --c-ink-body: var(--color-ink-soft);
+  --c-ink-mute: var(--color-ink-muted);
+  --c-bg: var(--color-canvas);
+  --c-danger: var(--color-danger);
+  --card-border-color: var(--c-border);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --shadow-sm: var(--surface-flush-shadow);
+  --shadow-md: var(--surface-raised-shadow);
+  --shadow-lg: var(--surface-raised-shadow);
+}

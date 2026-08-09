@@ -3,6 +3,7 @@ import Popover from './Popover'
 import Modal from './Modal'
 import SyncIcon from './SyncIcon'
 import UserMenu from './UserMenu'
+import BrandLockup from './BrandLockup'
 
 const RenameIcon = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -56,7 +57,7 @@ export default function SideNav({
   return (
     <aside className={`side-nav${open ? ' open' : ''}`} aria-hidden={desktop ? undefined : !open}>
       <div className="side-nav-header">
-        <span className="side-nav-title">Worthfolio</span>
+        <BrandLockup compact className="side-nav-title" />
       </div>
       <button className="side-nav-new" onClick={onAdd} tabIndex={tabbable ? 0 : -1}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">

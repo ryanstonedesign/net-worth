@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Worthfolio</title>
+  <desc id="desc">Simplified Worthfolio W tile for small sizes, print, and high-contrast contexts</desc>
+  <rect x="8" y="8" width="112" height="112" rx="13" fill="#F3EFE6" stroke="#B8B2A6" stroke-width="2"/>
+  <path d="M0 0 L30.1 0 L30.1 1.4 L19.7 1.4 L40.3 59.4 L40.5 59.4 L53.8 22.5 L46.2 1.4 L37.8 1.4 L37.8 0 L67.8 0 L67.8 1.4 L56.9 1.4 L77.5 59.4 L77.7 59.4 L98.7 1.4 L88 1.4 L88 0 L109.4 0 L109.4 1.4 L100.4 1.4 L74.5 72.7 L72 72.7 L54.8 24.7 L54.6 24.7 L37.2 72.7 L34.5 72.7 L9 1.4 L0 1.4 Z" transform="translate(29.39 37.5) scale(.633)" fill="#173F32"/>
+</svg>
