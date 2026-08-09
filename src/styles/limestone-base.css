@@ -253,7 +253,16 @@ textarea {
 .ask-panel::before,
 .cat-card.card::before,
 .settings-card::before,
-.side-nav-item.active::before {
+.side-nav-item.active::before,
+.btn-secondary::before,
+.btn-icon::before,
+.fab::before,
+.back-to-month::before,
+.month-selector::before,
+.cat-card-edit::before,
+.btn-primary::before,
+.top-nav-ask::before,
+.ask-compose form > button::before {
   content: "";
   position: absolute;
   z-index: -1;
@@ -261,6 +270,15 @@ textarea {
   pointer-events: none;
   border-radius: inherit;
   background: var(--surface-sheen);
+}
+
+/* The forest actions take the same light on their own scale. White has some
+   two hundred levels of headroom on a forest fill against the limestone's ten,
+   so the limestone peak would blow them out. */
+.btn-primary::before,
+.top-nav-ask::before,
+.ask-compose form > button::before {
+  background: var(--surface-sheen-ink);
 }
 
 /* Forest actions carry the grain too, on the ink recipe. They are anchored

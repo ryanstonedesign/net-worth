@@ -42,7 +42,7 @@
 
   /* Light catching a raised edge. Reads as a shallow emboss on ink sitting on
      the limestone plane. */
-  --text-emboss: 0 1px 0 var(--light-edge);
+  --text-emboss: 1px 1px 0 var(--light-edge);
 
   /* Key light — one source, high and off to the left, so every plane in the
      product catches its sheen in the same corner and falls away toward the
@@ -58,6 +58,15 @@
     farthest-corner at 0% 0%,
     rgba(255, 255, 255, 0.2) 0%,
     rgba(255, 255, 255, 0.088) 34%,
+    rgba(255, 255, 255, 0) 72%
+  );
+  /* Same light on the forest actions. The peak is far lower because the
+     headroom is far larger — white lifts a dark fill roughly twenty times as
+     hard, so this lands the same couple of levels the limestone gets. */
+  --surface-sheen-ink: radial-gradient(
+    farthest-corner at 0% 0%,
+    rgba(255, 255, 255, 0.012) 0%,
+    rgba(255, 255, 255, 0.0053) 34%,
     rgba(255, 255, 255, 0) 72%
   );
 
@@ -87,22 +96,34 @@
   --shade-edge: rgba(65, 59, 49, 0.1);
   --shade-ambient: rgba(45, 42, 36, 0.07);
   --shade-occlusion: rgba(45, 40, 32, 0.15);
-  --surface-flush-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34);
+  /* Light direction. One source, high and off to the left, matching the sheen
+     the surfaces carry. Every offset below follows from it: a raised plane
+     catches light along its top and left edges and casts down and to the
+     right, while a recess takes its shadow on the top-left inner wall and
+     shows a lit lip at the bottom-right. Contact shadows sit at 1:1 because
+     they are cast from a millimetre away; the broad ambient ones run about
+     2:3 because the source is higher than it is far to the side.
+
+     Two shadows in the product deliberately ignore this: the open drawer's
+     edge and the Ask panel's rise from the bottom. Those are occlusion
+     between stacked layers rather than key light, and pointing them at the
+     sun would flatten the layering they exist to convey. */
+  --surface-flush-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.34);
   --shadow-card:
-    inset 0 1px 3px rgba(54, 49, 41, 0.13),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.58);
+    inset 1px 1px 3px rgba(54, 49, 41, 0.13),
+    inset -1px -1px 0 rgba(255, 255, 255, 0.58);
   --shadow-btn-primary:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 8px 20px rgba(23, 63, 50, 0.14);
+    inset 1px 1px 0 rgba(255, 255, 255, 0.12),
+    6px 8px 20px rgba(23, 63, 50, 0.14);
   --shadow-btn-secondary:
-    inset 0 1px 0 var(--light-edge),
-    0 1px 2px var(--shade-edge),
-    0 12px 32px var(--shade-ambient);
+    inset 1px 1px 0 var(--light-edge),
+    1px 1px 2px var(--shade-edge),
+    8px 12px 32px var(--shade-ambient);
   --surface-raised-shadow: var(--shadow-btn-secondary);
   --surface-recessed-shadow: var(--shadow-card);
   --surface-pressed-shadow:
-    inset 0 2px 5px rgba(54, 49, 41, 0.17),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.46);
+    inset 2px 2px 5px rgba(54, 49, 41, 0.17),
+    inset -1px -1px 0 rgba(255, 255, 255, 0.46);
 
   /* Limestone grain. The canvas wears it as a page-level multiply wash; a slab
      carries its own copy so a cut plane still reads as stone once it covers
@@ -148,15 +169,15 @@
      separates a slab from a button or a popover is material, not elevation:
      the grain in its fill and the chamfered rim around its edge. */
   --shadow-slab:
-    inset 0 1px 0 var(--light-edge),
+    inset 1px 1px 0 var(--light-edge),
     inset 0 0 0 1px rgba(255, 255, 255, 0.22),
-    0 1px 2px var(--shade-edge),
-    0 12px 32px var(--shade-ambient);
+    1px 1px 2px var(--shade-edge),
+    8px 12px 32px var(--shade-ambient);
   --shadow-slab-lifted:
-    inset 0 1px 0 var(--light-edge),
+    inset 1px 1px 0 var(--light-edge),
     inset 0 0 0 1px rgba(255, 255, 255, 0.26),
-    0 1px 2px var(--shade-edge),
-    0 14px 30px color-mix(in srgb, var(--shade-ambient) 88%, transparent);
+    1px 1px 2px var(--shade-edge),
+    10px 14px 30px color-mix(in srgb, var(--shade-ambient) 88%, transparent);
   --surface-slab-shadow: var(--shadow-slab);
   --surface-slab-border: color-mix(in srgb, var(--c-border) 72%, transparent);
 
