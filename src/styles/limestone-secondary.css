@@ -999,7 +999,7 @@ button.settings-row:active {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: url("../assets/worthfolio/texture/limestone-surface.webp") center / 1024px 1024px repeat;
+  background: var(--texture-limestone) center / var(--texture-limestone-tile) repeat;
   mix-blend-mode: multiply;
   opacity: 0.06;
 }

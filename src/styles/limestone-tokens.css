@@ -80,9 +80,9 @@
      follows, so a tinted slab keeps its texture instead of flattening into a
      painted panel. */
   --texture-limestone: url("../assets/worthfolio/texture/limestone-surface.webp");
-  --texture-limestone-tile: 1024px 1024px;
+  --texture-limestone-tile: 256px 256px;
   --slab-fill: var(--c-surface);
-  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) 91%, transparent);
+  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) 85%, transparent);
   --slab-grain-image:
     linear-gradient(var(--slab-grain-veil), var(--slab-grain-veil)),
     var(--texture-limestone);
