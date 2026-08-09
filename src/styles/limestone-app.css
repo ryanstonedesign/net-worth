@@ -737,22 +737,29 @@
   color: var(--c-ink-body);
 }
 
+/* Secondary field role. These sit inside a card that is already a slab, so a
+   filled, bordered control fights the surface it lives on and boxes in a value
+   that should read as part of the record. No fill, no box — the value is just
+   the number in the row, and an underline appears while it is being edited.
+   The 2px underline is reserved as transparent at rest so focus adds no shift,
+   and the horizontal padding is zero so values line up with the category total
+   below them. */
 .cat-account-input,
 .cat-contrib-input {
   min-height: 44px;
-  padding: 7px 8px;
+  padding: 7px 0;
   color: var(--c-ink);
-  background: color-mix(in srgb, var(--c-bg) 60%, transparent);
-  border: 1px solid transparent;
-  border-radius: 6px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  box-shadow: none;
   font-family: var(--font-interface);
   font-size: 14px;
   font-weight: 500;
   transition:
     color var(--duration-fast) var(--ease-standard),
-    background var(--duration-fast) var(--ease-standard),
-    border-color var(--duration-fast) var(--ease-standard),
-    box-shadow var(--duration-fast) var(--ease-standard);
+    border-color var(--duration-fast) var(--ease-standard);
 }
 
 .cat-account-input {
@@ -766,14 +773,19 @@
 
 .cat-account-input:hover,
 .cat-contrib-input:hover {
-  border-color: color-mix(in srgb, var(--c-border) 80%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--c-border) 80%, transparent);
 }
 
+/* The underline is the focus indicator for this role. The global focus ring is
+   suppressed here — it draws the very box the role exists to avoid, and text
+   fields match :focus-visible on pointer focus too, so it would appear on every
+   tap. It needs !important to beat that rule's own. */
 .cat-account-input:focus,
 .cat-contrib-input:focus {
-  background: var(--c-surface-muted);
-  border-color: var(--color-line-strong);
-  box-shadow: var(--surface-recessed-shadow);
+  background: transparent;
+  border-bottom-color: var(--c-primary);
+  box-shadow: none;
+  outline: none !important;
 }
 
 .cat-account-est,
