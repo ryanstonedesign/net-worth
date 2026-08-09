@@ -95,6 +95,29 @@ textarea {
   box-shadow: var(--surface-raised-shadow);
 }
 
+/* Slab — content containers sit on the canvas as cut planes of limestone, not
+   as recesses pressed into it. Grain in the fill, a rounded light-catching
+   edge, and a small contact shadow. Recesses stay reserved for the controls
+   you write into: inputs, selects, and segmented rails. */
+[data-surface="slab"] {
+  background-color: var(--slab-fill);
+  background-image: var(--slab-grain-image);
+  background-position: center;
+  background-size: var(--slab-grain-size);
+  background-repeat: repeat;
+  background-blend-mode: var(--slab-grain-blend);
+  border: 1px solid var(--surface-slab-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--surface-slab-shadow);
+}
+
+/* Dividers within a slab are engraved into the stone rather than boxing each
+   row into its own inset panel. */
+[data-rule="engraved"] {
+  border-top: 1px solid var(--rule-engraved-color);
+  box-shadow: var(--rule-engraved-lip);
+}
+
 .btn {
   min-height: 44px;
   border-radius: var(--radius-sm);

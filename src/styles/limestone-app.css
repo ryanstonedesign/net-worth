@@ -1,5 +1,8 @@
 /* Product shell and dashboard: one continuous limestone plane with a small,
-   consistent vocabulary of engraved, recessed, inlaid, and raised surfaces. */
+   consistent vocabulary of engraved, recessed, inlaid, raised, and slab
+   surfaces. Content containers are slabs cut from the stone and set on the
+   canvas; recesses are reserved for what you write into — inputs, selects, and
+   segmented rails. */
 
 /* ── Shell and transitions ─────────────────────────────────────────────── */
 .app-shell,
@@ -119,10 +122,24 @@
   height: 32px;
   padding: 7px;
   color: var(--c-primary);
-  background: var(--c-surface-muted);
-  border: 1px solid color-mix(in srgb, var(--c-border) 82%, transparent);
+  background-color: var(--slab-fill);
+  background-image: var(--slab-grain-image);
+  background-position: center;
+  background-size: var(--slab-grain-size);
+  background-repeat: repeat;
+  background-blend-mode: var(--slab-grain-blend);
+  border: 1px solid var(--surface-slab-border);
   border-radius: var(--radius-sm);
-  box-shadow: var(--surface-recessed-shadow);
+  box-shadow: var(--shadow-slab);
+  transition: box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.side-nav-new:hover svg {
+  box-shadow: var(--shadow-slab-lifted);
+}
+
+.side-nav-new:active svg {
+  box-shadow: var(--surface-pressed-shadow);
 }
 
 .side-nav-new:hover {
@@ -136,9 +153,13 @@
   box-shadow: var(--surface-pressed-shadow);
 }
 
+/* The list scrolls, so it clips on both axes. Pad it and pull the padding back
+   out with a negative margin so an active slab's contact shadow has room to
+   fall instead of being sheared off at the scroll box edge. */
 .side-nav-list {
   gap: 4px;
-  margin-top: var(--space-3);
+  margin: var(--space-3) -8px 0;
+  padding: 4px 8px;
 }
 
 .side-nav-item {
@@ -160,9 +181,14 @@
 }
 
 .side-nav-item.active {
-  background: var(--c-surface-muted);
-  border-color: color-mix(in srgb, var(--c-border) 84%, transparent);
-  box-shadow: var(--surface-recessed-shadow);
+  background-color: var(--slab-fill);
+  background-image: var(--slab-grain-image);
+  background-position: center;
+  background-size: var(--slab-grain-size);
+  background-repeat: repeat;
+  background-blend-mode: var(--slab-grain-blend);
+  border-color: var(--surface-slab-border);
+  box-shadow: var(--shadow-slab);
 }
 
 .side-nav-item.active::before {
@@ -420,15 +446,17 @@
   background: color-mix(in srgb, var(--c-primary) 7%, transparent);
 }
 
+/* The chart is drawn straight onto the canvas — no well, no plate. Its own
+   strokes carry the hierarchy, so any container here would only compete. */
 .net-worth-chart-well {
   min-height: 208px;
   margin: var(--space-5) 20px 0;
-  padding: 16px 14px 10px;
-  overflow: hidden;
-  background: color-mix(in srgb, var(--c-surface-muted) 88%, var(--c-bg));
-  border: 1px solid color-mix(in srgb, var(--c-border) 86%, transparent);
-  border-radius: var(--radius-md);
-  box-shadow: var(--surface-recessed-shadow);
+  padding: 4px 0 6px;
+  overflow: visible;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .net-worth-chart-loading {
@@ -625,10 +653,15 @@
 
 .cat-card.card {
   padding: 16px 18px;
-  background: color-mix(in srgb, var(--c-surface-muted) 86%, var(--c-bg));
-  border: 1px solid color-mix(in srgb, var(--card-border-color) 86%, transparent);
+  background-color: var(--slab-fill);
+  background-image: var(--slab-grain-image);
+  background-position: center;
+  background-size: var(--slab-grain-size);
+  background-repeat: repeat;
+  background-blend-mode: var(--slab-grain-blend);
+  border: 1px solid var(--surface-slab-border);
   border-radius: var(--radius-md);
-  box-shadow: var(--surface-recessed-shadow);
+  box-shadow: var(--surface-slab-shadow);
 }
 
 .cat-card-header {
@@ -675,8 +708,12 @@
   padding-top: 0;
 }
 
+/* Each account block is separated by an engraved rule — a chiselled groove
+   with a light lip below it — including the last one, whose rule reads as the
+   line above the category total. */
 .cat-account-block {
-  border-bottom-color: var(--c-border);
+  border-bottom: 1px solid var(--rule-engraved-color);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
 .cat-account-row {
@@ -819,14 +856,21 @@
   box-shadow: var(--surface-pressed-shadow);
 }
 
+/* Same icon tile as the side rail's new-scenario control, so it carries the
+   same slab treatment. */
 .cat-card-add-icon {
   width: 40px;
   height: 40px;
   color: var(--c-primary);
-  background: var(--c-surface-muted);
-  border: 1px solid color-mix(in srgb, var(--c-border) 82%, transparent);
+  background-color: var(--slab-fill);
+  background-image: var(--slab-grain-image);
+  background-position: center;
+  background-size: var(--slab-grain-size);
+  background-repeat: repeat;
+  background-blend-mode: var(--slab-grain-blend);
+  border: 1px solid var(--surface-slab-border);
   border-radius: var(--radius-sm);
-  box-shadow: var(--surface-recessed-shadow);
+  box-shadow: var(--shadow-slab);
 }
 
 /* ── Month instrument ──────────────────────────────────────────────────── */
@@ -1056,9 +1100,11 @@
 }
 
 @media (prefers-contrast: more) {
-  .net-worth-chart-well,
   .range-pills,
   .cat-card.card,
+  .cat-card-add-icon,
+  .side-nav-item.active,
+  .side-nav-new svg,
   .month-selector,
   .top-nav-ask,
   .fab {
@@ -1067,11 +1113,13 @@
 }
 
 @media (forced-colors: active) {
-  .net-worth-chart-well,
   .range-pills,
   .summary-row,
   .cat-card.card,
   .cat-card-add,
+  .cat-card-add-icon,
+  .side-nav-item.active,
+  .side-nav-new svg,
   .month-selector,
   .back-to-month,
   .fab,

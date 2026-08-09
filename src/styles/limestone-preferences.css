@@ -9,7 +9,15 @@
   }
 }
 
+/* The limestone grain is decorative. Retiring the slab grain token here drops
+   it from every slab at once, the same way the page wash is dropped below. */
 @media (prefers-contrast: more) {
+  :root {
+    --slab-grain-image: none;
+    --slab-grain-size: auto;
+    --slab-grain-blend: normal;
+  }
+
   .app-bg::after,
   .app-shell::after,
   .lp::after,
@@ -27,6 +35,12 @@
 }
 
 @media (prefers-reduced-data: reduce) {
+  :root {
+    --slab-grain-image: none;
+    --slab-grain-size: auto;
+    --slab-grain-blend: normal;
+  }
+
   .app-bg::after,
   .app-shell::after,
   .lp::after,
@@ -36,6 +50,12 @@
 }
 
 @media print {
+  :root {
+    --slab-grain-image: none;
+    --slab-grain-size: auto;
+    --slab-grain-blend: normal;
+  }
+
   .app-bg::after,
   .app-shell::after,
   .lp::after,
@@ -45,6 +65,12 @@
 }
 
 @media (forced-colors: active) {
+  :root {
+    --slab-grain-image: none;
+    --slab-grain-size: auto;
+    --slab-grain-blend: normal;
+  }
+
   .app-bg::after,
   .app-shell::after,
   .lp::after,

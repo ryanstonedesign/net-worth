@@ -74,6 +74,45 @@
     inset 0 2px 5px rgba(54, 49, 41, 0.17),
     inset 0 -1px 0 rgba(255, 255, 255, 0.46);
 
+  /* Limestone grain. The canvas wears it as a page-level multiply wash; a slab
+     carries its own copy so a cut plane still reads as stone once it covers
+     the page beneath it. Override --slab-fill on a slab to tint it — the veil
+     follows, so a tinted slab keeps its texture instead of flattening into a
+     painted panel. */
+  --texture-limestone: url("../assets/worthfolio/texture/limestone-surface.webp");
+  --texture-limestone-tile: 1024px 1024px;
+  --slab-fill: var(--c-surface);
+  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) 91%, transparent);
+  --slab-grain-image:
+    linear-gradient(var(--slab-grain-veil), var(--slab-grain-veil)),
+    var(--texture-limestone);
+  --slab-grain-size: auto, var(--texture-limestone-tile);
+  --slab-grain-blend: normal, multiply;
+
+  /* Slab: a plane cut from the canvas and set on top of it. The rim highlight
+     is the rounded chamfer catching light, the inner bottom wash is the
+     stone's thickness, and the two outer shadows are contact plus ambient. */
+  --shadow-slab:
+    inset 0 1px 0 rgba(255, 255, 255, 0.86),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.3),
+    inset 0 -8px 12px -9px rgba(54, 49, 41, 0.24),
+    0 1px 1px var(--shade-edge),
+    0 10px 22px -8px rgba(45, 42, 36, 0.17);
+  --shadow-slab-lifted:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.34),
+    inset 0 -8px 12px -9px rgba(54, 49, 41, 0.22),
+    0 2px 3px var(--shade-edge),
+    0 18px 32px -10px rgba(45, 42, 36, 0.21);
+  --surface-slab-shadow: var(--shadow-slab);
+  --surface-slab-border: color-mix(in srgb, var(--c-border) 62%, transparent);
+
+  /* Engraved rule: a line chiselled into a surface — dark groove with the
+     light lip below it. Slabs are divided this way instead of being packed
+     with nested inset panels. */
+  --rule-engraved-color: color-mix(in srgb, var(--c-border) 88%, transparent);
+  --rule-engraved-lip: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+
   --duration-instant: 80ms;
   --duration-fast: 140ms;
   --duration-control: 220ms;
