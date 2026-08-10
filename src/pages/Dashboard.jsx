@@ -85,6 +85,7 @@ export default function Dashboard({
   selectedMonth,
   onMonthChange,
   animateEntrance = true,
+  chartVariant = 'multicolor',
   goal,
   setGoal,
   addCategoryWithAccounts,
@@ -266,7 +267,7 @@ export default function Dashboard({
             chart's own frame. */}
         <div className="nw-grid-plane" aria-hidden="true" />
         <Suspense fallback={<div className="net-worth-chart-loading" aria-hidden="true" />}>
-          <NetWorthChart key={timeRange} data={filteredHistory} forecastData={forecastData} selectedMonth={selectedMonth} height={180} goal={goal} goalEta={goalEta} onGoalClick={() => setGoalOpen(true)} onSelectMonth={onMonthChange} animateDraw={chartAnimate} emptyPointCount={RANGE_COUNTS[timeRange] ?? 12} />
+          <NetWorthChart key={timeRange} data={filteredHistory} forecastData={forecastData} selectedMonth={selectedMonth} height={180} goal={goal} goalEta={goalEta} onGoalClick={() => setGoalOpen(true)} onSelectMonth={onMonthChange} animateDraw={chartAnimate} emptyPointCount={RANGE_COUNTS[timeRange] ?? 12} colorVariant={chartVariant} />
         </Suspense>
       </div>
 

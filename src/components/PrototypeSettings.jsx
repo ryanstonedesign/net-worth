@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Modal from './Modal'
 import ImportSheet from './ImportSheet'
+import { CHART_VARIANTS } from '../lib/chartVariant'
 
 export const SCENARIOS = [
   { value: 'none', label: 'None' },
@@ -17,6 +18,7 @@ export default function PrototypeSettings({
   open, onClose, initialView = 'main',
   scenario, onScenarioChange, onSignOut,
   categories, selectedMonth, onImport, onOpenStickerSheet,
+  chartVariant, onChartVariantChange,
 }) {
   const [view, setView] = useState(initialView)
 
@@ -60,6 +62,27 @@ export default function PrototypeSettings({
                   </svg>
                 </div>
               </div>
+
+              {onChartVariantChange && (
+                <div className="form-group">
+                  <label className="form-label" htmlFor="chart-variant-select">Chart color</label>
+                  <div className="select-wrap">
+                    <select
+                      id="chart-variant-select"
+                      className="select"
+                      value={chartVariant}
+                      onChange={e => onChartVariantChange(e.target.value)}
+                    >
+                      {CHART_VARIANTS.map(v => (
+                        <option key={v.value} value={v.value}>{v.label}</option>
+                      ))}
+                    </select>
+                    <svg className="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </div>
+                </div>
+              )}
 
               {onImport && (
                 <>

@@ -51,6 +51,7 @@ function CustomTooltip({ active, payload }) {
 // the component. Filter flood colours are the exception — those are literal,
 // because flood-color resolves var() inconsistently across engines.
 const HISTORY_COLOR = 'var(--chart-history)'
+const BRONZE_COLOR = 'var(--chart-bronze)'
 const GOAL_COLOR = 'var(--chart-goal)'
 const GROOVE_COLOR = 'var(--chart-groove)'
 const UNSET_LINE_COLOR = 'var(--chart-grid)'
@@ -64,7 +65,7 @@ const SELECTED_SCALE = 1.5
 // (dashboard and the scenario switcher mid-transition) cannot collide.
 let uid = 0
 
-function chartMaterials(ns) {
+function chartMaterials(ns, trend, shade) {
   return (
     <defs>
       {/* A groove: the source is the dark upper wall, the offset white copy is
@@ -104,7 +105,7 @@ function chartMaterials(ns) {
         <feComposite in="SourceAlpha" in2="shifted" operator="out" result="topEdge" />
         <feGaussianBlur in="topEdge" stdDeviation="0.55" result="topSoft" />
         <feComposite in="topSoft" in2="SourceAlpha" operator="in" result="topClipped" />
-        <feFlood floodColor="#08170f" floodOpacity="0.62" result="shade" />
+        <feFlood floodColor={shade} floodOpacity="0.62" result="shade" />
         <feComposite in="shade" in2="topClipped" operator="in" result="innerShade" />
 
         <feOffset in="SourceAlpha" dx="0.45" dy="0.6" result="lipShift" />
@@ -132,8 +133,8 @@ function chartMaterials(ns) {
       </radialGradient>
 
       <linearGradient id={`${ns}-fill`} x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor={HISTORY_COLOR} stopOpacity={0.07} />
-        <stop offset="100%" stopColor={HISTORY_COLOR} stopOpacity={0} />
+        <stop offset="0%" stopColor={trend} stopOpacity={0.07} />
+        <stop offset="100%" stopColor={trend} stopOpacity={0} />
       </linearGradient>
     </defs>
   )
@@ -159,6 +160,17 @@ function BrassInlay({ cx, cy, ns, r = MARKER_R, className, style }) {
   )
 }
 
+// Bronze variant: a completed month is the line. Same fill, no rim, no socket
+// — recharts puts the curve and the dots inside one layer and the inlay filter
+// is applied to that layer, so an unrimmed circle of the same colour merges
+// into the channel instead of reading as a marker laid over it.
+function BronzeNode({ cx, cy, ns, r = MARKER_R, className, style }) {
+  return (
+    <circle className={className} style={style} cx={cx} cy={cy} r={r} fill={BRONZE_COLOR}
+      filter={`url(#${ns}-inlay)`} />
+  )
+}
+
 // Future: the same socket, prepared and left empty.
 function EmptySocket({ cx, cy, ns, r = MARKER_R, className, style }) {
   return (
@@ -172,15 +184,17 @@ function EmptySocket({ cx, cy, ns, r = MARKER_R, className, style }) {
 }
 
 // Present: a larger medallion, seated inside a concentric engraving.
-function Medallion({ cx, cy, ns, filled, animate }) {
+function Medallion({ cx, cy, ns, filled, animate, bronze }) {
   const r = MARKER_R * SELECTED_SCALE
   return (
     <g className={animate ? 'nw-medallion' : undefined} style={{ transformOrigin: `${cx}px ${cy}px` }}>
       <circle cx={cx} cy={cy} r={r + 5.5} fill="none" stroke={GROOVE_COLOR} strokeWidth={0.75}
         strokeOpacity={0.62} filter={`url(#${ns}-engrave)`} />
-      {filled
-        ? <BrassInlay cx={cx} cy={cy} ns={ns} r={r} />
-        : <EmptySocket cx={cx} cy={cy} ns={ns} r={r} />}
+      {!filled
+        ? <EmptySocket cx={cx} cy={cy} ns={ns} r={r} />
+        : bronze
+          ? <BronzeNode cx={cx} cy={cy} ns={ns} r={r} />
+          : <BrassInlay cx={cx} cy={cy} ns={ns} r={r} />}
     </g>
   )
 }
@@ -225,11 +239,13 @@ function goalLineText(goal, goalEta) {
   return `Goal ${formatCompact(goal)}${goalEta ? ` · ${goalEta}` : ''}`
 }
 
-export default function NetWorthChart({ data, forecastData = [], selectedMonth, height = 160, goal = null, goalEta = null, onGoalClick = null, onSelectMonth, animateDraw = false, emptyPointCount = 12 }) {
+export default function NetWorthChart({ data, forecastData = [], selectedMonth, height = 160, goal = null, goalEta = null, onGoalClick = null, onSelectMonth, animateDraw = false, emptyPointCount = 12, colorVariant = 'multicolor' }) {
   // ── Hooks (must run before any early return) ──
   const nsRef = useRef(null)
   if (nsRef.current === null) nsRef.current = `nw${++uid}`
   const ns = nsRef.current
+  const bronze = colorVariant === 'bronze'
+  const trendColor = bronze ? BRONZE_COLOR : HISTORY_COLOR
 
   const animateRef = useRef(null)
   if (animateRef.current === null) animateRef.current = !!animateDraw
@@ -309,7 +325,7 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
         onKeyDown={onGoalClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onGoalClick() } } : undefined}
       >
         <svg width="100%" height={height} style={{ display: 'block', overflow: 'visible' }}>
-          {chartMaterials(ns)}
+          {chartMaterials(ns, trendColor, bronze ? '#2b1a08' : '#08170f')}
           {showGoalLine && (
             <>
               <text
@@ -398,10 +414,12 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
     if (!markersIn) return null
     if (payload.historical == null || !isFinite(cx) || !isFinite(cy)) return null
     if (payload.month === selectedMonth) {
-      return <Medallion key={payload.month} cx={cx} cy={cy} ns={ns} filled animate={settled} />
+      return <Medallion key={payload.month} cx={cx} cy={cy} ns={ns} filled animate={settled} bronze={bronze} />
     }
     if (!showDotAt(index)) return null
-    return <BrassInlay key={payload.month} cx={cx} cy={cy} ns={ns} {...settleProps(index)} />
+    return bronze
+      ? <BronzeNode key={payload.month} cx={cx} cy={cy} ns={ns} {...settleProps(index)} />
+      : <BrassInlay key={payload.month} cx={cx} cy={cy} ns={ns} {...settleProps(index)} />
   }
 
   // Future months: the same socket, left empty. The junction point belongs to
@@ -410,7 +428,7 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
     if (!markersIn) return null
     if (payload.forecast == null || payload.historical != null || !isFinite(cx) || !isFinite(cy)) return null
     if (payload.month === selectedMonth) {
-      return <Medallion key={payload.month} cx={cx} cy={cy} ns={ns} filled={false} animate={settled} />
+      return <Medallion key={payload.month} cx={cx} cy={cy} ns={ns} filled={false} animate={settled} bronze={bronze} />
     }
     if (!showDotAt(index)) return null
     return <EmptySocket key={payload.month} cx={cx} cy={cy} ns={ns} {...settleProps(index)} />
@@ -428,7 +446,7 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
         onTouchMove={(state) => { if (scrubbing.current) selectFrom(state) }}
         style={onSelectMonth ? { cursor: 'pointer', touchAction: 'pan-y' } : undefined}
       >
-        {chartMaterials(ns)}
+        {chartMaterials(ns, trendColor, bronze ? '#2b1a08' : '#08170f')}
         <YAxis domain={yDomain} hide />
         <XAxis dataKey="month" hide />
         <Tooltip
@@ -459,7 +477,7 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
         <Area
           type="monotone"
           dataKey="historical"
-          stroke={HISTORY_COLOR}
+          stroke={trendColor}
           strokeWidth={2.4}
           strokeLinecap="round"
           fill={`url(#${ns}-fill)`}

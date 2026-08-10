@@ -8,6 +8,7 @@ import { useMediaQuery, DESKTOP_QUERY } from './hooks/useMediaQuery'
 import { getCurrentMonth } from './utils'
 import Dashboard from './pages/Dashboard'
 import PrototypeSettings from './components/PrototypeSettings'
+import { readChartVariant, writeChartVariant } from './lib/chartVariant'
 import StickerSheet from './components/StickerSheet'
 import TopNav from './components/TopNav'
 import SideNav from './components/SideNav'
@@ -32,6 +33,8 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
   // Which settings view is open in the modal sheet: null (closed), 'main'
   // (full list, mobile), or a specific flow launched from the desktop popover.
   const [settingsView, setSettingsView] = useState(null)
+  const [chartVariant, setChartVariant] = useState(readChartVariant)
+  const changeChartVariant = (v) => { setChartVariant(v); writeChartVariant(v) }
   const [stickerOpen, setStickerOpen] = useState(false)
   // Account modal (avatar / name / email / password). Landing on the app
   // with #account in the URL deep-links straight into it; opening and
@@ -122,6 +125,7 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
           importDisabled: dataHook.scenario !== 'none',
           onImport: () => setSettingsView('import'),
           onOpenStickerSheet: () => setStickerOpen(true),
+          onPrototypeSettings: () => setSettingsView('main'),
           onAccount: account && openAccount,
           onSignOut: settingsProps.onSignOut,
         }}
@@ -151,6 +155,7 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
               >
                 <Dashboard
                   {...readonlyDashboardProps(dataHook.getForecastData(outgoing.id))}
+                  chartVariant={chartVariant}
                   selectedMonth={selectedMonth}
                   onMonthChange={noop}
                 />
@@ -166,6 +171,7 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
             >
               <Dashboard
                 {...dataHook}
+                chartVariant={chartVariant}
                 selectedMonth={selectedMonth}
                 onMonthChange={setSelectedMonth}
               />
@@ -195,6 +201,8 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
         selectedMonth={selectedMonth}
         onImport={dataHook.bulkImport}
         onOpenStickerSheet={() => { setSettingsView(null); setStickerOpen(true) }}
+        chartVariant={chartVariant}
+        onChartVariantChange={changeChartVariant}
         {...settingsProps}
       />
 

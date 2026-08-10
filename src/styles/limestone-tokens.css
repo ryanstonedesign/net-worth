@@ -227,6 +227,11 @@
   --chart-brass: #b2914f;
   --chart-brass-dark: #7d6335;
   --chart-brass-rim: rgba(85, 68, 36, 0.55);
+  /* Bronze: the single-colour chart variant. One deep bronze for the trend and
+     for every completed month, dark enough to hold its own against the ivory
+     where a lighter bronze would wash out. */
+  --chart-bronze: #6b4520;
+
   /* An empty socket: stone floor, in shadow because nothing fills it. */
   --chart-socket: color-mix(in srgb, var(--c-bg) 82%, rgba(74, 66, 54, 1));
 
