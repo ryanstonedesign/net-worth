@@ -13,7 +13,8 @@ import { formatMonthDisplay, formatCurrency, formatCompact } from '../utils'
 //     below it;
 //   · time points share one circular geometry and differ only in material.
 //     Past is filled with brass, present is a larger medallion inside an
-//     engraved focus ring, future is the same socket left empty.
+//     engraved focus ring, future is the same socket left empty — and the
+//     projected path is the same channel, cut but not yet filled.
 //
 // Whether the reveal plays is decided by the caller via `animateDraw` and
 // latched at mount: page load and time-range changes animate; the fresh mounts
@@ -47,7 +48,6 @@ function CustomTooltip({ active, payload }) {
 // the component. Filter flood colours are the exception — those are literal,
 // because flood-color resolves var() inconsistently across engines.
 const HISTORY_COLOR = 'var(--chart-history)'
-const PROJECTION_COLOR = 'var(--chart-projection)'
 const GOAL_COLOR = 'var(--chart-goal)'
 const GROOVE_COLOR = 'var(--chart-groove)'
 const UNSET_LINE_COLOR = 'var(--chart-grid)'
@@ -81,10 +81,13 @@ function chartMaterials(ns) {
       </filter>
 
       {/* An inlay seated in a channel: occluded by the wall above and to the
-          left, catching light on the lip below and to the right. */}
+          left, catching light on the lip below and to the right. Both offsets
+          are hard-edged and under a pixel — a drop shadow here copies the whole
+          stroke, so any more reads as a second line running alongside rather
+          than as the edge of a groove. */}
       <filter id={`${ns}-inlay`} x="-60%" y="-60%" width="220%" height="220%">
-        <feDropShadow dx="-0.6" dy="-0.7" stdDeviation="0.9" floodColor="#453d31" floodOpacity="0.38" />
-        <feDropShadow dx="0.5" dy="0.9" stdDeviation="0" floodColor="#ffffff" floodOpacity="0.52" />
+        <feDropShadow dx="-0.5" dy="-0.55" stdDeviation="0" floodColor="#453d31" floodOpacity="0.3" />
+        <feDropShadow dx="0.45" dy="0.6" stdDeviation="0" floodColor="#ffffff" floodOpacity="0.5" />
       </filter>
 
       {/* Brushed brass, lit face to shadowed face along the same axis. */}
@@ -412,11 +415,9 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
           <Area
             type="monotone"
             dataKey="forecast"
-            stroke={PROJECTION_COLOR}
+            stroke={GROOVE_COLOR}
             strokeWidth={1.6}
-            strokeOpacity={0.72}
             strokeLinecap="round"
-            strokeDasharray="0.5 5.5"
             fill="none"
             dot={forecastDot}
             activeDot={false}
