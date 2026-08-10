@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react'
 import { AreaChart, Area, Tooltip, ResponsiveContainer, ReferenceLine, YAxis, XAxis } from 'recharts'
 import { formatMonthDisplay, formatCurrency, formatCompact } from '../utils'
+import { markerPlan, visibleMarkers } from '../lib/chartTicks'
 
 // The chart is engraved into the same stone plane the rest of the product is
 // made of, rather than drawn on top of it. Three ideas carry that:
@@ -449,10 +450,17 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
   const yDomain = [Math.round(lo), Math.round(hi)]
 
   // Thin the markers on long ranges so the sockets don't crowd the groove. The
-  // line itself stays continuous — only the time points are sampled, and the
-  // selected month and the final point always show regardless of the stride.
-  const dotStride = Math.max(1, Math.ceil(combined.length / 12))
-  const showDotAt = (index) => index % dotStride === 0 || index === combined.length - 1
+  // line itself stays continuous — only the time points are sampled. Nothing is
+  // forced into the pattern: the stride is phased on the last real month, which
+  // keeps the gaps identical end to end and holds the sockets still while the
+  // user scrubs. The selected medallion still draws wherever it lands; when
+  // that is off the beat, the markers around it step aside rather than crowd
+  // it — see visibleMarkers.
+  const markerSet = new Set(visibleMarkers(
+    markerPlan(combined.length, data.length - 1),
+    combined.findIndex(d => d.month === selectedMonth),
+  ))
+  const showDotAt = (index) => markerSet.has(index)
 
   const settleProps = (index) => settled
     ? {}

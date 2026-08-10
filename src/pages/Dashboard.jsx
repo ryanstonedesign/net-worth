@@ -12,8 +12,15 @@ import {
   generateForecast,
   monthIndex,
 } from '../lib/forecast'
+import { markerPlan } from '../lib/chartTicks'
 
 const NetWorthChart = lazy(() => import('../components/NetWorthChart'))
+
+// Mirrors NetWorthChart's own geometry, which the drafting plane has to line up
+// with: the plot's left/right margin, and the 1%–99% inset the empty state
+// spaces its prepared sockets across.
+const CHART_X_MARGIN = 14
+const EMPTY_X_INSET = 0.01
 
 const RANGE_OPTIONS = ['1M', '3M', '6M', '1Y', 'custom']
 const RANGE_COUNTS   = { '1M': 2,  '3M': 3,  '6M': 6,  '1Y': 12 }
@@ -120,6 +127,9 @@ export default function Dashboard({
   // changes (which remount the chart) always animate.
   const dashMountedRef = useRef(false)
   useEffect(() => { dashMountedRef.current = true }, [])
+
+  const wellRef  = useRef(null)
+  const planeRef = useRef(null)
   const chartAnimate = dashMountedRef.current ? true : animateEntrance
 
   const currentMonth = getCurrentMonth()
@@ -144,6 +154,61 @@ export default function Dashboard({
   const forecastData  = generateForecast(data.categories, accountModels, data.snapshots, data.contributions || {}, lastDataMonth, forecastCount)
   const forecastMap   = Object.fromEntries(forecastData.map(d => [d.month, d.netWorth]))
   const forecastByMonth = Object.fromEntries(forecastData.map(d => [d.month, d]))
+
+  // ── Line the drafting plane's rules up with the chart's time points ───────
+  // The plane is a 100vw CSS background that knows nothing about the data, so
+  // the column pitch has to come from the rendered plot: measure how wide a
+  // month is, multiply by the shared grid step, and offset the field so a rule
+  // falls on a marker. markerPlan is the same source the chart samples its
+  // sockets from, so the two can only agree.
+  const chartHasData  = filteredHistory.length >= 2
+  const chartPoints   = chartHasData
+    ? filteredHistory.length + forecastData.length
+    : Math.max(2, RANGE_COUNTS[timeRange] ?? 12)
+  const chartAnchor   = chartHasData ? filteredHistory.length - 1 : chartPoints - 1
+
+  useEffect(() => {
+    const well  = wellRef.current
+    const plane = planeRef.current
+    if (!well || !plane || typeof ResizeObserver === 'undefined') return
+
+    const apply = () => {
+      const wellRect  = well.getBoundingClientRect()
+      const planeRect = plane.getBoundingClientRect()
+      if (wellRect.width <= 0 || planeRect.width <= 0 || chartPoints < 2) return
+
+      const cs    = getComputedStyle(well)
+      const padL  = parseFloat(cs.paddingLeft)  || 0
+      const padR  = parseFloat(cs.paddingRight) || 0
+      const plotW = wellRect.width - padL - padR
+      // Where the first point sits inside the plot, and how far the last one is
+      // from it — the empty state insets by a percentage, the real chart by the
+      // AreaChart margin.
+      const inset = chartHasData ? CHART_X_MARGIN : plotW * EMPTY_X_INSET
+      const span  = chartHasData ? plotW - CHART_X_MARGIN * 2 : plotW * (1 - EMPTY_X_INSET * 2)
+      if (span <= 0) return
+
+      const pitch = span / (chartPoints - 1)
+      const { gridStep, firstGridIndex } = markerPlan(chartPoints, chartAnchor)
+      const col = pitch * gridStep
+      // Below a few pixels the groove and its lip would collide; leave the
+      // stylesheet's fallback pitch in place rather than draw a smear.
+      if (col < 6) return
+
+      const firstX = wellRect.left + padL + inset + firstGridIndex * pitch - planeRect.left
+      plane.style.setProperty('--nw-grid-col', `${col}px`)
+      plane.style.setProperty('--nw-grid-phase', `${((firstX % col) + col) % col}px`)
+    }
+
+    apply()
+    const ro = new ResizeObserver(apply)
+    ro.observe(well)
+    window.addEventListener('resize', apply)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', apply)
+    }
+  }, [chartPoints, chartAnchor, chartHasData])
 
   const isEstimated      = !!(lastDataMonth && selectedMonth > lastDataMonth && selectedMonth in forecastMap)
 
@@ -260,12 +325,13 @@ export default function Dashboard({
       {/* Trend line + forecast. The goal line on the chart is the single goal
           element — it shows the target, the time to reach it, and opens the
           editor; with no data yet it still renders as the set-a-goal CTA. */}
-      <div className="net-worth-chart-well">
+      <div className="net-worth-chart-well" ref={wellRef}>
         {/* The drafting plane the chart is cut into. It reaches past the chart
             to the screen edges and up behind the hero, fading out before it
             gets there, so the grid reads as the surface rather than as the
-            chart's own frame. */}
-        <div className="nw-grid-plane" aria-hidden="true" />
+            chart's own frame. Its vertical rules are pitched to the chart's
+            months by the effect above. */}
+        <div className="nw-grid-plane" aria-hidden="true" ref={planeRef} />
         <Suspense fallback={<div className="net-worth-chart-loading" aria-hidden="true" />}>
           <NetWorthChart key={timeRange} data={filteredHistory} forecastData={forecastData} selectedMonth={selectedMonth} height={180} goal={goal} goalEta={goalEta} onGoalClick={() => setGoalOpen(true)} onSelectMonth={onMonthChange} animateDraw={chartAnimate} emptyPointCount={RANGE_COUNTS[timeRange] ?? 12} colorVariant={chartVariant} />
         </Suspense>

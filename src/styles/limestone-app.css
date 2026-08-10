@@ -498,8 +498,16 @@
    intersect, taking it to nothing well before it reaches anything it would
    otherwise interfere with. */
 .nw-grid-plane {
+  /* Column pitch and phase are set from JS: the rules have to land on the
+     chart's own time points, and only the rendered plot knows how wide a month
+     is. The declarations here are the fallback the plane draws with before the
+     first measurement — and the only ones a test environment without
+     ResizeObserver ever sees. Each vertical layer is tiled at exactly one
+     column so the phase offset shifts the field cleanly instead of dragging a
+     partial period in from the tile seam. */
   --nw-grid-col: 64px;
   --nw-grid-row: 52px;
+  --nw-grid-phase: 0px;
   position: absolute;
   z-index: -1;
   top: -300px;
@@ -513,6 +521,17 @@
     repeating-linear-gradient(to right, transparent 0 1px, var(--chart-lip) 1px 2px, transparent 2px var(--nw-grid-col)),
     repeating-linear-gradient(to bottom, var(--chart-grid) 0 1px, transparent 1px var(--nw-grid-row)),
     repeating-linear-gradient(to bottom, transparent 0 1px, var(--chart-lip) 1px 2px, transparent 2px var(--nw-grid-row));
+  background-size:
+    var(--nw-grid-col) 100%,
+    var(--nw-grid-col) 100%,
+    100% var(--nw-grid-row),
+    100% var(--nw-grid-row);
+  background-position:
+    var(--nw-grid-phase) 0,
+    var(--nw-grid-phase) 0,
+    0 0,
+    0 0;
+  background-repeat: repeat;
   -webkit-mask-image:
     linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.5) 34%, #000 62%, #000 88%, transparent 100%),
     linear-gradient(to right, transparent 0%, #000 15%, #000 85%, transparent 100%);
