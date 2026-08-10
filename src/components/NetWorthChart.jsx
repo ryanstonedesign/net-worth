@@ -51,7 +51,6 @@ function CustomTooltip({ active, payload }) {
 // the component. Filter flood colours are the exception — those are literal,
 // because flood-color resolves var() inconsistently across engines.
 const HISTORY_COLOR = 'var(--chart-history)'
-const BRONZE_COLOR = 'var(--chart-bronze)'
 const GOAL_COLOR = 'var(--chart-goal)'
 const GROOVE_COLOR = 'var(--chart-groove)'
 const UNSET_LINE_COLOR = 'var(--chart-grid)'
@@ -65,7 +64,7 @@ const SELECTED_SCALE = 1.5
 // (dashboard and the scenario switcher mid-transition) cannot collide.
 let uid = 0
 
-function chartMaterials(ns, trend, shade) {
+function chartMaterials(ns, wash, shade, height) {
   return (
     <defs>
       {/* A groove: the source is the dark upper wall, the offset white copy is
@@ -119,6 +118,49 @@ function chartMaterials(ns, trend, shade) {
         </feMerge>
       </filter>
 
+      {/* The bronze variant's metal: the same brushed-brass palette the
+          completed months are made of, laid across the plot in user space so
+          the trend and the months sample one continuous ramp. In bounding-box
+          units the gradient would restart inside every dot, which is what
+          makes a marker read as a bead sitting on the line. */}
+      <linearGradient id={`${ns}-metal`} gradientUnits="userSpaceOnUse"
+        x1="0" y1="0" x2="0" y2={height}>
+        <stop offset="0%" stopColor="var(--chart-brass-light)" />
+        <stop offset="52%" stopColor="var(--chart-brass)" />
+        <stop offset="100%" stopColor="var(--chart-brass-dark)" />
+      </linearGradient>
+
+      {/* Metal poured into the channel. The wall above shades its top edge and
+          light pools along the lower inside — a concave surface is bright
+          where the far wall bounces light back, which is what gives it the
+          look of having flowed in and settled rather than been laid on. */}
+      <filter id={`${ns}-inlay-metal`} x="-40%" y="-40%" width="180%" height="180%">
+        <feOffset in="SourceAlpha" dx="0" dy="1.2" result="mDn" />
+        <feComposite in="SourceAlpha" in2="mDn" operator="out" result="mTop" />
+        <feGaussianBlur in="mTop" stdDeviation="0.6" result="mTopSoft" />
+        <feComposite in="mTopSoft" in2="SourceAlpha" operator="in" result="mTopClip" />
+        <feFlood floodColor="#3d2a0b" floodOpacity="0.72" result="mShadeC" />
+        <feComposite in="mShadeC" in2="mTopClip" operator="in" result="mShade" />
+
+        <feOffset in="SourceAlpha" dx="0" dy="-1.1" result="mUp" />
+        <feComposite in="SourceAlpha" in2="mUp" operator="out" result="mBot" />
+        <feGaussianBlur in="mBot" stdDeviation="0.5" result="mBotSoft" />
+        <feComposite in="mBotSoft" in2="SourceAlpha" operator="in" result="mBotClip" />
+        <feFlood floodColor="#fff0cd" floodOpacity="0.62" result="mSpecC" />
+        <feComposite in="mSpecC" in2="mBotClip" operator="in" result="mSpec" />
+
+        <feOffset in="SourceAlpha" dx="0.45" dy="0.6" result="mLipShift" />
+        <feFlood floodColor="#ffffff" floodOpacity="0.5" result="mLipColor" />
+        <feComposite in="mLipColor" in2="mLipShift" operator="in" result="mLip" />
+
+        <feMerge>
+          <feMergeNode in="mLip" />
+          <feMergeNode in="SourceGraphic" />
+          <feMergeNode in="mShade" />
+          <feMergeNode in="mSpec" />
+        </feMerge>
+      </filter>
+
       {/* Brushed brass, lit face to shadowed face along the same axis. */}
       <linearGradient id={`${ns}-brass`} x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="var(--chart-brass-light)" />
@@ -133,8 +175,8 @@ function chartMaterials(ns, trend, shade) {
       </radialGradient>
 
       <linearGradient id={`${ns}-fill`} x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor={trend} stopOpacity={0.07} />
-        <stop offset="100%" stopColor={trend} stopOpacity={0} />
+        <stop offset="0%" stopColor={wash} stopOpacity={0.07} />
+        <stop offset="100%" stopColor={wash} stopOpacity={0} />
       </linearGradient>
     </defs>
   )
@@ -166,8 +208,8 @@ function BrassInlay({ cx, cy, ns, r = MARKER_R, className, style }) {
 // into the channel instead of reading as a marker laid over it.
 function BronzeNode({ cx, cy, ns, r = MARKER_R, className, style }) {
   return (
-    <circle className={className} style={style} cx={cx} cy={cy} r={r} fill={BRONZE_COLOR}
-      filter={`url(#${ns}-inlay)`} />
+    <circle className={className} style={style} cx={cx} cy={cy} r={r}
+      fill={`url(#${ns}-metal)`} filter={`url(#${ns}-inlay-metal)`} />
   )
 }
 
@@ -245,7 +287,10 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
   if (nsRef.current === null) nsRef.current = `nw${++uid}`
   const ns = nsRef.current
   const bronze = colorVariant === 'bronze'
-  const trendColor = bronze ? BRONZE_COLOR : HISTORY_COLOR
+  const trendColor = bronze ? `url(#${ns}-metal)` : HISTORY_COLOR
+  // The wash under the trend has to be a flat colour: a gradient stop cannot
+  // reference another paint server.
+  const washColor = bronze ? 'var(--chart-brass-dark)' : HISTORY_COLOR
 
   const animateRef = useRef(null)
   if (animateRef.current === null) animateRef.current = !!animateDraw
@@ -325,7 +370,7 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
         onKeyDown={onGoalClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onGoalClick() } } : undefined}
       >
         <svg width="100%" height={height} style={{ display: 'block', overflow: 'visible' }}>
-          {chartMaterials(ns, trendColor, bronze ? '#2b1a08' : '#08170f')}
+          {chartMaterials(ns, washColor, '#08170f', height)}
           {showGoalLine && (
             <>
               <text
@@ -446,7 +491,7 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
         onTouchMove={(state) => { if (scrubbing.current) selectFrom(state) }}
         style={onSelectMonth ? { cursor: 'pointer', touchAction: 'pan-y' } : undefined}
       >
-        {chartMaterials(ns, trendColor, bronze ? '#2b1a08' : '#08170f')}
+        {chartMaterials(ns, washColor, '#08170f', height)}
         <YAxis domain={yDomain} hide />
         <XAxis dataKey="month" hide />
         <Tooltip
@@ -483,7 +528,7 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
           fill={`url(#${ns}-fill)`}
           dot={historicalDot}
           activeDot={false}
-          filter={`url(#${ns}-inlay)`}
+          filter={`url(#${ns}-${bronze ? 'inlay-metal' : 'inlay'})`}
           isAnimationActive={drawAnimationActive}
           animationBegin={0}
           animationDuration={720}
