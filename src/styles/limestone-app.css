@@ -476,6 +476,16 @@
   box-shadow: none;
 }
 
+/* The trend, its markers, and the goal sit 20px above where the plot area
+   alone would put them, clearing the grid's lower rows and the range pills
+   beneath. Transforming the chart's own wrapper leaves the drafting plane
+   untouched, since that is positioned against the well rather than the chart.
+   Pointer coordinates are read from the transformed box, so scrubbing and
+   selection still land on the right month. */
+.net-worth-chart-well .recharts-wrapper {
+  transform: translateY(-20px);
+}
+
 /* ── The drafting plane ────────────────────────────────────────────────────
    The grid belongs to the surface, not to the chart, so it runs out to the
    screen edges and up behind the hero instead of stopping at the plot. Each
@@ -493,7 +503,7 @@
   position: absolute;
   z-index: -1;
   top: -300px;
-  bottom: -34px;
+  bottom: 2px;
   left: 50%;
   width: 100vw;
   transform: translateX(-50%);
@@ -504,10 +514,10 @@
     repeating-linear-gradient(to bottom, var(--chart-grid) 0 1px, transparent 1px var(--nw-grid-row)),
     repeating-linear-gradient(to bottom, transparent 0 1px, var(--chart-lip) 1px 2px, transparent 2px var(--nw-grid-row));
   -webkit-mask-image:
-    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.5) 34%, #000 62%, #000 92%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.5) 34%, #000 62%, #000 88%, transparent 100%),
     linear-gradient(to right, transparent 0%, #000 15%, #000 85%, transparent 100%);
   mask-image:
-    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.5) 34%, #000 62%, #000 92%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.5) 34%, #000 62%, #000 88%, transparent 100%),
     linear-gradient(to right, transparent 0%, #000 15%, #000 85%, transparent 100%);
   -webkit-mask-composite: source-in;
   mask-composite: intersect;
