@@ -8,9 +8,9 @@ import { formatMonthDisplay, formatCurrency, formatCompact } from '../utils'
 //   · every incised line is a dark groove with a lit lip below and to the
 //     right of it, because the key light sits high and to the left — the same
 //     source the surfaces, cards, and buttons are lit by;
-//   · the trend is a forest inlay seated in a shallow channel, shaded along
-//     its own top edge by the wall above it — the depth sits inside the
-//     inlay, not cast onto the stone beside it;
+//   · the trend is a forest inlay seated in a shallow channel: shaded along
+//     its own top edge by the wall above it, with the stone below catching
+//     light on the cut edge. Nothing dark is cast onto the stone;
 //   · time points share one circular geometry and differ only in material.
 //     Past is filled with brass, present is a larger medallion inside an
 //     engraved focus ring, future is the same socket left empty — and the
@@ -90,15 +90,27 @@ function chartMaterials(ns) {
 
           Shifting the alpha down and subtracting it from itself leaves the top
           sliver of the shape; blurring that and clipping it back to the source
-          keeps the shading within the inlay. */}
-      <filter id={`${ns}-inlay`} x="-20%" y="-20%" width="140%" height="140%">
+          keeps the shading within the inlay.
+
+          Below the line, a white copy sits behind the source so only a sliver
+          shows past its lower right: that is the stone's own edge catching the
+          light where the channel is cut, the same lip the grid and the empty
+          sockets carry. It belongs outside the stroke because it is the stone,
+          not the inlay. */}
+      <filter id={`${ns}-inlay`} x="-40%" y="-40%" width="180%" height="180%">
         <feOffset in="SourceAlpha" dx="0" dy="1.1" result="shifted" />
         <feComposite in="SourceAlpha" in2="shifted" operator="out" result="topEdge" />
         <feGaussianBlur in="topEdge" stdDeviation="0.55" result="topSoft" />
         <feComposite in="topSoft" in2="SourceAlpha" operator="in" result="topClipped" />
         <feFlood floodColor="#08170f" floodOpacity="0.62" result="shade" />
         <feComposite in="shade" in2="topClipped" operator="in" result="innerShade" />
+
+        <feOffset in="SourceAlpha" dx="0.45" dy="0.6" result="lipShift" />
+        <feFlood floodColor="#ffffff" floodOpacity="0.5" result="lipColor" />
+        <feComposite in="lipColor" in2="lipShift" operator="in" result="lip" />
+
         <feMerge>
+          <feMergeNode in="lip" />
           <feMergeNode in="SourceGraphic" />
           <feMergeNode in="innerShade" />
         </feMerge>
