@@ -260,6 +260,11 @@ export default function Dashboard({
           element — it shows the target, the time to reach it, and opens the
           editor; with no data yet it still renders as the set-a-goal CTA. */}
       <div className="net-worth-chart-well">
+        {/* The drafting plane the chart is cut into. It reaches past the chart
+            to the screen edges and up behind the hero, fading out before it
+            gets there, so the grid reads as the surface rather than as the
+            chart's own frame. */}
+        <div className="nw-grid-plane" aria-hidden="true" />
         <Suspense fallback={<div className="net-worth-chart-loading" aria-hidden="true" />}>
           <NetWorthChart key={timeRange} data={filteredHistory} forecastData={forecastData} selectedMonth={selectedMonth} height={180} goal={goal} goalEta={goalEta} onGoalClick={() => setGoalOpen(true)} onSelectMonth={onMonthChange} animateDraw={chartAnimate} emptyPointCount={RANGE_COUNTS[timeRange] ?? 12} />
         </Suspense>

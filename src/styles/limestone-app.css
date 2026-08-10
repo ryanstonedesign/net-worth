@@ -465,6 +465,7 @@
 /* The chart is drawn straight onto the canvas — no well, no plate. Its own
    strokes carry the hierarchy, so any container here would only compete. */
 .net-worth-chart-well {
+  position: relative;
   min-height: 208px;
   margin: var(--space-5) 20px 0;
   padding: 4px 0 6px;
@@ -473,6 +474,43 @@
   border: 0;
   border-radius: 0;
   box-shadow: none;
+}
+
+/* ── The drafting plane ────────────────────────────────────────────────────
+   The grid belongs to the surface, not to the chart, so it runs out to the
+   screen edges and up behind the hero instead of stopping at the plot. Each
+   line is the same engraving used everywhere else: a groove with its lit lip
+   one pixel down and to the right, on the key light.
+
+   It sits at z-index -1. The nearest stacking context is .app-shell, so the
+   plane lands above the page fill and beneath every piece of content — which
+   is what lets it pass behind the hero without touching it. The two masks
+   intersect, taking it to nothing well before it reaches anything it would
+   otherwise interfere with. */
+.nw-grid-plane {
+  --nw-grid-col: 64px;
+  --nw-grid-row: 52px;
+  position: absolute;
+  z-index: -1;
+  top: -300px;
+  bottom: -34px;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(to right, var(--chart-grid) 0 1px, transparent 1px var(--nw-grid-col)),
+    repeating-linear-gradient(to right, transparent 0 1px, var(--chart-lip) 1px 2px, transparent 2px var(--nw-grid-col)),
+    repeating-linear-gradient(to bottom, var(--chart-grid) 0 1px, transparent 1px var(--nw-grid-row)),
+    repeating-linear-gradient(to bottom, transparent 0 1px, var(--chart-lip) 1px 2px, transparent 2px var(--nw-grid-row));
+  -webkit-mask-image:
+    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.5) 34%, #000 62%, #000 92%, transparent 100%),
+    linear-gradient(to right, transparent 0%, #000 15%, #000 85%, transparent 100%);
+  mask-image:
+    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.5) 34%, #000 62%, #000 92%, transparent 100%),
+    linear-gradient(to right, transparent 0%, #000 15%, #000 85%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
 }
 
 .net-worth-chart-loading {
@@ -548,7 +586,7 @@
    light finds the engraved grid, the groove draws forward, brass settles into
    its prepared sockets, then the projection continues outward. The order is
    carried by delays here and by the marker gate in the component. */
-.nw-grid-reveal {
+.nw-grid-plane {
   animation: nwGridReveal var(--duration-surface) var(--ease-standard) both;
 }
 
@@ -1154,7 +1192,7 @@
   }
 
   .nw-dot-appear,
-  .nw-grid-reveal,
+  .nw-grid-plane,
   .nw-forecast-reveal,
   .nw-marker-settle,
   .nw-medallion {

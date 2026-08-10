@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react'
-import { AreaChart, Area, Tooltip, ResponsiveContainer, ReferenceLine, YAxis, XAxis, CartesianGrid } from 'recharts'
+import { AreaChart, Area, Tooltip, ResponsiveContainer, ReferenceLine, YAxis, XAxis } from 'recharts'
 import { formatMonthDisplay, formatCurrency, formatCompact } from '../utils'
 
 // The chart is engraved into the same stone plane the rest of the product is
@@ -7,7 +7,9 @@ import { formatMonthDisplay, formatCurrency, formatCompact } from '../utils'
 //
 //   · every incised line is a dark groove with a lit lip below and to the
 //     right of it, because the key light sits high and to the left — the same
-//     source the surfaces, cards, and buttons are lit by;
+//     source the surfaces, cards, and buttons are lit by. The drafting grid is
+//     a plane behind the chart rather than a member of it, so it can run past
+//     the chart to the screen edges;
 //   · the trend is a forest inlay seated in a shallow channel: shaded along
 //     its own top edge by the wall above it, with the stone below catching
 //     light on the cut edge. Nothing dark is cast onto the stone;
@@ -364,15 +366,22 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
   const minDataVal = allValues.length > 0 ? Math.min(...allValues) : 0
   const placeholderGoalY = maxDataVal + Math.max((maxDataVal - minDataVal) * 0.3, Math.abs(maxDataVal) * 0.08, 1)
   const goalLineY = goal ?? (onGoalClick ? placeholderGoalY : null)
-  const goalAbove = goalLineY != null && goalLineY > maxDataVal
-  // A goal under the data range must also stretch the domain — outside it,
-  // recharts discards the reference line and the goal becomes uneditable.
-  const goalBelow = goalLineY != null && goalLineY < minDataVal
-  const yDomain = goalAbove
-    ? [minDataVal, Math.round(goalLineY * 1.12)]
-    : goalBelow
-      ? [Math.round(goalLineY - (maxDataVal - goalLineY) * 0.08), 'auto']
-      : ['auto', 'auto']
+  // Pad against the data's own span, not against the absolute value. Scaling
+  // headroom by the value pushed the trend into the bottom third of the plot
+  // whenever a goal sat above it — at these magnitudes 12% of the value is far
+  // more than the whole span — and pinning the floor to minDataVal left the
+  // lowest marker half off the bottom edge and awkward to hit.
+  const span = Math.max(maxDataVal - minDataVal, Math.abs(maxDataVal) * 0.02, 1)
+  const pad = span * 0.16
+  let lo = minDataVal - pad
+  let hi = maxDataVal + pad
+  // A goal outside the data range still has to be inside the domain — outside
+  // it, recharts discards the reference line and the goal becomes uneditable.
+  if (goalLineY != null) {
+    if (goalLineY > hi) hi = goalLineY + span * 0.1
+    else if (goalLineY < lo) lo = goalLineY - span * 0.1
+  }
+  const yDomain = [Math.round(lo), Math.round(hi)]
 
   // Thin the markers on long ranges so the sockets don't crowd the groove. The
   // line itself stays continuous — only the time points are sampled, and the
@@ -420,15 +429,6 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
         style={onSelectMonth ? { cursor: 'pointer', touchAction: 'pan-y' } : undefined}
       >
         {chartMaterials(ns)}
-        {/* Drafting marks incised into the stone, not chart chrome. */}
-        <CartesianGrid
-          stroke={UNSET_LINE_COLOR}
-          strokeWidth={0.75}
-          vertical
-          horizontal
-          filter={`url(#${ns}-engrave-rule)`}
-          className={animate ? 'nw-grid-reveal' : undefined}
-        />
         <YAxis domain={yDomain} hide />
         <XAxis dataKey="month" hide />
         <Tooltip
