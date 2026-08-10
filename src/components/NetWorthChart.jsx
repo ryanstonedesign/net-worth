@@ -8,9 +8,9 @@ import { formatMonthDisplay, formatCurrency, formatCompact } from '../utils'
 //   · every incised line is a dark groove with a lit lip below and to the
 //     right of it, because the key light sits high and to the left — the same
 //     source the surfaces, cards, and buttons are lit by;
-//   · the trend is a forest inlay seated in a shallow channel, so it takes
-//     occlusion from the channel wall above it and catches light on the lip
-//     below it;
+//   · the trend is a forest inlay seated in a shallow channel, shaded along
+//     its own top edge by the wall above it — the depth sits inside the
+//     inlay, not cast onto the stone beside it;
 //   · time points share one circular geometry and differ only in material.
 //     Past is filled with brass, present is a larger medallion inside an
 //     engraved focus ring, future is the same socket left empty — and the
@@ -81,14 +81,27 @@ function chartMaterials(ns) {
         <feDropShadow dx="0.7" dy="0.7" stdDeviation="0" floodColor="#ffffff" floodOpacity="0.6" />
       </filter>
 
-      {/* An inlay seated in a channel: occluded by the wall above and to the
-          left, catching light on the lip below and to the right. Both offsets
-          are hard-edged and under a pixel — a drop shadow here copies the whole
-          stroke, so any more reads as a second line running alongside rather
-          than as the edge of a groove. */}
-      <filter id={`${ns}-inlay`} x="-60%" y="-60%" width="220%" height="220%">
-        <feDropShadow dx="-0.5" dy="-0.55" stdDeviation="0" floodColor="#453d31" floodOpacity="0.3" />
-        <feDropShadow dx="0.45" dy="0.6" stdDeviation="0" floodColor="#ffffff" floodOpacity="0.5" />
+      {/* An inlay seated in a channel. The depth is carried inside the stroke
+          rather than cast onto the stone: the wall above shades the top of the
+          inlay itself, which is what you see looking into a filled groove.
+          Nothing is drawn outside the line — a drop shadow copies the entire
+          stroke, so any outer offset reads as a second line running alongside
+          rather than as depth.
+
+          Shifting the alpha down and subtracting it from itself leaves the top
+          sliver of the shape; blurring that and clipping it back to the source
+          keeps the shading within the inlay. */}
+      <filter id={`${ns}-inlay`} x="-20%" y="-20%" width="140%" height="140%">
+        <feOffset in="SourceAlpha" dx="0" dy="1.1" result="shifted" />
+        <feComposite in="SourceAlpha" in2="shifted" operator="out" result="topEdge" />
+        <feGaussianBlur in="topEdge" stdDeviation="0.55" result="topSoft" />
+        <feComposite in="topSoft" in2="SourceAlpha" operator="in" result="topClipped" />
+        <feFlood floodColor="#08170f" floodOpacity="0.62" result="shade" />
+        <feComposite in="shade" in2="topClipped" operator="in" result="innerShade" />
+        <feMerge>
+          <feMergeNode in="SourceGraphic" />
+          <feMergeNode in="innerShade" />
+        </feMerge>
       </filter>
 
       {/* Brushed brass, lit face to shadowed face along the same axis. */}
