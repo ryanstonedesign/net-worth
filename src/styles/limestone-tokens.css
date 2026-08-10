@@ -205,11 +205,30 @@
 
   --chart-history: var(--c-primary);
   --chart-projection: var(--c-secondary);
-  --chart-goal: var(--c-accent);
-  --chart-grid: color-mix(in srgb, var(--c-ink) 10%, transparent);
   --chart-axis: var(--c-ink-mute);
   --chart-crosshair: var(--c-ink);
   --chart-marker-fill: var(--c-bg);
+
+  /* Engraving. A groove cut in stone shows a dark upper wall and a lit lower
+     lip, because the key light sits high and to the left; every incised line
+     in the chart is that pair. The major divisions are only a little stronger
+     than the minor ones — this is drafting marks in stone, not chart chrome. */
+  --chart-groove: rgba(74, 66, 54, 0.3);
+  --chart-groove-soft: rgba(74, 66, 54, 0.12);
+  --chart-lip: rgba(255, 255, 255, 0.66);
+  --chart-grid: var(--chart-groove-soft);
+  /* The goal is an engraved architectural line, not a coloured alert. */
+  --chart-goal: rgba(74, 66, 54, 0.42);
+
+  /* Brushed brass, for time points that have actually happened. Lit face to
+     shadowed face across the same top-left axis, with a machined rim so the
+     inlay reads as fitted into its socket rather than dropped on top. */
+  --chart-brass-light: #dcc48d;
+  --chart-brass: #b2914f;
+  --chart-brass-dark: #7d6335;
+  --chart-brass-rim: rgba(85, 68, 36, 0.55);
+  /* An empty socket: stone floor, in shadow because nothing fills it. */
+  --chart-socket: color-mix(in srgb, var(--c-bg) 82%, rgba(74, 66, 54, 1));
 
   --z-base: 0;
   --z-sticky: 10;

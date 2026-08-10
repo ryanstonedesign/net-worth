@@ -543,6 +543,65 @@
   animation-timing-function: var(--ease-enter);
 }
 
+/* ── Fabricating the chart ────────────────────────────────────────────────
+   The reveal is staged so the plane reads as being made rather than faded in:
+   light finds the engraved grid, the groove draws forward, brass settles into
+   its prepared sockets, then the projection continues outward. The order is
+   carried by delays here and by the marker gate in the component. */
+.nw-grid-reveal {
+  animation: nwGridReveal var(--duration-surface) var(--ease-standard) both;
+}
+
+@keyframes nwGridReveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.nw-forecast-reveal {
+  animation: nwForecastReveal var(--duration-reveal) var(--ease-standard) 620ms both;
+}
+
+@keyframes nwForecastReveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* A marker settles into its socket: it arrives slightly small and low and is
+   damped into place. No overshoot — machined parts do not bounce. */
+.nw-marker-settle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: nwMarkerSettle var(--duration-control) var(--ease-material) both;
+}
+
+@keyframes nwMarkerSettle {
+  from {
+    opacity: 0;
+    transform: scale(0.62) translateY(1px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The selected medallion becomes more legible rather than popping in: it
+   resolves into focus from just under full size, on the same damped curve. */
+.nw-medallion {
+  animation: nwMedallionSettle var(--duration-surface) var(--ease-material) both;
+}
+
+@keyframes nwMedallionSettle {
+  from {
+    opacity: 0.45;
+    transform: scale(0.84);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 /* ── Segmented range and supporting metrics ────────────────────────────── */
 .range-pills {
   align-items: stretch;
@@ -1094,7 +1153,11 @@
     animation: none !important;
   }
 
-  .nw-dot-appear {
+  .nw-dot-appear,
+  .nw-grid-reveal,
+  .nw-forecast-reveal,
+  .nw-marker-settle,
+  .nw-medallion {
     animation: none !important;
   }
 

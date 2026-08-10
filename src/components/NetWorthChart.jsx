@@ -1,10 +1,23 @@
-import { useMemo, useState, useEffect, useRef } from 'react'
-import { AreaChart, Area, Tooltip, ResponsiveContainer, ReferenceLine, YAxis } from 'recharts'
+import { useMemo, useState, useEffect, useRef, useCallback } from 'react'
+import { AreaChart, Area, Tooltip, ResponsiveContainer, ReferenceLine, YAxis, XAxis, CartesianGrid } from 'recharts'
 import { formatMonthDisplay, formatCurrency, formatCompact } from '../utils'
 
-// Whether the draw animation plays is decided by the caller via `animateDraw`
-// and latched at mount: page load and time-range changes animate; the fresh
-// mounts from entering/exiting the scenario switcher don't.
+// The chart is engraved into the same stone plane the rest of the product is
+// made of, rather than drawn on top of it. Three ideas carry that:
+//
+//   · every incised line is a dark groove with a lit lip below and to the
+//     right of it, because the key light sits high and to the left — the same
+//     source the surfaces, cards, and buttons are lit by;
+//   · the trend is a forest inlay seated in a shallow channel, so it takes
+//     occlusion from the channel wall above it and catches light on the lip
+//     below it;
+//   · time points share one circular geometry and differ only in material.
+//     Past is filled with brass, present is a larger medallion inside an
+//     engraved focus ring, future is the same socket left empty.
+//
+// Whether the reveal plays is decided by the caller via `animateDraw` and
+// latched at mount: page load and time-range changes animate; the fresh mounts
+// from entering/exiting the scenario switcher don't.
 
 function CustomTooltip({ active, payload }) {
   if (!active || !payload?.length) return null
@@ -31,21 +44,121 @@ function CustomTooltip({ active, payload }) {
 
 // SVG presentation attributes accept CSS custom properties, keeping all chart
 // materials connected to the live theme rather than baking palette values into
-// the component.
+// the component. Filter flood colours are the exception — those are literal,
+// because flood-color resolves var() inconsistently across engines.
 const HISTORY_COLOR = 'var(--chart-history)'
 const PROJECTION_COLOR = 'var(--chart-projection)'
 const GOAL_COLOR = 'var(--chart-goal)'
+const GROOVE_COLOR = 'var(--chart-groove)'
 const UNSET_LINE_COLOR = 'var(--chart-grid)'
 const UNSET_TEXT_COLOR = 'var(--chart-axis)'
-const UNSET_DOT_COLOR = 'var(--color-line-strong)'
-const MARKER_FILL = 'var(--chart-marker-fill)'
-const CROSSHAIR_COLOR = 'var(--chart-crosshair)'
+
+// One circular geometry for every time point; only the material changes.
+const MARKER_R = 4.2
+const SELECTED_SCALE = 1.5
+
+// Filter and gradient ids are suffixed per instance so two charts on one page
+// (dashboard and the scenario switcher mid-transition) cannot collide.
+let uid = 0
+
+function chartMaterials(ns) {
+  return (
+    <defs>
+      {/* A groove: the source is the dark upper wall, the offset white copy is
+          the lit lower lip. Every incised line in the chart uses this.
+
+          Straight rules get the user-space variant. A horizontal line's
+          bounding box has zero height, so a percentage filter region collapses
+          with it and the browser renders nothing at all — which silently
+          erased the grid and the goal line. */}
+      <filter id={`${ns}-engrave`} x="-60%" y="-60%" width="220%" height="220%">
+        <feDropShadow dx="0.7" dy="0.7" stdDeviation="0" floodColor="#ffffff" floodOpacity="0.62" />
+      </filter>
+
+      <filter id={`${ns}-engrave-rule`} filterUnits="userSpaceOnUse"
+        x="-40" y="-40" width="3000" height="1400">
+        <feDropShadow dx="0.7" dy="0.7" stdDeviation="0" floodColor="#ffffff" floodOpacity="0.6" />
+      </filter>
+
+      {/* An inlay seated in a channel: occluded by the wall above and to the
+          left, catching light on the lip below and to the right. */}
+      <filter id={`${ns}-inlay`} x="-60%" y="-60%" width="220%" height="220%">
+        <feDropShadow dx="-0.6" dy="-0.7" stdDeviation="0.9" floodColor="#453d31" floodOpacity="0.38" />
+        <feDropShadow dx="0.5" dy="0.9" stdDeviation="0" floodColor="#ffffff" floodOpacity="0.52" />
+      </filter>
+
+      {/* Brushed brass, lit face to shadowed face along the same axis. */}
+      <linearGradient id={`${ns}-brass`} x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="var(--chart-brass-light)" />
+        <stop offset="46%" stopColor="var(--chart-brass)" />
+        <stop offset="100%" stopColor="var(--chart-brass-dark)" />
+      </linearGradient>
+
+      {/* An empty socket: stone floor, darkest where the near wall shades it. */}
+      <radialGradient id={`${ns}-socket`} cx="34%" cy="30%" r="84%">
+        <stop offset="0%" stopColor="rgba(69, 61, 49, 0.26)" />
+        <stop offset="100%" stopColor="rgba(69, 61, 49, 0.07)" />
+      </radialGradient>
+
+      <linearGradient id={`${ns}-fill`} x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor={HISTORY_COLOR} stopOpacity={0.07} />
+        <stop offset="100%" stopColor={HISTORY_COLOR} stopOpacity={0} />
+      </linearGradient>
+    </defs>
+  )
+}
+
+// Past: brass fitted flush into a prepared socket.
+function BrassInlay({ cx, cy, ns, r = MARKER_R, className, style }) {
+  return (
+    <g className={className} style={style}>
+      <circle cx={cx} cy={cy} r={r + 0.55} fill="none" stroke="var(--chart-brass-rim)" strokeWidth={0.85}
+        filter={`url(#${ns}-engrave)`} />
+      <circle cx={cx} cy={cy} r={r} fill={`url(#${ns}-brass)`} />
+      {/* Machined rim: bright where the light lands, dark where it leaves. */}
+      <path
+        d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx} ${cy - r}`}
+        fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth={0.8} strokeLinecap="round"
+      />
+      <path
+        d={`M ${cx + r} ${cy} A ${r} ${r} 0 0 1 ${cx} ${cy + r}`}
+        fill="none" stroke="rgba(74,58,28,0.4)" strokeWidth={0.8} strokeLinecap="round"
+      />
+    </g>
+  )
+}
+
+// Future: the same socket, prepared and left empty.
+function EmptySocket({ cx, cy, ns, r = MARKER_R, className, style }) {
+  return (
+    <g className={className} style={style}>
+      <circle cx={cx} cy={cy} r={r} fill="var(--chart-marker-fill)" />
+      <circle cx={cx} cy={cy} r={r} fill={`url(#${ns}-socket)`} />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke={GROOVE_COLOR} strokeWidth={0.9}
+        filter={`url(#${ns}-engrave)`} />
+    </g>
+  )
+}
+
+// Present: a larger medallion, seated inside a concentric engraving.
+function Medallion({ cx, cy, ns, filled, animate }) {
+  const r = MARKER_R * SELECTED_SCALE
+  return (
+    <g className={animate ? 'nw-medallion' : undefined} style={{ transformOrigin: `${cx}px ${cy}px` }}>
+      <circle cx={cx} cy={cy} r={r + 5.5} fill="none" stroke={GROOVE_COLOR} strokeWidth={0.75}
+        strokeOpacity={0.62} filter={`url(#${ns}-engrave)`} />
+      {filled
+        ? <BrassInlay cx={cx} cy={cy} ns={ns} r={r} />
+        : <EmptySocket cx={cx} cy={cy} ns={ns} r={r} />}
+    </g>
+  )
+}
 
 // Label for the goal reference line. The line is the single goal element on
 // the dashboard — it shows the target, the time remaining, and (via onClick)
 // opens the goal editor, so a transparent hit strip covers the line and label
 // to make the whole thing tappable.
-function GoalLabel({ viewBox, label, fill = GOAL_COLOR, onClick }) {
+function GoalLabel({ viewBox, label, fill = UNSET_TEXT_COLOR, onClick }) {
   if (!viewBox) return null
   const { x, y, width } = viewBox
   // Swallow pointer movement over the strip so the chart's tooltip / month
@@ -62,11 +175,12 @@ function GoalLabel({ viewBox, label, fill = GOAL_COLOR, onClick }) {
     >
       <text
         x={x + width - 4}
-        y={y - 5}
+        y={y - 6}
         textAnchor="end"
         fill={fill}
         fontSize={10}
         fontWeight={500}
+        letterSpacing="0.02em"
         fontFamily="var(--font-interface)"
       >
         {label}
@@ -82,11 +196,10 @@ function goalLineText(goal, goalEta) {
 
 export default function NetWorthChart({ data, forecastData = [], selectedMonth, height = 160, goal = null, goalEta = null, onGoalClick = null, onSelectMonth, animateDraw = false, emptyPointCount = 12 }) {
   // ── Hooks (must run before any early return) ──
-  // Build combined dataset with separate dataKeys for each segment.
-  // Memoised on the data's content so hover / selected-month re-renders keep a
-  // stable reference — that prevents recharts from replaying its draw animation
-  // on every interaction (it only replays on mount, i.e. on time-range change).
-  // Latch the draw decision at mount so later prop changes don't replay it.
+  const nsRef = useRef(null)
+  if (nsRef.current === null) nsRef.current = `nw${++uid}`
+  const ns = nsRef.current
+
   const animateRef = useRef(null)
   if (animateRef.current === null) animateRef.current = !!animateDraw
   const reduceMotion = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
@@ -107,28 +220,54 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataSig, forecastSig])
 
-  // Dots stay hidden until the line has finished drawing, then fade in. With no
-  // draw animation (later mounts) they're shown immediately. The same latch
-  // switches the recharts animation off entirely once the initial draw is done:
-  // only mounts animate — interactions that reshape the series (selecting a
-  // month that extends or shrinks the window) must not replay the draw.
-  const [dotsVisible, setDotsVisible] = useState(!animate)
+  // The reveal is staged so the chart reads as being made rather than faded in:
+  // the groove draws first, then brass settles into the prepared sockets, then
+  // the empty sockets and the projection appear. `markersIn` gates the whole
+  // marker layer; the per-marker stagger is CSS animation-delay from there.
+  const [markersIn, setMarkersIn] = useState(!animate)
   useEffect(() => {
     if (!animate) return
-    const t = setTimeout(() => setDotsVisible(true), 760)
+    const t = setTimeout(() => setMarkersIn(true), 700)
     return () => clearTimeout(t)
   }, [animate])
-  const drawAnimationActive = animate && !dotsVisible
+  // The settle animation is a one-shot: recharts re-renders every dot on each
+  // hover and selection, and without this latch each one would replay it.
+  const [settled, setSettled] = useState(!animate)
+  useEffect(() => {
+    if (!markersIn || settled) return
+    const t = setTimeout(() => setSettled(true), 900)
+    return () => clearTimeout(t)
+  }, [markersIn, settled])
+  const drawAnimationActive = animate && !markersIn
 
-  // First-time / empty state: no trend to draw yet, but the chart frame still
-  // renders — a flat baseline in the border color stands in for the (empty)
-  // net worth line, and the goal line (or a CTA to create one) lives on the
-  // chart from day one. Plain SVG since recharts needs data for a domain.
+  // Horizontal scrubbing: holding and dragging across the plane moves the
+  // active month. A tap still selects, since a press-release with no movement
+  // ends in the same handler.
+  const scrubbing = useRef(false)
+  const selectFrom = useCallback((state) => {
+    const month = state?.activePayload?.[0]?.payload?.month
+    if (month && onSelectMonth) onSelectMonth(month)
+  }, [onSelectMonth])
+  useEffect(() => {
+    const end = () => { scrubbing.current = false }
+    window.addEventListener('pointerup', end)
+    window.addEventListener('pointercancel', end)
+    return () => {
+      window.removeEventListener('pointerup', end)
+      window.removeEventListener('pointercancel', end)
+    }
+  }, [])
+
+  // First-time / empty state: no trend to draw yet, but the plane still shows
+  // its engraving — a flat baseline groove stands in for the (empty) net worth
+  // line, with prepared sockets along it, and the goal line (or a CTA to create
+  // one) is present from day one. Plain SVG since recharts needs a domain.
   if (!data || data.length < 2) {
     const hasGoal = goal != null
     const showGoalLine = hasGoal || !!onGoalClick
     const label = hasGoal ? goalLineText(goal, goalEta) : '+ Set a goal'
     const lineY = 26
+    const count = Math.max(2, emptyPointCount)
     return (
       <div
         style={{ height, cursor: onGoalClick ? 'pointer' : undefined }}
@@ -138,15 +277,16 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
         onClick={onGoalClick ?? undefined}
         onKeyDown={onGoalClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onGoalClick() } } : undefined}
       >
-        <svg width="100%" height={height} style={{ display: 'block' }}>
+        <svg width="100%" height={height} style={{ display: 'block', overflow: 'visible' }}>
+          {chartMaterials(ns)}
           {showGoalLine && (
             <>
               <text
                 x="100%"
                 dx={-4}
-                y={lineY - 9}
+                y={lineY - 10}
                 textAnchor="end"
-                fill={hasGoal ? GOAL_COLOR : UNSET_TEXT_COLOR}
+                fill={UNSET_TEXT_COLOR}
                 fontSize={10}
                 fontWeight={500}
                 fontFamily="var(--font-interface)"
@@ -156,30 +296,28 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
               <line
                 x1={4} y1={lineY} x2="100%" y2={lineY}
                 stroke={hasGoal ? GOAL_COLOR : UNSET_LINE_COLOR}
-                strokeDasharray="5 3"
-                strokeWidth={1.5}
+                strokeWidth={0.9}
+                filter={`url(#${ns}-engrave-rule)`}
               />
             </>
           )}
-          {/* Flat "no data yet" net worth line along the bottom — drawn out
-              with the same timing as the real chart, month dots fading in
-              after (dotsVisible reuses that latch) */}
           <line
             className={animate ? 'nw-empty-draw' : undefined}
             pathLength={1}
             x1="1%" y1={height - 8} x2="99%" y2={height - 8}
-            stroke={UNSET_LINE_COLOR}
-            strokeWidth={2.5}
+            stroke={GROOVE_COLOR}
+            strokeWidth={1.4}
             strokeLinecap="round"
+            filter={`url(#${ns}-engrave-rule)`}
           />
-          {dotsVisible && Array.from({ length: Math.max(2, emptyPointCount) }, (_, i) => (
-            <circle
+          {markersIn && Array.from({ length: count }, (_, i) => (
+            <EmptySocket
               key={i}
-              className="nw-dot-appear"
-              cx={`${1 + (i / (Math.max(2, emptyPointCount) - 1)) * 98}%`}
+              ns={ns}
+              cx={`${1 + (i / (count - 1)) * 98}%`}
               cy={height - 8}
-              r={3.5}
-              fill={UNSET_DOT_COLOR}
+              className={settled ? undefined : 'nw-marker-settle'}
+              style={settled ? undefined : { animationDelay: `${i * 34}ms` }}
             />
           ))}
         </svg>
@@ -189,10 +327,6 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
 
   const hasForecast = forecastData.length > 0
   const lastHistorical = data[data.length - 1]
-  const endPoint = hasForecast ? forecastData[forecastData.length - 1] : lastHistorical
-  const isUp = endPoint.netWorth >= data[0].netWorth
-  const gradId = isUp ? 'nwGradUp' : 'nwGradDown'
-  const fGradId = isUp ? 'nwForecastUp' : 'nwForecastDown'
 
   // Y-axis domain — expand to include the goal line if above data range. With
   // no goal set, a placeholder line floats above the data as the set-a-goal CTA.
@@ -211,100 +345,106 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
       ? [Math.round(goalLineY - (maxDataVal - goalLineY) * 0.08), 'auto']
       : ['auto', 'auto']
 
-  // Thin the dots on long ranges so they don't crowd the line. The line itself
-  // stays continuous — only the markers are sampled. The selected month and the
-  // final point always show regardless of the stride.
+  // Thin the markers on long ranges so the sockets don't crowd the groove. The
+  // line itself stays continuous — only the time points are sampled, and the
+  // selected month and the final point always show regardless of the stride.
   const dotStride = Math.max(1, Math.ceil(combined.length / 12))
   const showDotAt = (index) => index % dotStride === 0 || index === combined.length - 1
 
-  // Dot renderer for the historical area
+  const settleProps = (index) => settled
+    ? {}
+    : { className: 'nw-marker-settle', style: { animationDelay: `${Math.min(index, 14) * 38}ms` } }
+
+  // Past months: brass. The selected one becomes the medallion.
   const historicalDot = ({ cx, cy, payload, index }) => {
-    if (!dotsVisible) return null
+    if (!markersIn) return null
     if (payload.historical == null || !isFinite(cx) || !isFinite(cy)) return null
-    const isSelected = payload.month === selectedMonth
-    if (isSelected) return (
-      <g className="nw-dot-appear">
-        <circle cx={cx} cy={cy} r={9} fill={HISTORY_COLOR} opacity={0.14} className="dot-pulse-ring" />
-        <circle cx={cx} cy={cy} r={4.5} fill={HISTORY_COLOR} stroke={MARKER_FILL} strokeWidth={1.5} />
-      </g>
-    )
+    if (payload.month === selectedMonth) {
+      return <Medallion key={payload.month} cx={cx} cy={cy} ns={ns} filled animate={settled} />
+    }
     if (!showDotAt(index)) return null
-    return <circle className="nw-dot-appear" cx={cx} cy={cy} r={2.75} fill={HISTORY_COLOR} />
+    return <BrassInlay key={payload.month} cx={cx} cy={cy} ns={ns} {...settleProps(index)} />
   }
 
-  // Dot renderer for the forecast area (skip junction point — historical area owns it)
+  // Future months: the same socket, left empty. The junction point belongs to
+  // the historical series, which has already filled it.
   const forecastDot = ({ cx, cy, payload, index }) => {
-    if (!dotsVisible) return null
+    if (!markersIn) return null
     if (payload.forecast == null || payload.historical != null || !isFinite(cx) || !isFinite(cy)) return null
-    const isSelected = payload.month === selectedMonth
-    if (isSelected) return (
-      <g className="nw-dot-appear">
-        <circle cx={cx} cy={cy} r={8} fill={PROJECTION_COLOR} opacity={0.14} className="dot-pulse-ring" />
-        <circle cx={cx} cy={cy} r={4} fill={PROJECTION_COLOR} stroke={MARKER_FILL} strokeWidth={1.5} />
-      </g>
-    )
+    if (payload.month === selectedMonth) {
+      return <Medallion key={payload.month} cx={cx} cy={cy} ns={ns} filled={false} animate={settled} />
+    }
     if (!showDotAt(index)) return null
-    return <circle className="nw-dot-appear" cx={cx} cy={cy} r={2.5} fill={PROJECTION_COLOR} opacity={0.72} />
+    return <EmptySocket key={payload.month} cx={cx} cy={cy} ns={ns} {...settleProps(index)} />
   }
 
   return (
     <ResponsiveContainer width="100%" height={height}>
       <AreaChart
         data={combined}
-        margin={{ top: 20, right: 4, left: 4, bottom: 4 }}
-        onClick={(state) => {
-          const month = state?.activePayload?.[0]?.payload?.month
-          if (month && onSelectMonth) onSelectMonth(month)
-        }}
-        style={onSelectMonth ? { cursor: 'pointer' } : undefined}
+        margin={{ top: 20, right: 14, left: 14, bottom: 6 }}
+        onClick={selectFrom}
+        onMouseDown={(state) => { scrubbing.current = true; selectFrom(state) }}
+        onMouseMove={(state) => { if (scrubbing.current) selectFrom(state) }}
+        onTouchStart={() => { scrubbing.current = true }}
+        onTouchMove={(state) => { if (scrubbing.current) selectFrom(state) }}
+        style={onSelectMonth ? { cursor: 'pointer', touchAction: 'pan-y' } : undefined}
       >
-        <defs>
-          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={HISTORY_COLOR} stopOpacity={0.075} />
-            <stop offset="100%" stopColor={HISTORY_COLOR} stopOpacity={0} />
-          </linearGradient>
-          <linearGradient id={fGradId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={PROJECTION_COLOR} stopOpacity={0.04} />
-            <stop offset="100%" stopColor={PROJECTION_COLOR} stopOpacity={0} />
-          </linearGradient>
-        </defs>
+        {chartMaterials(ns)}
+        {/* Drafting marks incised into the stone, not chart chrome. */}
+        <CartesianGrid
+          stroke={UNSET_LINE_COLOR}
+          strokeWidth={0.75}
+          vertical
+          horizontal
+          filter={`url(#${ns}-engrave-rule)`}
+          className={animate ? 'nw-grid-reveal' : undefined}
+        />
         <YAxis domain={yDomain} hide />
+        <XAxis dataKey="month" hide />
         <Tooltip
           content={<CustomTooltip />}
-          cursor={{ stroke: CROSSHAIR_COLOR, strokeOpacity: 0.38, strokeWidth: 1, strokeDasharray: '3 3' }}
+          cursor={{ stroke: GROOVE_COLOR, strokeOpacity: 0.5, strokeWidth: 1 }}
         />
+        {/* Forecast is declared first so the realised history sits over it at
+            the junction, keeping the projection visually subordinate. */}
+        {hasForecast && (
+          <Area
+            type="monotone"
+            dataKey="forecast"
+            stroke={PROJECTION_COLOR}
+            strokeWidth={1.6}
+            strokeOpacity={0.72}
+            strokeLinecap="round"
+            strokeDasharray="0.5 5.5"
+            fill="none"
+            dot={forecastDot}
+            activeDot={false}
+            filter={`url(#${ns}-engrave-rule)`}
+            className={animate ? 'nw-forecast-reveal' : undefined}
+            isAnimationActive={drawAnimationActive}
+            animationBegin={140}
+            animationDuration={760}
+            animationEasing="ease-out"
+            connectNulls={false}
+          />
+        )}
         <Area
           type="monotone"
           dataKey="historical"
           stroke={HISTORY_COLOR}
-          strokeWidth={2.25}
-          fill={`url(#${gradId})`}
+          strokeWidth={2.4}
+          strokeLinecap="round"
+          fill={`url(#${ns}-fill)`}
           dot={historicalDot}
-          activeDot={{ r: 5, fill: HISTORY_COLOR, stroke: MARKER_FILL, strokeWidth: 2 }}
+          activeDot={false}
+          filter={`url(#${ns}-inlay)`}
           isAnimationActive={drawAnimationActive}
           animationBegin={0}
           animationDuration={720}
           animationEasing="ease-out"
           connectNulls={false}
         />
-        {hasForecast && (
-          <Area
-            type="monotone"
-            dataKey="forecast"
-            stroke={PROJECTION_COLOR}
-            strokeWidth={1.75}
-            strokeOpacity={0.9}
-            strokeDasharray="5 4"
-            fill={`url(#${fGradId})`}
-            dot={forecastDot}
-            activeDot={{ r: 4.5, fill: PROJECTION_COLOR, stroke: MARKER_FILL, strokeWidth: 2 }}
-            isAnimationActive={drawAnimationActive}
-            animationBegin={0}
-            animationDuration={720}
-            animationEasing="ease-out"
-            connectNulls={false}
-          />
-        )}
         {/* Declared after the areas: SVG hit-tests in document order, so the
             goal line and its tap strip must come last to stay clickable when
             the trend line crosses above it */}
@@ -312,12 +452,12 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
           <ReferenceLine
             y={goalLineY}
             stroke={goal != null ? GOAL_COLOR : UNSET_LINE_COLOR}
-            strokeDasharray="5 3"
-            strokeWidth={1.5}
+            strokeWidth={0.9}
+            filter={`url(#${ns}-engrave-rule)`}
             label={
               <GoalLabel
                 label={goal != null ? goalLineText(goal, goalEta) : '+ Set a goal'}
-                fill={goal != null ? GOAL_COLOR : UNSET_TEXT_COLOR}
+                fill={UNSET_TEXT_COLOR}
                 onClick={onGoalClick}
               />
             }
