@@ -14,7 +14,8 @@ import { formatMonthDisplay, formatCurrency, formatCompact } from '../utils'
 //   · time points share one circular geometry and differ only in material.
 //     Past is filled with brass, present is a larger medallion inside an
 //     engraved focus ring, future is the same socket left empty — and the
-//     projected path is the same channel, cut but not yet filled.
+//     projected path is the same channel at the same width, cut but not yet
+//     filled.
 //
 // Whether the reveal plays is decided by the caller via `animateDraw` and
 // latched at mount: page load and time-range changes animate; the fresh mounts
@@ -416,7 +417,7 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
             type="monotone"
             dataKey="forecast"
             stroke={GROOVE_COLOR}
-            strokeWidth={1.6}
+            strokeWidth={2.4}
             strokeLinecap="round"
             fill="none"
             dot={forecastDot}
