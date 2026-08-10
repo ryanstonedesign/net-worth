@@ -130,34 +130,38 @@ function chartMaterials(ns, wash, shade, height) {
         <stop offset="100%" stopColor="var(--chart-brass-dark)" />
       </linearGradient>
 
-      {/* Metal poured into the channel. The wall above shades its top edge and
-          light pools along the lower inside — a concave surface is bright
-          where the far wall bounces light back, which is what gives it the
-          look of having flowed in and settled rather than been laid on. */}
+      {/* Metal filling the channel, with a crown of its own. The brass months
+          read as dimensional because they carry a lit face and a shadowed one
+          across the key light's axis; the trend is the same material, so it is
+          embossed the same way — highlight banked along its top-left edge,
+          shadow where it turns away at the bottom-right. Both are clipped back
+          inside the stroke, so the dimension belongs to the metal rather than
+          being cast onto the stone. The stone's own cut edge still catches
+          light below it. */}
       <filter id={`${ns}-inlay-metal`} x="-40%" y="-40%" width="180%" height="180%">
-        <feOffset in="SourceAlpha" dx="0" dy="1.2" result="mDn" />
-        <feComposite in="SourceAlpha" in2="mDn" operator="out" result="mTop" />
-        <feGaussianBlur in="mTop" stdDeviation="0.6" result="mTopSoft" />
-        <feComposite in="mTopSoft" in2="SourceAlpha" operator="in" result="mTopClip" />
-        <feFlood floodColor="#3d2a0b" floodOpacity="0.72" result="mShadeC" />
-        <feComposite in="mShadeC" in2="mTopClip" operator="in" result="mShade" />
+        <feOffset in="SourceAlpha" dx="0.85" dy="0.95" result="mDR" />
+        <feComposite in="SourceAlpha" in2="mDR" operator="out" result="mTL" />
+        <feGaussianBlur in="mTL" stdDeviation="0.5" result="mTLs" />
+        <feComposite in="mTLs" in2="SourceAlpha" operator="in" result="mTLc" />
+        <feFlood floodColor="#fff4d8" floodOpacity="0.8" result="mHiC" />
+        <feComposite in="mHiC" in2="mTLc" operator="in" result="mHi" />
 
-        <feOffset in="SourceAlpha" dx="0" dy="-1.1" result="mUp" />
-        <feComposite in="SourceAlpha" in2="mUp" operator="out" result="mBot" />
-        <feGaussianBlur in="mBot" stdDeviation="0.5" result="mBotSoft" />
-        <feComposite in="mBotSoft" in2="SourceAlpha" operator="in" result="mBotClip" />
-        <feFlood floodColor="#fff0cd" floodOpacity="0.62" result="mSpecC" />
-        <feComposite in="mSpecC" in2="mBotClip" operator="in" result="mSpec" />
+        <feOffset in="SourceAlpha" dx="-0.85" dy="-0.95" result="mUL" />
+        <feComposite in="SourceAlpha" in2="mUL" operator="out" result="mBR" />
+        <feGaussianBlur in="mBR" stdDeviation="0.6" result="mBRs" />
+        <feComposite in="mBRs" in2="SourceAlpha" operator="in" result="mBRc" />
+        <feFlood floodColor="#4a3410" floodOpacity="0.6" result="mLoC" />
+        <feComposite in="mLoC" in2="mBRc" operator="in" result="mLo" />
 
-        <feOffset in="SourceAlpha" dx="0.45" dy="0.6" result="mLipShift" />
-        <feFlood floodColor="#ffffff" floodOpacity="0.5" result="mLipColor" />
+        <feOffset in="SourceAlpha" dx="0.45" dy="0.65" result="mLipShift" />
+        <feFlood floodColor="#ffffff" floodOpacity="0.45" result="mLipColor" />
         <feComposite in="mLipColor" in2="mLipShift" operator="in" result="mLip" />
 
         <feMerge>
           <feMergeNode in="mLip" />
           <feMergeNode in="SourceGraphic" />
-          <feMergeNode in="mShade" />
-          <feMergeNode in="mSpec" />
+          <feMergeNode in="mLo" />
+          <feMergeNode in="mHi" />
         </feMerge>
       </filter>
 
