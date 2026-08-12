@@ -135,7 +135,7 @@
   height: 32px;
   padding: 7px;
   color: var(--c-primary);
-  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) 85%, transparent);
+  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) var(--slab-grain-keep), transparent);
   background-color: var(--slab-fill);
   background-image:
     linear-gradient(var(--slab-grain-veil), var(--slab-grain-veil)),
@@ -197,7 +197,7 @@
 }
 
 .side-nav-item.active {
-  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) 85%, transparent);
+  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) var(--slab-grain-keep), transparent);
   background-color: var(--slab-fill);
   background-image:
     linear-gradient(var(--slab-grain-veil), var(--slab-grain-veil)),
@@ -742,7 +742,7 @@
 }
 
 .summary-cell.card {
-  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) 85%, transparent);
+  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) var(--slab-grain-keep), transparent);
   min-width: 0;
   padding: 16px 18px;
   background-color: var(--slab-fill);
@@ -797,7 +797,7 @@
 
 .cat-card.card {
   padding: 16px 18px;
-  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) 85%, transparent);
+  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) var(--slab-grain-keep), transparent);
   background-color: var(--slab-fill);
   background-image:
     linear-gradient(var(--slab-grain-veil), var(--slab-grain-veil)),
@@ -1021,7 +1021,7 @@
   width: 40px;
   height: 40px;
   color: var(--c-primary);
-  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) 85%, transparent);
+  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) var(--slab-grain-keep), transparent);
   background-color: var(--slab-fill);
   background-image:
     linear-gradient(var(--slab-grain-veil), var(--slab-grain-veil)),

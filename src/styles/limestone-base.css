@@ -61,7 +61,7 @@ textarea {
   pointer-events: none;
   background: var(--texture-limestone) center / var(--texture-limestone-tile) repeat;
   mix-blend-mode: multiply;
-  opacity: 0.1;
+  opacity: var(--grain-strength-bg);
 }
 
 .app-bg,
@@ -100,7 +100,7 @@ textarea {
    edge, and a small contact shadow. Recesses stay reserved for the controls
    you write into: inputs, selects, and segmented rails. */
 [data-surface="slab"] {
-  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) 85%, transparent);
+  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) var(--slab-grain-keep), transparent);
   background-color: var(--slab-fill);
   background-image:
     linear-gradient(var(--slab-grain-veil), var(--slab-grain-veil)),
@@ -367,7 +367,7 @@ textarea {
 .input,
 .custom-range-input,
 .update-amount-input {
-  --slab-grain-veil: color-mix(in srgb, var(--c-surface-muted) 85%, transparent);
+  --slab-grain-veil: color-mix(in srgb, var(--c-surface-muted) var(--slab-grain-keep), transparent);
   min-height: 48px;
   color: var(--c-ink);
   background-color: var(--c-surface-muted);
@@ -398,7 +398,7 @@ textarea {
 :is(.select, .select-wrap > select) {
   min-height: 48px;
   color: var(--c-ink);
-  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) 85%, transparent);
+  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) var(--slab-grain-keep), transparent);
   background-color: var(--slab-fill);
   background-image:
     linear-gradient(var(--slab-grain-veil), var(--slab-grain-veil)),
@@ -432,6 +432,132 @@ textarea {
 .form-label {
   color: var(--c-ink-body);
   letter-spacing: 0.015em;
+}
+
+/* ── Slider ────────────────────────────────────────────────────────────────
+   The two halves take opposite roles from the same vocabulary: the track is a
+   groove chiselled into the surface — the same recess the inputs and segmented
+   rails use — and the thumb is a small slab riding in it, lit and shadowed like
+   every other raised instrument. The filled portion is a shallow inlay laid
+   into the groove behind the thumb, so the control reads as a machined part
+   rather than as a coloured bar.
+
+   Chromium needs the two pseudo-elements written separately: a rule listing
+   ::-webkit-slider-thumb alongside ::-moz-range-thumb is dropped whole. */
+.slider {
+  width: 100%;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.slider::-webkit-slider-runnable-track {
+  height: 8px;
+  background:
+    linear-gradient(var(--c-primary), var(--c-primary)) 0 / var(--slider-fill, 0%) 100% no-repeat,
+    var(--c-surface-muted);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-round);
+  box-shadow: var(--surface-recessed-shadow);
+}
+
+.slider::-moz-range-track {
+  height: 8px;
+  background: var(--c-surface-muted);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-round);
+  box-shadow: var(--surface-recessed-shadow);
+}
+
+.slider::-moz-range-progress {
+  height: 8px;
+  background: var(--c-primary);
+  border-radius: var(--radius-round);
+}
+
+.slider::-webkit-slider-thumb {
+  box-sizing: border-box;
+  width: 22px;
+  height: 22px;
+  /* Centre the thumb on an 8px track from a 22px box: (8 - 22) / 2. */
+  margin-top: -7px;
+  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) var(--slab-grain-keep), transparent);
+  background-color: var(--slab-fill);
+  background-image:
+    linear-gradient(var(--slab-grain-veil), var(--slab-grain-veil)),
+    var(--texture-limestone);
+  background-position: center;
+  background-size: var(--slab-grain-size);
+  background-repeat: repeat;
+  background-blend-mode: var(--slab-grain-blend);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-round);
+  box-shadow: var(--shadow-slab);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.slider::-moz-range-thumb {
+  box-sizing: border-box;
+  width: 22px;
+  height: 22px;
+  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) var(--slab-grain-keep), transparent);
+  background-color: var(--slab-fill);
+  background-image:
+    linear-gradient(var(--slab-grain-veil), var(--slab-grain-veil)),
+    var(--texture-limestone);
+  background-position: center;
+  background-size: var(--slab-grain-size);
+  background-repeat: repeat;
+  background-blend-mode: var(--slab-grain-blend);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-round);
+  box-shadow: var(--shadow-slab);
+}
+
+.slider:hover::-webkit-slider-thumb {
+  box-shadow: var(--shadow-slab-lifted);
+}
+
+.slider:hover::-moz-range-thumb {
+  box-shadow: var(--shadow-slab-lifted);
+}
+
+.slider:active::-webkit-slider-thumb {
+  box-shadow: var(--surface-pressed-shadow);
+}
+
+.slider:active::-moz-range-thumb {
+  box-shadow: var(--surface-pressed-shadow);
+}
+
+/* The label and its readout share a baseline above the track. */
+.slider-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.slider-value {
+  font-family: var(--font-interface);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.slider-hint {
+  margin: 2px 0 0;
+  font-family: var(--font-interface);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--c-ink-mute);
 }
 
 .type-toggle,

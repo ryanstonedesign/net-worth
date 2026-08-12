@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Modal from './Modal'
 import ImportSheet from './ImportSheet'
 import { CHART_VARIANTS } from '../lib/chartVariant'
+import { GRAIN_DIALS, GRAIN_MAX } from '../lib/grainOpacity'
 
 export const SCENARIOS = [
   { value: 'none', label: 'None' },
@@ -19,6 +20,7 @@ export default function PrototypeSettings({
   scenario, onScenarioChange, onSignOut,
   categories, selectedMonth, onImport, onOpenStickerSheet,
   chartVariant, onChartVariantChange,
+  grain, onGrainChange,
 }) {
   const [view, setView] = useState(initialView)
 
@@ -83,6 +85,34 @@ export default function PrototypeSettings({
                   </div>
                 </div>
               )}
+
+              {onGrainChange && GRAIN_DIALS.map(dial => {
+                const value = grain?.[dial.key] ?? dial.def
+                const pct = Math.round(value * 100)
+                const max = Math.round(GRAIN_MAX * 100)
+                return (
+                  <div className="form-group" key={dial.key}>
+                    <div className="slider-head">
+                      <label className="form-label" htmlFor={`grain-${dial.key}`}>{dial.label}</label>
+                      <span className="slider-value">{pct}%</span>
+                    </div>
+                    <input
+                      id={`grain-${dial.key}`}
+                      className="slider"
+                      type="range"
+                      min={0}
+                      max={max}
+                      step={1}
+                      value={pct}
+                      // Chromium has no ::-moz-range-progress equivalent, so the
+                      // filled half of the track is painted from this.
+                      style={{ '--slider-fill': `${(pct / max) * 100}%` }}
+                      onChange={e => onGrainChange(dial.key, Number(e.target.value) / 100)}
+                    />
+                    <p className="slider-hint">{dial.hint}</p>
+                  </div>
+                )
+              })}
 
               {onImport && (
                 <>

@@ -141,7 +141,7 @@
 .modal-sheet :is(.select, .select-wrap > select),
 .settings-pop-field .select {
   color: var(--c-ink);
-  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) 85%, transparent);
+  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) var(--slab-grain-keep), transparent);
   background-color: var(--slab-fill);
   background-image:
     linear-gradient(var(--slab-grain-veil), var(--slab-grain-veil)),
@@ -362,7 +362,7 @@
 /* One slab holding a stack of rows, rather than a recess per row. */
 .settings-card {
   overflow: hidden;
-  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) 85%, transparent);
+  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) var(--slab-grain-keep), transparent);
   background-color: var(--slab-fill);
   background-image:
     linear-gradient(var(--slab-grain-veil), var(--slab-grain-veil)),
@@ -1042,6 +1042,10 @@ button.settings-row:active {
   animation: limestone-fade-in var(--duration-control) var(--ease-standard);
 }
 
+/* The design-system page is a document rather than the product surface, so it
+   wears the canvas grain at a little over half strength — enough to sit on the
+   same material, quiet enough not to compete with the specimens. It tracks the
+   background dial so the two pages never disagree about what stone is. */
 .ds-page::before {
   content: "";
   position: absolute;
@@ -1050,7 +1054,7 @@ button.settings-row:active {
   pointer-events: none;
   background: var(--texture-limestone) center / var(--texture-limestone-tile) repeat;
   mix-blend-mode: multiply;
-  opacity: 0.06;
+  opacity: calc(var(--grain-strength-bg) * 0.6);
 }
 
 .ds-header {

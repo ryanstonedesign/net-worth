@@ -148,11 +148,28 @@
      custom property resolves where that property is declared — a composite
      built here would carry the root fill onto every slab and cancel any
      local ground. Set --texture-limestone to none to retire the grain. */
-  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) 85%, transparent);
+  --slab-grain-veil: color-mix(in srgb, var(--slab-fill) var(--slab-grain-keep), transparent);
   --slab-grain-size: auto, var(--texture-limestone-tile);
-  /* Strength of the grain overlay worn by every painted surface. Matches the
-     15% the slab veil passes, so a slab and a sheet read as the same stone. */
+
+  /* ── How much grain each family of surfaces shows ────────────────────────
+     Two numbers, because the two families are lit differently and were tuned
+     separately. --grain-strength-bg is the page canvas: a wide, uninterrupted
+     plane where the eye integrates the texture over a large area, so it takes
+     less. --grain-strength is everything painted on top of it — sheets,
+     popovers, rails, buttons, and the slab cards — where the same stone has to
+     read across a few hundred pixels.
+
+     Everything else about the grain is derived from those two, so the sliders
+     in prototype settings move a whole family coherently instead of pulling
+     one surface out of step with its neighbours. */
+  --grain-strength-bg: 0.1;
   --grain-strength: 0.15;
+  /* A slab veils the texture in its own fill rather than multiplying over it,
+     so its dial is what the veil lets through — the complement of the overlay
+     strength. Each slab rule re-declares the veil against its own --slab-fill
+     but reads this percentage from here, which is safe: only the fill needs
+     resolving where the slab is. */
+  --slab-grain-keep: calc(100% - var(--grain-strength) * 100%);
 
   /* The forest actions are the same stone in shadow, but a multiply of a
      near-white grain barely registers on a dark fill — 0.6 luminance levels,
@@ -163,9 +180,11 @@
      of matching the light surfaces' absolute variance: the same sd on a fill
      this dark is several times the relative contrast, so 0.55 lands at 1.57
      luminance sd against their 1.91 and reads as the same stone rather than
-     as noise. */
+     as noise. The ratio is held rather than the absolute number, so moving the
+     surface dial carries the forest actions with it. */
   --grain-ink-recentre: brightness(0.549);
-  --grain-strength-ink: 0.55;
+  --grain-ink-ratio: 3.667;
+  --grain-strength-ink: calc(var(--grain-strength) * var(--grain-ink-ratio));
   --slab-grain-blend: normal, multiply;
 
   /* Slab: a plane cut from the canvas and set on top of it. It sits at the

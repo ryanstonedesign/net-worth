@@ -9,6 +9,7 @@ import { getCurrentMonth } from './utils'
 import Dashboard from './pages/Dashboard'
 import PrototypeSettings from './components/PrototypeSettings'
 import { readChartVariant, writeChartVariant } from './lib/chartVariant'
+import { applyGrain, readGrain, writeGrain } from './lib/grainOpacity'
 import StickerSheet from './components/StickerSheet'
 import TopNav from './components/TopNav'
 import SideNav from './components/SideNav'
@@ -35,6 +36,18 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
   const [settingsView, setSettingsView] = useState(null)
   const [chartVariant, setChartVariant] = useState(readChartVariant)
   const changeChartVariant = (v) => { setChartVariant(v); writeChartVariant(v) }
+  // Grain dials. main.jsx has already applied the saved values to the document;
+  // this holds them so the sliders have something to render, and pushes each
+  // change straight onto the root so the surfaces respond as the user drags.
+  const [grain, setGrain] = useState(readGrain)
+  const changeGrain = (key, value) => {
+    setGrain(prev => {
+      const next = { ...prev, [key]: value }
+      applyGrain(next)
+      writeGrain(next)
+      return next
+    })
+  }
   const [stickerOpen, setStickerOpen] = useState(false)
   // Account modal (avatar / name / email / password). Landing on the app
   // with #account in the URL deep-links straight into it; opening and
@@ -203,6 +216,8 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
         onOpenStickerSheet={() => { setSettingsView(null); setStickerOpen(true) }}
         chartVariant={chartVariant}
         onChartVariantChange={changeChartVariant}
+        grain={grain}
+        onGrainChange={changeGrain}
         {...settingsProps}
       />
 
