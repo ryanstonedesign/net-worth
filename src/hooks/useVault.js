@@ -20,6 +20,11 @@ const SALT_CACHE_KEY = 'networth_salt_v1'
 // single-use and is gone by then, so we can't rely on it after the first load.
 const RECOVERY_MODE_KEY = 'networth_recovery_mode'
 
+// How long to wait for the session check before giving up on it. A paused or
+// unreachable backend can leave the request hanging indefinitely, and 'loading'
+// draws nothing but the background — a blank screen with no way out.
+const SESSION_TIMEOUT_MS = 8000
+
 function recoveryModeActive() {
   try { return sessionStorage.getItem(RECOVERY_MODE_KEY) === '1' } catch { return false }
 }
@@ -56,19 +61,38 @@ export function useVault() {
     if (arrivedFromPasswordReset) setRecoveryMode(true)
     const inRecovery = arrivedFromPasswordReset || recoveryModeActive()
 
+    // The session check has to reach a conclusion even when it can't reach the
+    // backend. Left unhandled, a rejected or hanging request keeps the app on
+    // 'loading', which renders the background and nothing else — indefinitely,
+    // with nothing on screen to explain it or act on. Both failures land on the
+    // signed-out screen, which is where a visitor without a session belongs.
+    let settled = false
+    let timer = 0
+    const settle = (next, message) => {
+      if (!mounted || settled) return
+      settled = true
+      clearTimeout(timer)
+      if (message) setError(message)
+      setStage(next)
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!mounted) return
       if (session?.user) {
         setUser(session.user)
-        setStage(inRecovery ? 'recovery-reset' : 'lock')
+        settle(inRecovery ? 'recovery-reset' : 'lock')
       } else if (inRecovery) {
         // Recovery session not established yet. PASSWORD_RECOVERY (or SIGNED_IN)
         // in onAuthStateChange will route us the moment it fires.
-        setStage('loading')
+        settled = true
       } else {
-        setStage('auth')
+        settle('auth')
       }
-    })
+    }).catch(() => settle('auth', 'Could not reach the server. Check your connection and try again.'))
+
+    // Recovery deliberately waits on an auth event rather than the session
+    // check, so it is the one case that is allowed to sit on 'loading'.
+    if (!inRecovery) timer = setTimeout(() => settle('auth'), SESSION_TIMEOUT_MS)
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       // PASSWORD_RECOVERY fires when the user lands on the page from a reset
       // email link. The session is established but only valid for changing
@@ -99,7 +123,7 @@ export function useVault() {
         }
       }
     })
-    return () => { mounted = false; sub.subscription.unsubscribe() }
+    return () => { mounted = false; clearTimeout(timer); sub.subscription.unsubscribe() }
   }, [])
 
   const cachedSalt = useCallback(() => {

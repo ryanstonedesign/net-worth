@@ -86,7 +86,7 @@ vec3 causticLight(float d, float w, float spread) {
      flanks separate into saturated red and cyan lines and the fold reads as a
      little rainbow; this leaves the shift as a fringe on an otherwise white
      filament, which is what the glass actually does. */
-  vec3 core = mix(vec3(mid), split, 0.45);
+  vec3 core = mix(vec3(mid), split, 0.52);
 
   float h = w * HALO_SPREAD;
   float halo = exp(-(d * d) / (h * h));
@@ -138,22 +138,22 @@ void main() {
      rate, amplitude. Bow frequencies sit near a half cycle across the pane, so
      each fold is one gentle arc rather than a wave; the angles are spread so
      the arcs cross each other instead of stacking into a grain. */
-  light += fold(w, t,  0.21, 0.00787, 1.32, 0.40, 0.09, -1.02, 0.00, 0.00411, 1.00);
-  light += fold(w, t, -0.74, 0.00541, 1.07, 0.52, 0.15, -0.34, 0.37, 0.00271, 0.90);
-  light += fold(w, t,  0.58, 0.00997, 1.63, 0.34, 0.07,  0.28, 0.62, 0.00533, 0.80);
-  light += fold(w, t, -1.19, 0.00673, 1.19, 0.46, 0.12,  0.86, 0.81, 0.00193, 0.95);
-  light += fold(w, t,  1.42, 0.00439, 0.91, 0.61, 0.19,  1.42, 0.14, 0.00347, 0.75);
+  light += fold(w, t,  0.21, 0.00787, 1.32, 0.40, 0.09, -1.02, 0.00, 0.00411, 1.20);
+  light += fold(w, t, -0.74, 0.00541, 1.07, 0.52, 0.15, -0.34, 0.37, 0.00271, 1.08);
+  light += fold(w, t,  0.58, 0.00997, 1.63, 0.34, 0.07,  0.28, 0.62, 0.00533, 0.96);
+  light += fold(w, t, -1.19, 0.00673, 1.19, 0.46, 0.12,  0.86, 0.81, 0.00193, 1.14);
+  light += fold(w, t,  1.42, 0.00439, 0.91, 0.61, 0.19,  1.42, 0.14, 0.00347, 0.90);
 
   /* The card stack sits in the middle of the screen, so light is pulled down
      over a tall ellipse there. It is attenuated rather than cut: the folds
      still cross the middle, they just stop competing with the numbers. */
   vec2 c = vec2(p.x * 0.95, p.y * 0.62);
-  light *= mix(0.62, 1.0, smoothstep(0.0, 1.0, dot(c, c)));
+  light *= mix(0.70, 1.0, smoothstep(0.0, 1.0, dot(c, c)));
 
   /* Nearly white, a half step cool. The undertone deepens toward the edges so
      the pane reads as curved glass rather than flat paper. */
   float edge = smoothstep(0.15, 1.75, length(p * vec2(1.0, 0.62)));
-  vec3 base = mix(vec3(0.930, 0.936, 0.955), vec3(0.845, 0.856, 0.900), edge);
+  vec3 base = mix(vec3(0.926, 0.932, 0.952), vec3(0.836, 0.848, 0.895), edge);
 
   /* Exposure rather than a clamp: where folds pile up, a clamp flattens the
      overlap into a plate of pure white with a visible edge, while this rolls
