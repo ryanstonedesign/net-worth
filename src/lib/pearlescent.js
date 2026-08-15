@@ -68,11 +68,16 @@ vec3 iridescence(float phase, float warm) {
 
 /* Refraction through an uneven pane: the path bends by the local gradient of a
    slowly evolving thickness field. Two octaves is the whole budget — a third
-   starts to read as noise cloud rather than glass. */
+   starts to read as noise cloud rather than glass.
+
+   The two octaves run at very different rates on purpose. The coarse one is
+   the slow swell of the pane, minutes per cycle; the fine one travels a few
+   times faster, and it is what keeps the field continuously in motion instead
+   of holding a shape between the slow beats. */
 vec2 bend(vec2 p, float t) {
   return p + vec2(
-    sin(p.y * 1.19 + t * 0.01253) + 0.42 * sin(p.y * 2.31 - t * 0.00779),
-    cos(p.x * 1.07 - t * 0.01031) + 0.42 * cos(p.x * 2.53 + t * 0.00671)
+    sin(p.y * 1.19 + t * 0.01253) + 0.42 * sin(p.y * 2.31 - t * 0.04871),
+    cos(p.x * 1.07 - t * 0.01031) + 0.42 * cos(p.x * 2.53 + t * 0.04139)
   ) * 0.19;
 }
 
@@ -104,6 +109,13 @@ vec3 causticLight(float d, float w, float spread) {
   return core * 0.70 + vec3(halo * 0.30);
 }
 
+/* Both are multiples of a fold's own drift, so each fold keeps its own periods
+   and the set stays mutually incommensurate across folds. The ratios are
+   deliberately not whole numbers: at 9.0 the ripple would close on the arc
+   every ninth pass and the fold would repeat on the arc's period. */
+const float BREATHE_RATIO = 4.73;
+const float RIPPLE_RATIO = 9.19;
+
 /* One caustic fold: a curved ridge, the distance to it, and the caustic
    falloff of that distance. The ridge is three sines of unrelated period, so
    the curve is asymmetric and never straightens out as the phases drift. */
@@ -113,10 +125,23 @@ vec3 fold(
 ) {
   vec2 q = rot(angle) * p;
   float ph = t * drift;
-  float sweep = bow * uTravel;
+
+  /* The arc opens and closes on its own cycle, so the fold is never sitting at
+     one fixed curvature waiting for its phase to come round. */
+  float sweep = bow * uTravel * (1.0 + 0.25 * sin(t * drift * BREATHE_RATIO + tintPhase * 4.1));
+
   float ridge = sin(q.x * bowFreq + ph) * sweep
               + sin(q.x * bowFreq * 0.53 - ph * 0.79) * sweep * 0.52
               + sin(q.x * bowFreq * 0.23 + ph * 0.37) * sweep * 0.86;
+
+  /* A ripple travelling along the fold: a fraction of the arc's amplitude at
+     many times its phase velocity. The arc alone only rocks, and a rock this
+     slow reads as a rigid thing being moved rather than as light — this is
+     what keeps the curve moving through itself while the arc drifts. */
+  float rp = t * drift * RIPPLE_RATIO;
+  ridge += sin(q.x * bowFreq * 2.7 - rp) * sweep * 0.17
+         + sin(q.x * bowFreq * 4.3 + rp * 0.63) * sweep * 0.085;
+
   float d = q.y - offset - ridge;
 
   float w = width * uThickness;
