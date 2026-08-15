@@ -50,7 +50,7 @@ export default function ResponsiveArtwork({
         height={height}
         alt={alt}
         loading={priority ? 'eager' : 'lazy'}
-        fetchPriority={priority ? 'high' : 'auto'}
+        fetchpriority={priority ? 'high' : undefined}
         decoding="async"
       />
     </picture>

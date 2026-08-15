@@ -1,0 +1,2440 @@
+/* Worthfolio — Holographic Calm
+   This file is deliberately last in the cascade. Stone remains the untouched
+   base theme; every rule here is opt-in through the root data attribute. */
+
+html[data-theme="holographic"] {
+  color-scheme: light;
+
+  --pearl-000: #fcfdff;
+  --pearl-050: #f8faff;
+  --pearl-100: #f3f6fc;
+  --mist-100: #eef2fa;
+  --mist-200: #e5eaf4;
+  --mist-300: #d8dfec;
+  --slate-500: #687286;
+  --slate-600: #566174;
+  --slate-700: #3d475a;
+  --slate-800: #253044;
+  --ink-900: #101828;
+  --ink-950: #08111f;
+  --emerald-400: #36d9a5;
+  --emerald-500: #16b887;
+  --emerald-600: #0a8f6a;
+  --emerald-700: #067154;
+  --teal-400: #2bdcd8;
+  --teal-500: #18c6c5;
+  --cyan-400: #43c8ff;
+  --cyan-500: #1fafff;
+  --violet-400: #9b8cff;
+  --violet-500: #7d6cff;
+  --lavender-300: #c5bfff;
+  --lavender-400: #ada3ff;
+  --rose-300: #ffa7d8;
+  --rose-400: #f681c3;
+  --rose-500: #e45aa6;
+  --coral-400: #ff8a77;
+  --coral-500: #f76854;
+
+  --color-canvas: var(--pearl-050);
+  --color-canvas-soft: rgba(255, 255, 255, 0.54);
+  --color-canvas-deep: rgba(238, 242, 250, 0.68);
+  --color-ink: var(--ink-900);
+  --color-ink-soft: var(--slate-700);
+  --color-ink-muted: var(--slate-600);
+  --color-line: rgba(104, 114, 134, 0.2);
+  --color-line-strong: rgba(86, 97, 116, 0.32);
+  --color-forest: var(--emerald-600);
+  --color-forest-hover: var(--emerald-500);
+  --color-forest-pressed: var(--emerald-700);
+  --color-moss: var(--teal-500);
+  --color-sage: var(--cyan-500);
+  --color-projection: var(--violet-500);
+  --color-positive: var(--emerald-600);
+  --color-warning: #b85f16;
+  --color-danger: #c73d6e;
+  --color-info: #246cb3;
+  --color-focus: var(--cyan-500);
+  --color-on-dark: #ffffff;
+
+  --c-primary: var(--emerald-600);
+  --c-accent: var(--cyan-500);
+  --c-secondary: var(--violet-500);
+  --c-tertiary: var(--emerald-500);
+  --c-surface: #fcfdff;
+  --c-surface-muted: #eef2fa;
+  --c-tertiary-muted: #ddf8f5;
+  --c-border: #d8dfec;
+  --c-ink: var(--ink-900);
+  --c-ink-body: var(--slate-700);
+  --c-ink-mute: var(--slate-600);
+  --c-bg: var(--pearl-050);
+  --c-danger: #c73d6e;
+  --card-border-color: #e5eaf4;
+
+  --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-title: Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-interface: var(--font);
+  --font-display: "Instrument Serif", Georgia, serif;
+  --text-display: 62px;
+  --weight-display: 400;
+  --leading-display: 0.98;
+  --tracking-display: -0.035em;
+  --text-emboss: none;
+
+  --r-card: 22px;
+  --r-btn: 16px;
+  --radius-xs: 10px;
+  --radius-sm: 14px;
+  --radius-md: 18px;
+  --radius-lg: 26px;
+  --radius-xl: 30px;
+  --radius-round: 999px;
+
+  --holo-aurora: linear-gradient(
+    120deg,
+    rgba(43, 220, 216, 0.96) 0%,
+    rgba(67, 200, 255, 0.92) 30%,
+    rgba(155, 140, 255, 0.92) 67%,
+    rgba(246, 129, 195, 0.86) 100%
+  );
+  --holo-ai: linear-gradient(
+    135deg,
+    rgba(10, 171, 151, 0.98),
+    rgba(24, 198, 197, 0.96) 45%,
+    rgba(31, 175, 255, 0.95) 67%,
+    rgba(125, 108, 255, 0.94)
+  );
+  --holo-atmosphere:
+    radial-gradient(circle at 12% 18%, rgba(43, 220, 216, 0.14), transparent 28%),
+    radial-gradient(circle at 88% 8%, rgba(155, 140, 255, 0.16), transparent 32%),
+    radial-gradient(circle at 70% 78%, rgba(246, 129, 195, 0.1), transparent 34%),
+    radial-gradient(circle at 35% 62%, rgba(67, 200, 255, 0.08), transparent 28%),
+    var(--pearl-050);
+  --holo-glass-quiet: rgba(255, 255, 255, 0.38);
+  --holo-glass-elevated: rgba(255, 255, 255, 0.56);
+  --holo-glass-strong: rgba(250, 252, 255, 0.72);
+  --holo-border: rgba(255, 255, 255, 0.76);
+  --holo-border-strong: rgba(255, 255, 255, 0.9);
+  --holo-rule: rgba(37, 48, 68, 0.1);
+  --holo-focus:
+    0 0 0 2px rgba(67, 200, 255, 0.72),
+    0 0 0 4px rgba(155, 140, 255, 0.18),
+    0 8px 24px rgba(44, 102, 180, 0.08);
+
+  --shadow-xs: 0 2px 8px rgba(27, 38, 58, 0.05);
+  --shadow-sm: 0 6px 20px rgba(27, 38, 58, 0.07);
+  --shadow-md: 0 14px 36px rgba(27, 38, 58, 0.1);
+  --shadow-lg: 0 24px 64px rgba(20, 30, 55, 0.14);
+  --shadow-card:
+    inset 0 1px 0 rgba(255, 255, 255, 0.78),
+    0 8px 24px rgba(33, 45, 70, 0.06);
+  --shadow-btn-primary:
+    inset 0 1px 0 rgba(255, 255, 255, 0.46),
+    0 10px 30px rgba(35, 161, 170, 0.2),
+    0 0 36px rgba(125, 108, 255, 0.14);
+  --shadow-btn-secondary:
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    0 8px 24px rgba(33, 45, 70, 0.07);
+  --surface-flush-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.68);
+  --surface-recessed-shadow: inset 0 1px 2px rgba(38, 55, 80, 0.06);
+  --surface-raised-shadow: var(--shadow-btn-secondary);
+  --surface-pressed-shadow:
+    inset 0 2px 5px rgba(38, 55, 80, 0.12),
+    0 2px 8px rgba(27, 38, 58, 0.05);
+  --surface-slab-shadow: var(--shadow-card);
+  --surface-slab-border: var(--holo-border);
+  --shadow-slab: var(--shadow-card);
+  --shadow-slab-lifted:
+    inset 0 1px 0 rgba(255, 255, 255, 0.86),
+    0 12px 30px rgba(31, 47, 74, 0.1),
+    0 0 24px rgba(67, 200, 255, 0.06);
+  --rule-engraved-color: var(--holo-rule);
+  --rule-engraved-lip: none;
+
+  --texture-limestone: none;
+  --surface-sheen: none;
+  --surface-sheen-ink: none;
+  --grain-strength-bg: 0;
+  --grain-strength: 0;
+  --slab-grain-keep: 100%;
+  --slab-grain-blend: normal;
+
+  --duration-instant: 120ms;
+  --duration-fast: 160ms;
+  --duration-control: 220ms;
+  --duration-surface: 320ms;
+  --duration-data: 480ms;
+  --duration-reveal: 680ms;
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-enter: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-material: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --chart-history: var(--teal-500);
+  --chart-projection: var(--violet-500);
+  --chart-axis: var(--slate-600);
+  --chart-crosshair: rgba(31, 175, 255, 0.55);
+  --chart-marker-fill: rgba(252, 253, 255, 0.78);
+  --chart-groove: rgba(125, 108, 255, 0.62);
+  --chart-groove-soft: rgba(71, 85, 105, 0.08);
+  --chart-grid: rgba(71, 85, 105, 0.08);
+  --chart-goal: rgba(125, 108, 255, 0.72);
+  --chart-lip: rgba(255, 255, 255, 0.82);
+  --chart-brass-light: var(--cyan-400);
+  --chart-brass: var(--teal-500);
+  --chart-brass-dark: var(--emerald-600);
+  --chart-brass-rim: rgba(31, 175, 255, 0.5);
+  --chart-socket: rgba(125, 108, 255, 0.12);
+}
+
+/* Atmosphere and common optical materials */
+html[data-theme="holographic"],
+html[data-theme="holographic"] body,
+html[data-theme="holographic"] #root {
+  background: var(--holo-atmosphere);
+}
+
+html[data-theme="holographic"] body {
+  color: var(--c-ink);
+  font-feature-settings: "cv11" 1, "tnum" 1, "lnum" 1;
+}
+
+html[data-theme="holographic"] ::selection {
+  color: var(--ink-950);
+  background: rgba(43, 220, 216, 0.42);
+}
+
+html[data-theme="holographic"] :where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--cyan-500) !important;
+  outline-offset: 3px;
+  box-shadow: var(--holo-focus);
+}
+
+html[data-theme="holographic"] .app-bg,
+html[data-theme="holographic"] .app-shell,
+html[data-theme="holographic"] .scenario-stage--out,
+html[data-theme="holographic"] .auth-shell,
+html[data-theme="holographic"] .lp,
+html[data-theme="holographic"] .ds-page {
+  background-color: var(--pearl-050);
+  background-image: var(--holo-atmosphere);
+  background-attachment: fixed;
+}
+
+html[data-theme="holographic"] .app-shell {
+  background-color: transparent;
+}
+
+html[data-theme="holographic"] :is(
+  .app-bg,
+  .app-shell,
+  .auth-shell,
+  .lp,
+  .side-nav,
+  .modal-sheet,
+  .popover-menu,
+  .auth-card,
+  .ask-panel,
+  .cat-card.card,
+  .summary-cell.card,
+  .settings-card,
+  .side-nav-item.active,
+  .btn,
+  .btn-icon,
+  .fab,
+  .month-selector,
+  .range-pills,
+  .type-toggle,
+  .sign-toggle
+)::after,
+html[data-theme="holographic"] :is(
+  .app-bg,
+  .app-shell,
+  .auth-shell,
+  .side-nav,
+  .modal-sheet,
+  .popover-menu,
+  .auth-card,
+  .ask-panel,
+  .cat-card.card,
+  .summary-cell.card,
+  .settings-card,
+  .side-nav-item.active,
+  .btn,
+  .btn-icon,
+  .fab,
+  .back-to-month,
+  .month-selector,
+  .cat-card-edit,
+  .top-nav-ask,
+  .ask-compose form > button
+)::before {
+  display: none;
+}
+
+html[data-theme="holographic"] :is(.card, [data-surface="slab"], [data-surface="raised"]) {
+  background-color: var(--holo-glass-quiet);
+  background-image:
+    radial-gradient(circle at 100% 100%, rgba(43, 220, 216, 0.08), transparent 35%),
+    radial-gradient(circle at 0% 0%, rgba(155, 140, 255, 0.07), transparent 38%);
+  border: 1px solid var(--holo-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+  backdrop-filter: blur(18px) saturate(125%);
+}
+
+html[data-theme="holographic"] [data-surface="recessed"] {
+  background: rgba(238, 242, 250, 0.52);
+  border: 1px solid rgba(255, 255, 255, 0.66);
+  border-radius: var(--radius-md);
+  box-shadow: var(--surface-recessed-shadow);
+}
+
+html[data-theme="holographic"] [data-rule="engraved"] {
+  border-top-color: var(--holo-rule);
+  box-shadow: none;
+}
+
+/* Brand placeholder: the existing W is framed as an optical mark until the
+   final logo is ready. */
+html[data-theme="holographic"] .brand-lockup {
+  gap: 12px;
+  color: var(--ink-900);
+}
+
+html[data-theme="holographic"] .brand-lockup__picture {
+  position: relative;
+  padding: 4px;
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.54)) padding-box,
+    var(--holo-aurora) border-box;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 8px 22px rgba(64, 82, 130, 0.1),
+    0 0 20px rgba(125, 108, 255, 0.1);
+}
+
+html[data-theme="holographic"] .brand-lockup__mark {
+  width: 100%;
+  height: 100%;
+  filter: saturate(0.2) hue-rotate(125deg) brightness(0.74) contrast(1.1);
+}
+
+html[data-theme="holographic"] .brand-lockup__wordmark {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: none;
+}
+
+/* Controls */
+html[data-theme="holographic"] .btn {
+  min-height: 48px;
+  border-radius: var(--r-btn);
+  font-weight: 600;
+  transition:
+    transform var(--duration-fast) var(--ease-standard),
+    filter var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    background var(--duration-fast) var(--ease-standard);
+}
+
+html[data-theme="holographic"] :is(.btn-primary, .top-nav-ask, .ask-compose form > button) {
+  color: #fff;
+  background: var(--holo-ai);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: var(--shadow-btn-primary);
+  text-shadow: 0 1px 1px rgba(8, 17, 31, 0.16);
+}
+
+html[data-theme="holographic"] :is(.btn-primary, .top-nav-ask, .ask-compose form > button):hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.035) saturate(1.05);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.56),
+    0 12px 34px rgba(35, 161, 170, 0.23),
+    0 0 42px rgba(125, 108, 255, 0.18);
+}
+
+html[data-theme="holographic"] :is(.btn-primary, .top-nav-ask, .ask-compose form > button):active:not(:disabled) {
+  transform: scale(0.985);
+  filter: brightness(0.98);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 5px 16px rgba(35, 161, 170, 0.16);
+}
+
+html[data-theme="holographic"] :is(.btn-secondary, .btn-icon, .fab, .settings-fab, .back-to-month) {
+  color: var(--ink-900);
+  background: rgba(255, 255, 255, 0.46);
+  border: 1px solid var(--holo-border);
+  box-shadow: var(--shadow-btn-secondary);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+  backdrop-filter: blur(18px) saturate(125%);
+}
+
+html[data-theme="holographic"] :is(.btn-secondary, .btn-icon, .fab, .settings-fab, .back-to-month):hover:not(:disabled) {
+  transform: translateY(-1px);
+  color: var(--ink-950);
+  background: rgba(255, 255, 255, 0.64);
+  border-color: rgba(67, 200, 255, 0.38);
+  box-shadow: var(--shadow-slab-lifted);
+}
+
+html[data-theme="holographic"] :is(.btn-secondary, .btn-icon, .fab, .settings-fab, .back-to-month):active:not(:disabled) {
+  transform: scale(0.985);
+  box-shadow: var(--surface-pressed-shadow);
+}
+
+html[data-theme="holographic"] .btn-tertiary {
+  color: var(--violet-500);
+}
+
+html[data-theme="holographic"] .btn-tertiary:hover {
+  color: #5949d8;
+  background: rgba(125, 108, 255, 0.08);
+}
+
+html[data-theme="holographic"] .btn-destructive {
+  color: var(--c-danger);
+  background: rgba(255, 244, 249, 0.5);
+  border-color: rgba(228, 90, 166, 0.38);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 6px 20px rgba(197, 61, 110, 0.07);
+}
+
+html[data-theme="holographic"] .btn:disabled {
+  color: rgba(86, 97, 116, 0.45);
+  background: rgba(238, 242, 250, 0.48);
+  border-color: rgba(255, 255, 255, 0.52);
+  box-shadow: none;
+  filter: none;
+}
+
+html[data-theme="holographic"] :is(.input, .custom-range-input, .update-amount-input, .side-nav-item-input) {
+  min-height: 52px;
+  color: var(--ink-900);
+  background: rgba(255, 255, 255, 0.44);
+  background-image: none;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: var(--r-btn);
+  box-shadow:
+    inset 0 1px 2px rgba(41, 61, 91, 0.06),
+    0 4px 14px rgba(35, 50, 76, 0.04);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+  backdrop-filter: blur(16px) saturate(120%);
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    background var(--duration-fast) var(--ease-standard);
+}
+
+html[data-theme="holographic"] :is(.input, .custom-range-input, .update-amount-input, .side-nav-item-input):focus {
+  background: rgba(255, 255, 255, 0.64);
+  border-color: rgba(67, 200, 255, 0.8);
+  box-shadow: var(--holo-focus);
+}
+
+html[data-theme="holographic"] :is(.select, .select-wrap > select) {
+  min-height: 52px;
+  color: var(--ink-900);
+  background: rgba(255, 255, 255, 0.46);
+  background-image: none;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: var(--r-btn);
+  box-shadow: var(--shadow-btn-secondary);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+  backdrop-filter: blur(18px) saturate(125%);
+}
+
+html[data-theme="holographic"] :is(.select, .select-wrap > select):hover {
+  border-color: rgba(67, 200, 255, 0.34);
+  box-shadow: var(--shadow-slab-lifted);
+}
+
+html[data-theme="holographic"] :is(.select, .select-wrap > select):focus {
+  border-color: rgba(67, 200, 255, 0.78);
+  box-shadow: var(--holo-focus);
+}
+
+html[data-theme="holographic"] .form-label {
+  color: var(--slate-700);
+  font-size: 13px;
+  font-weight: 550;
+  letter-spacing: 0.01em;
+}
+
+html[data-theme="holographic"] :is(.type-toggle, .sign-toggle, .range-pills) {
+  background: rgba(229, 234, 244, 0.48);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: var(--r-btn);
+  box-shadow: inset 0 1px 3px rgba(32, 48, 74, 0.06);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+  backdrop-filter: blur(16px) saturate(120%);
+}
+
+html[data-theme="holographic"] .type-toggle-thumb,
+html[data-theme="holographic"] .range-pill.active {
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.62)) padding-box,
+    var(--holo-aurora) border-box;
+  border: 1px solid transparent;
+  border-radius: 13px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 5px 16px rgba(63, 80, 125, 0.09),
+    0 0 18px rgba(125, 108, 255, 0.1);
+}
+
+html[data-theme="holographic"] .checkbox-input {
+  border-color: rgba(86, 97, 116, 0.44);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.46);
+}
+
+html[data-theme="holographic"] .checkbox-input:checked {
+  background: var(--holo-ai);
+  border-color: transparent;
+  box-shadow: 0 0 16px rgba(24, 198, 197, 0.2);
+}
+
+html[data-theme="holographic"] .switch-track {
+  background: rgba(197, 207, 225, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.66);
+}
+
+html[data-theme="holographic"] .switch input:checked ~ .switch-track {
+  background: linear-gradient(90deg, var(--emerald-500), var(--teal-500));
+}
+
+html[data-theme="holographic"] .switch-thumb {
+  background: var(--pearl-000);
+  box-shadow: 0 3px 10px rgba(30, 45, 70, 0.18);
+}
+
+html[data-theme="holographic"] .slider::-webkit-slider-runnable-track {
+  height: 6px;
+  background:
+    var(--holo-aurora) 0 / var(--slider-fill, 0%) 100% no-repeat,
+    rgba(197, 207, 225, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  box-shadow: inset 0 1px 2px rgba(31, 45, 72, 0.08);
+}
+
+html[data-theme="holographic"] .slider::-moz-range-track {
+  height: 6px;
+  background: rgba(197, 207, 225, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  box-shadow: inset 0 1px 2px rgba(31, 45, 72, 0.08);
+}
+
+html[data-theme="holographic"] .slider::-moz-range-progress {
+  height: 6px;
+  background: var(--holo-aurora);
+}
+
+html[data-theme="holographic"] .slider::-webkit-slider-thumb {
+  width: 22px;
+  height: 22px;
+  margin-top: -9px;
+  background: rgba(255, 255, 255, 0.92);
+  background-image: none;
+  border: 1px solid rgba(155, 140, 255, 0.58);
+  box-shadow:
+    0 4px 12px rgba(41, 57, 88, 0.14),
+    0 0 18px rgba(67, 200, 255, 0.22);
+}
+
+html[data-theme="holographic"] .slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.92);
+  background-image: none;
+  border: 1px solid rgba(155, 140, 255, 0.58);
+  box-shadow:
+    0 4px 12px rgba(41, 57, 88, 0.14),
+    0 0 18px rgba(67, 200, 255, 0.22);
+}
+
+/* Product shell and navigation */
+html[data-theme="holographic"] .top-nav-fade {
+  background: linear-gradient(
+    to bottom,
+    rgba(248, 250, 255, 0.96) 0%,
+    rgba(248, 250, 255, 0.82) 38%,
+    rgba(248, 250, 255, 0.42) 68%,
+    transparent 100%
+  );
+  -webkit-backdrop-filter: blur(10px) saturate(125%);
+  backdrop-filter: blur(10px) saturate(125%);
+}
+
+html[data-theme="holographic"] .app-shell {
+  transition:
+    transform 320ms var(--ease-enter),
+    border-radius 320ms var(--ease-enter),
+    box-shadow 320ms var(--ease-standard),
+    margin-right 220ms var(--ease-enter);
+}
+
+html[data-theme="holographic"] .app-shell.nav-open {
+  transform: translateX(min(84vw, 360px)) scale(0.985);
+  border-radius: 28px;
+  box-shadow:
+    -18px 0 52px rgba(37, 48, 68, 0.14),
+    0 0 0 1px rgba(255, 255, 255, 0.82),
+    0 0 42px rgba(125, 108, 255, 0.08);
+}
+
+html[data-theme="holographic"] .nav-scrim {
+  background: rgba(37, 48, 68, 0.13);
+  -webkit-backdrop-filter: blur(12px) saturate(115%);
+  backdrop-filter: blur(12px) saturate(115%);
+}
+
+html[data-theme="holographic"] .side-nav {
+  color: var(--ink-900);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(43, 220, 216, 0.13), transparent 30%),
+    radial-gradient(circle at 100% 32%, rgba(155, 140, 255, 0.12), transparent 36%),
+    rgba(248, 250, 255, 0.78);
+  border-right: 1px solid rgba(255, 255, 255, 0.82);
+  box-shadow: 18px 0 54px rgba(30, 45, 70, 0.08);
+  -webkit-backdrop-filter: blur(28px) saturate(135%);
+  backdrop-filter: blur(28px) saturate(135%);
+}
+
+html[data-theme="holographic"] .side-nav-header {
+  padding-top: 8px;
+}
+
+html[data-theme="holographic"] .side-nav-new {
+  min-height: 52px;
+  color: var(--slate-700);
+  border-radius: var(--r-btn);
+}
+
+html[data-theme="holographic"] .side-nav-new svg,
+html[data-theme="holographic"] .cat-card-add-icon {
+  color: var(--violet-500);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.58)) padding-box,
+    var(--holo-aurora) border-box;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.58)),
+    var(--holo-aurora);
+  border: 1px solid transparent;
+  border-radius: 12px;
+  box-shadow: var(--shadow-btn-secondary), 0 0 18px rgba(67, 200, 255, 0.08);
+}
+
+html[data-theme="holographic"] .side-nav-new:hover {
+  color: var(--ink-900);
+  background: rgba(255, 255, 255, 0.36);
+  border-color: rgba(255, 255, 255, 0.72);
+}
+
+html[data-theme="holographic"] .side-nav-item {
+  border-radius: var(--r-btn);
+}
+
+html[data-theme="holographic"] .side-nav-item:hover {
+  background: rgba(255, 255, 255, 0.36);
+}
+
+html[data-theme="holographic"] .side-nav-item.active {
+  overflow: visible;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.56), rgba(255, 255, 255, 0.4)) padding-box,
+    linear-gradient(120deg, rgba(43, 220, 216, 0.64), rgba(255, 255, 255, 0.84), rgba(155, 140, 255, 0.5)) border-box;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.56), rgba(255, 255, 255, 0.4)),
+    linear-gradient(120deg, rgba(43, 220, 216, 0.64), rgba(255, 255, 255, 0.84), rgba(155, 140, 255, 0.5));
+  border: 1px solid transparent;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.84),
+    0 8px 24px rgba(33, 45, 70, 0.07),
+    -3px 0 18px rgba(43, 220, 216, 0.08);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+  backdrop-filter: blur(18px) saturate(125%);
+}
+
+html[data-theme="holographic"] .side-nav-item.active::after {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: -1px;
+  width: 3px;
+  border-radius: 999px;
+  background: linear-gradient(var(--teal-400), var(--violet-400));
+  box-shadow: 0 0 14px rgba(43, 220, 216, 0.38);
+}
+
+html[data-theme="holographic"] .side-nav-footer {
+  border-top-color: rgba(37, 48, 68, 0.09);
+}
+
+html[data-theme="holographic"] .side-nav-user {
+  border-radius: var(--r-btn);
+}
+
+html[data-theme="holographic"] .side-nav-user:hover,
+html[data-theme="holographic"] .side-nav-user[aria-expanded="true"] {
+  background: rgba(255, 255, 255, 0.42);
+  border-color: rgba(255, 255, 255, 0.72);
+  box-shadow: var(--shadow-xs);
+}
+
+html[data-theme="holographic"] .side-nav-user-avatar,
+html[data-theme="holographic"] .account-avatar {
+  color: #fff;
+  background: var(--holo-ai);
+  border: 2px solid rgba(255, 255, 255, 0.84);
+  box-shadow:
+    0 5px 16px rgba(42, 87, 145, 0.16),
+    0 0 18px rgba(125, 108, 255, 0.12);
+}
+
+html[data-theme="holographic"] .fab {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}
+
+html[data-theme="holographic"] .top-nav-name {
+  color: var(--slate-800);
+  font-weight: 500;
+  text-shadow: none;
+}
+
+html[data-theme="holographic"] .top-nav-ask {
+  min-height: 48px;
+  padding-inline: 18px;
+  border-radius: 16px;
+}
+
+html[data-theme="holographic"] .top-nav-ask svg {
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.4));
+}
+
+html[data-theme="holographic"] .badge {
+  min-height: 24px;
+  padding: 4px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.74);
+  border-radius: 999px;
+  box-shadow: var(--shadow-xs);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+html[data-theme="holographic"] .badge-synced {
+  color: var(--emerald-700);
+  background: rgba(217, 252, 241, 0.58);
+}
+
+html[data-theme="holographic"] .badge-unsynced,
+html[data-theme="holographic"] .sync-badge--off {
+  color: #a65316;
+  background: rgba(255, 240, 224, 0.58);
+}
+
+/* Dashboard and data */
+html[data-theme="holographic"] .dashboard {
+  color: var(--ink-900);
+}
+
+html[data-theme="holographic"] .hero {
+  padding-top: 44px;
+}
+
+html[data-theme="holographic"] .hero-eyebrow,
+html[data-theme="holographic"] .summary-cell-label,
+html[data-theme="holographic"] .cat-card-label {
+  color: var(--slate-600);
+  font-family: var(--font-interface);
+  font-weight: 550;
+  letter-spacing: 0.12em;
+  text-shadow: none;
+}
+
+html[data-theme="holographic"] .hero-amount {
+  color: #13304b;
+  text-shadow: 0 10px 38px rgba(31, 175, 255, 0.08);
+}
+
+html[data-theme="holographic"] .hero-delta-line.positive {
+  color: var(--emerald-700);
+}
+
+html[data-theme="holographic"] .hero-delta-line.negative {
+  color: #b33d72;
+}
+
+html[data-theme="holographic"] .hero-est-info {
+  color: #246cb3;
+}
+
+html[data-theme="holographic"] .net-worth-chart-well {
+  overflow: visible;
+}
+
+html[data-theme="holographic"] .nw-grid-plane {
+  opacity: 0.9;
+  background-image:
+    linear-gradient(to right, rgba(71, 85, 105, 0.075) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(71, 85, 105, 0.055) 1px, transparent 1px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 88%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 88%, transparent 100%);
+}
+
+html[data-theme="holographic"] .net-worth-chart-well svg [id$="-socket"] stop:first-child {
+  stop-color: rgba(155, 140, 255, 0.18);
+}
+
+html[data-theme="holographic"] .net-worth-chart-well svg [id$="-socket"] stop:last-child {
+  stop-color: rgba(67, 200, 255, 0.04);
+}
+
+html[data-theme="holographic"] .net-worth-chart-well .nw-forecast-reveal {
+  stroke: var(--violet-500);
+  stroke-dasharray: 2 7;
+  filter: drop-shadow(0 0 4px rgba(125, 108, 255, 0.18));
+}
+
+html[data-theme="holographic"] .net-worth-chart-well .recharts-area-curve[stroke="var(--chart-history)"] {
+  filter: drop-shadow(0 0 5px rgba(24, 198, 197, 0.26));
+}
+
+html[data-theme="holographic"] .nw-medallion {
+  filter:
+    drop-shadow(0 0 6px rgba(67, 200, 255, 0.5))
+    drop-shadow(0 0 14px rgba(125, 108, 255, 0.24));
+}
+
+html[data-theme="holographic"] .nw-chart-tooltip {
+  color: var(--ink-900);
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid var(--holo-border-strong);
+  border-radius: 14px;
+  box-shadow: var(--shadow-md), 0 0 28px rgba(67, 200, 255, 0.08);
+  -webkit-backdrop-filter: blur(22px) saturate(135%);
+  backdrop-filter: blur(22px) saturate(135%);
+}
+
+html[data-theme="holographic"] .range-pills {
+  min-height: 52px;
+  padding: 4px;
+  border-radius: 16px;
+}
+
+html[data-theme="holographic"] .range-pill {
+  color: var(--slate-700);
+  border-radius: 13px;
+  transition:
+    color var(--duration-fast) var(--ease-standard),
+    background var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+html[data-theme="holographic"] .range-pill:hover {
+  color: var(--violet-500);
+  background: rgba(255, 255, 255, 0.38);
+}
+
+html[data-theme="holographic"] .range-pill.active {
+  color: #4031ba;
+}
+
+html[data-theme="holographic"] .summary-row {
+  gap: 12px;
+}
+
+html[data-theme="holographic"] .summary-cell.card {
+  min-height: 110px;
+  border-radius: 20px;
+}
+
+html[data-theme="holographic"] .summary-cell.assets {
+  background-image:
+    radial-gradient(circle at 100% 100%, rgba(43, 220, 216, 0.16), transparent 48%),
+    linear-gradient(rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.28));
+}
+
+html[data-theme="holographic"] .summary-cell.liabilities {
+  background-image:
+    radial-gradient(circle at 100% 100%, rgba(246, 129, 195, 0.14), transparent 48%),
+    linear-gradient(rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.28));
+}
+
+html[data-theme="holographic"] .summary-cell.assets .summary-cell-label {
+  color: var(--emerald-700);
+}
+
+html[data-theme="holographic"] .summary-cell.liabilities .summary-cell-label {
+  color: #b23f76;
+}
+
+html[data-theme="holographic"] .summary-cell-amount {
+  color: #102f4a;
+  font-weight: 500;
+}
+
+html[data-theme="holographic"] .cat-scroll {
+  gap: 16px;
+}
+
+html[data-theme="holographic"] .cat-card.card {
+  border-radius: 22px;
+  background-image:
+    radial-gradient(circle at 100% 0%, rgba(155, 140, 255, 0.08), transparent 34%),
+    radial-gradient(circle at 0% 100%, rgba(43, 220, 216, 0.07), transparent 34%);
+}
+
+html[data-theme="holographic"] .cat-card-edit {
+  color: #355b86;
+  background: rgba(255, 255, 255, 0.52);
+  border-color: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  box-shadow: var(--shadow-xs);
+}
+
+html[data-theme="holographic"] .cat-card-edit:hover {
+  color: var(--violet-500);
+  border-color: rgba(155, 140, 255, 0.4);
+  box-shadow: var(--shadow-sm), 0 0 16px rgba(125, 108, 255, 0.08);
+}
+
+html[data-theme="holographic"] .cat-account-block,
+html[data-theme="holographic"] .cat-account-total,
+html[data-theme="holographic"] .settings-row + .settings-row,
+html[data-theme="holographic"] .manage-account-row + .manage-account-row,
+html[data-theme="holographic"] .update-account-row + .update-account-row {
+  border-color: var(--holo-rule);
+  box-shadow: none;
+}
+
+html[data-theme="holographic"] .cat-account-name,
+html[data-theme="holographic"] .cat-total-label {
+  color: var(--slate-700);
+}
+
+html[data-theme="holographic"] :is(.cat-account-input, .cat-contrib-input) {
+  color: var(--ink-900);
+  border-bottom-color: rgba(86, 97, 116, 0.24);
+}
+
+html[data-theme="holographic"] :is(.cat-account-input, .cat-contrib-input):focus {
+  color: #135078;
+  border-bottom-color: var(--cyan-500);
+  box-shadow: 0 2px 0 rgba(155, 140, 255, 0.18);
+}
+
+html[data-theme="holographic"] .cat-total-amount {
+  color: var(--emerald-700);
+}
+
+html[data-theme="holographic"] .cat-total-amount.liability {
+  color: #b23f76;
+}
+
+html[data-theme="holographic"] .cat-card-add {
+  min-height: 82px;
+  color: var(--violet-500);
+  background: rgba(255, 255, 255, 0.24);
+  border: 1px dashed rgba(125, 108, 255, 0.3);
+  border-radius: 20px;
+  transition:
+    transform var(--duration-fast) var(--ease-standard),
+    background var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+html[data-theme="holographic"] .cat-card-add:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.42);
+  border-color: rgba(67, 200, 255, 0.46);
+  box-shadow: var(--shadow-sm), 0 0 26px rgba(125, 108, 255, 0.07);
+}
+
+html[data-theme="holographic"] .month-selector {
+  min-height: 54px;
+  color: var(--ink-900);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.46)) padding-box,
+    linear-gradient(120deg, rgba(43, 220, 216, 0.46), rgba(255, 255, 255, 0.86), rgba(155, 140, 255, 0.44)) border-box;
+  border: 1px solid transparent;
+  border-radius: 18px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    0 14px 36px rgba(27, 38, 58, 0.11),
+    0 0 26px rgba(43, 220, 216, 0.08);
+  -webkit-backdrop-filter: blur(24px) saturate(135%);
+  backdrop-filter: blur(24px) saturate(135%);
+}
+
+html[data-theme="holographic"] .month-nav-btn {
+  min-width: 44px;
+  min-height: 44px;
+  color: #315b84;
+  border-radius: 14px;
+}
+
+html[data-theme="holographic"] .month-nav-btn:hover {
+  color: var(--violet-500);
+  background: rgba(255, 255, 255, 0.48);
+}
+
+/* Overlays, settings, auth, and Ask */
+html[data-theme="holographic"] .modal-overlay,
+html[data-theme="holographic"] .ask-overlay {
+  background:
+    radial-gradient(circle at 24% 20%, rgba(43, 220, 216, 0.1), transparent 34%),
+    radial-gradient(circle at 78% 70%, rgba(155, 140, 255, 0.12), transparent 38%),
+    rgba(37, 48, 68, 0.16);
+  -webkit-backdrop-filter: blur(18px) saturate(115%);
+  backdrop-filter: blur(18px) saturate(115%);
+  animation: holoBackdropIn 280ms var(--ease-standard) both;
+}
+
+html[data-theme="holographic"] .modal-sheet {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(155, 140, 255, 0.1), transparent 34%),
+    radial-gradient(circle at 0% 100%, rgba(43, 220, 216, 0.09), transparent 36%),
+    rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  border-radius: 28px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 24px 64px rgba(20, 30, 55, 0.16),
+    0 0 42px rgba(125, 108, 255, 0.09);
+  -webkit-backdrop-filter: blur(28px) saturate(135%);
+  backdrop-filter: blur(28px) saturate(135%);
+  animation: holoPanelIn 360ms var(--ease-enter) both;
+}
+
+html[data-theme="holographic"] .modal-head,
+html[data-theme="holographic"] .modal-foot {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: var(--holo-rule);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+  backdrop-filter: blur(18px) saturate(125%);
+}
+
+html[data-theme="holographic"] .modal-title {
+  color: var(--ink-900);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+html[data-theme="holographic"] .popover-menu {
+  color: var(--ink-900);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(155, 140, 255, 0.08), transparent 36%),
+    rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  border-radius: 18px;
+  box-shadow: var(--shadow-lg), 0 0 30px rgba(67, 200, 255, 0.06);
+  -webkit-backdrop-filter: blur(26px) saturate(135%);
+  backdrop-filter: blur(26px) saturate(135%);
+  animation: holoPopoverIn 200ms var(--ease-enter) both;
+}
+
+html[data-theme="holographic"] .popover-item {
+  color: var(--slate-700);
+  border-radius: 12px;
+}
+
+html[data-theme="holographic"] .popover-item:hover {
+  color: var(--ink-900);
+  background:
+    linear-gradient(90deg, rgba(43, 220, 216, 0.08), rgba(125, 108, 255, 0.06)),
+    rgba(255, 255, 255, 0.34);
+}
+
+html[data-theme="holographic"] .popover-divider {
+  background: var(--holo-rule);
+}
+
+html[data-theme="holographic"] .settings-card,
+html[data-theme="holographic"] .sync-card,
+html[data-theme="holographic"] .import-preview,
+html[data-theme="holographic"] .import-row,
+html[data-theme="holographic"] .recovery-phrase {
+  background: rgba(255, 255, 255, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.74);
+  border-radius: 18px;
+  box-shadow: var(--shadow-card);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+  backdrop-filter: blur(16px) saturate(120%);
+}
+
+html[data-theme="holographic"] .settings-row:hover {
+  background: linear-gradient(90deg, rgba(43, 220, 216, 0.06), rgba(155, 140, 255, 0.05));
+}
+
+html[data-theme="holographic"] .settings-card--danger {
+  background: rgba(255, 244, 249, 0.38);
+  border-color: rgba(228, 90, 166, 0.28);
+}
+
+html[data-theme="holographic"] .auth-shell {
+  background-image:
+    radial-gradient(circle at 15% 18%, rgba(43, 220, 216, 0.17), transparent 30%),
+    radial-gradient(circle at 86% 14%, rgba(155, 140, 255, 0.19), transparent 35%),
+    radial-gradient(circle at 62% 84%, rgba(246, 129, 195, 0.13), transparent 38%),
+    linear-gradient(145deg, var(--pearl-000), var(--mist-100));
+}
+
+html[data-theme="holographic"] .auth-shell::before {
+  content: "";
+  display: block;
+  position: absolute;
+  inset: -20%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    conic-gradient(from 220deg at 42% 44%, transparent, rgba(43, 220, 216, 0.12), transparent 22%),
+    conic-gradient(from 40deg at 70% 60%, transparent, rgba(246, 129, 195, 0.1), transparent 24%);
+  filter: blur(50px);
+  opacity: 0.8;
+}
+
+html[data-theme="holographic"] .auth-card.card {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(155, 140, 255, 0.11), transparent 34%),
+    radial-gradient(circle at 0% 100%, rgba(43, 220, 216, 0.1), transparent 38%),
+    rgba(255, 255, 255, 0.54);
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  border-radius: 28px;
+  box-shadow: var(--shadow-lg), 0 0 42px rgba(125, 108, 255, 0.09);
+  -webkit-backdrop-filter: blur(28px) saturate(135%);
+  backdrop-filter: blur(28px) saturate(135%);
+  animation: holoPanelIn 520ms var(--ease-enter) both;
+}
+
+html[data-theme="holographic"] .auth-eyebrow {
+  color: var(--violet-500);
+  letter-spacing: 0.16em;
+}
+
+html[data-theme="holographic"] .auth-eyebrow::before {
+  background: linear-gradient(var(--teal-400), var(--violet-400));
+  box-shadow: 0 0 12px rgba(43, 220, 216, 0.34);
+}
+
+html[data-theme="holographic"] .auth-title {
+  color: var(--ink-900);
+  font-family: var(--font-interface);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+
+html[data-theme="holographic"] .auth-sub,
+html[data-theme="holographic"] .auth-switch {
+  color: var(--slate-700);
+}
+
+html[data-theme="holographic"] .auth-switch:hover {
+  color: var(--violet-500);
+}
+
+html[data-theme="holographic"] .auth-error {
+  color: #a82f63;
+  background: rgba(255, 238, 246, 0.62);
+  border: 1px solid rgba(228, 90, 166, 0.22);
+  border-radius: 14px;
+}
+
+html[data-theme="holographic"] .ask-panel {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(155, 140, 255, 0.14), transparent 32%),
+    radial-gradient(circle at 0% 100%, rgba(43, 220, 216, 0.12), transparent 36%),
+    rgba(250, 252, 255, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 28px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 24px 64px rgba(20, 30, 55, 0.17),
+    0 0 46px rgba(125, 108, 255, 0.12),
+    0 0 30px rgba(43, 220, 216, 0.08);
+  -webkit-backdrop-filter: blur(30px) saturate(140%);
+  backdrop-filter: blur(30px) saturate(140%);
+  animation: holoPanelIn 360ms var(--ease-enter) both;
+}
+
+html[data-theme="holographic"] .ask-head,
+html[data-theme="holographic"] .ask-compose {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: var(--holo-rule);
+  -webkit-backdrop-filter: blur(20px) saturate(130%);
+  backdrop-filter: blur(20px) saturate(130%);
+}
+
+html[data-theme="holographic"] .ask-title {
+  color: var(--ink-900);
+  font-size: 21px;
+  font-weight: 600;
+}
+
+html[data-theme="holographic"] .ask-title svg,
+html[data-theme="holographic"] .ask-consent-icon {
+  color: var(--violet-500);
+  filter:
+    drop-shadow(0 0 5px rgba(67, 200, 255, 0.35))
+    drop-shadow(0 0 8px rgba(125, 108, 255, 0.2));
+}
+
+html[data-theme="holographic"] .ask-consent-icon {
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.5)) padding-box,
+    var(--holo-aurora) border-box;
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-sm), 0 0 20px rgba(67, 200, 255, 0.1);
+}
+
+html[data-theme="holographic"] .ask-starters button {
+  min-height: 68px;
+  color: var(--slate-800);
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 16px;
+  box-shadow: var(--shadow-xs);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+html[data-theme="holographic"] .ask-starters button:hover {
+  transform: translateY(-1px);
+  color: #4031ba;
+  background:
+    linear-gradient(105deg, rgba(43, 220, 216, 0.08), rgba(125, 108, 255, 0.08), rgba(246, 129, 195, 0.06)),
+    rgba(255, 255, 255, 0.48);
+  border-color: rgba(155, 140, 255, 0.34);
+  box-shadow: var(--shadow-sm), 0 0 24px rgba(67, 200, 255, 0.08);
+}
+
+html[data-theme="holographic"] .ask-message--user {
+  color: #fff;
+  background: linear-gradient(135deg, rgba(31, 175, 255, 0.92), rgba(125, 108, 255, 0.9));
+  border-radius: 18px 18px 5px 18px;
+  box-shadow: 0 8px 22px rgba(70, 78, 171, 0.15);
+}
+
+html[data-theme="holographic"] .ask-message--assistant,
+html[data-theme="holographic"] .ask-consent-card,
+html[data-theme="holographic"] .ask-evidence {
+  color: var(--slate-800);
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  border-radius: 16px;
+  box-shadow: var(--shadow-xs);
+}
+
+html[data-theme="holographic"] .ask-compose form {
+  background: rgba(255, 255, 255, 0.56);
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  border-radius: 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+html[data-theme="holographic"] .ask-compose form:focus-within {
+  border-color: rgba(67, 200, 255, 0.68);
+  box-shadow: var(--holo-focus);
+}
+
+html[data-theme="holographic"] .ask-compose form > button {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+}
+
+/* Secondary pages and design-system gallery */
+html[data-theme="holographic"] :is(.manage-cat-card, .update-cat-section, .empty-state) {
+  background: rgba(255, 255, 255, 0.38);
+  border-color: rgba(255, 255, 255, 0.76);
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+  backdrop-filter: blur(18px) saturate(125%);
+}
+
+html[data-theme="holographic"] .page-top-title,
+html[data-theme="holographic"] .empty-title,
+html[data-theme="holographic"] .manage-cat-name,
+html[data-theme="holographic"] .update-cat-name {
+  color: var(--ink-900);
+}
+
+html[data-theme="holographic"] .ds-page {
+  color: var(--ink-900);
+}
+
+html[data-theme="holographic"] .ds-page::before {
+  display: none;
+}
+
+html[data-theme="holographic"] .ds-header {
+  background: rgba(248, 250, 255, 0.74);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.82);
+  box-shadow: 0 8px 24px rgba(27, 38, 58, 0.06);
+  -webkit-backdrop-filter: blur(24px) saturate(130%);
+  backdrop-filter: blur(24px) saturate(130%);
+}
+
+html[data-theme="holographic"] .ds-header-title,
+html[data-theme="holographic"] .ds-section-title,
+html[data-theme="holographic"] .ds-group-title {
+  color: var(--ink-900);
+}
+
+html[data-theme="holographic"] .ds-section-title {
+  letter-spacing: 0.08em;
+}
+
+html[data-theme="holographic"] .ds-token-group,
+html[data-theme="holographic"] .ds-type-list,
+html[data-theme="holographic"] .ds-specimen {
+  background: rgba(255, 255, 255, 0.36);
+  border: 1px solid rgba(255, 255, 255, 0.74);
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+  backdrop-filter: blur(18px) saturate(125%);
+}
+
+html[data-theme="holographic"] .ds-token,
+html[data-theme="holographic"] .ds-type-row {
+  border-color: var(--holo-rule);
+}
+
+html[data-theme="holographic"] .ds-specimen-stage {
+  background:
+    radial-gradient(circle at 10% 20%, rgba(43, 220, 216, 0.09), transparent 34%),
+    radial-gradient(circle at 90% 80%, rgba(155, 140, 255, 0.09), transparent 36%),
+    rgba(248, 250, 255, 0.7);
+  border-radius: 16px;
+}
+
+html[data-theme="holographic"] .ds-token-swatch {
+  border-color: rgba(255, 255, 255, 0.84);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Holographic translation of the existing landing-page information design. */
+html[data-theme="holographic"] .lp.lp-stone {
+  --lp-shell: 1280px;
+  --lp-gutter: clamp(20px, 4vw, 64px);
+  color: var(--ink-900);
+  background-image:
+    radial-gradient(circle at 10% 12%, rgba(43, 220, 216, 0.12), transparent 26%),
+    radial-gradient(circle at 88% 8%, rgba(155, 140, 255, 0.15), transparent 30%),
+    radial-gradient(circle at 75% 46%, rgba(246, 129, 195, 0.08), transparent 32%),
+    linear-gradient(145deg, var(--pearl-000), var(--pearl-100));
+}
+
+html[data-theme="holographic"] .lp-stone-nav {
+  min-height: 76px;
+  color: var(--ink-900);
+  background: rgba(248, 250, 255, 0.42);
+  border-bottom-color: transparent;
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+  backdrop-filter: blur(18px) saturate(125%);
+}
+
+html[data-theme="holographic"] .lp-stone-nav.is-scrolled {
+  background: rgba(248, 250, 255, 0.74);
+  border-bottom-color: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 10px 30px rgba(27, 38, 58, 0.07);
+  -webkit-backdrop-filter: blur(26px) saturate(135%);
+  backdrop-filter: blur(26px) saturate(135%);
+}
+
+html[data-theme="holographic"] :is(.lp-stone-nav__anchors a, .lp-stone-nav__sign-in) {
+  color: var(--slate-700);
+}
+
+html[data-theme="holographic"] :is(.lp-stone-nav__anchors a, .lp-stone-nav__sign-in):hover {
+  color: var(--violet-500);
+}
+
+html[data-theme="holographic"] .lp-stone-nav__anchors a::after {
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--teal-400), var(--violet-400));
+  box-shadow: 0 0 10px rgba(67, 200, 255, 0.2);
+}
+
+html[data-theme="holographic"] .lp-stone-nav__start,
+html[data-theme="holographic"] .lp-stone-action--primary {
+  color: #fff;
+  background: var(--holo-ai);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 16px;
+  box-shadow: var(--shadow-btn-primary);
+  text-shadow: 0 1px 1px rgba(8, 17, 31, 0.14);
+}
+
+html[data-theme="holographic"] :is(.lp-stone-nav__start, .lp-stone-action--primary):hover {
+  transform: translateY(-1px);
+  filter: brightness(1.035) saturate(1.05);
+  background: var(--holo-ai);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.56),
+    0 14px 36px rgba(35, 161, 170, 0.22),
+    0 0 42px rgba(125, 108, 255, 0.18);
+}
+
+html[data-theme="holographic"] :is(.lp-stone-nav__start, .lp-stone-action--primary):active {
+  transform: scale(0.985);
+  background: var(--holo-ai);
+  box-shadow: 0 6px 18px rgba(35, 161, 170, 0.14);
+}
+
+html[data-theme="holographic"] .lp-stone-overline {
+  color: #5543d2;
+  letter-spacing: 0.14em;
+}
+
+html[data-theme="holographic"] .lp-stone h1,
+html[data-theme="holographic"] .lp-stone h2 {
+  color: #101c42;
+  font-family: var(--font-interface);
+  font-weight: 500;
+}
+
+html[data-theme="holographic"] .lp-stone h1 {
+  max-width: 11ch;
+  font-size: clamp(3.8rem, 6.7vw, 6.6rem);
+  line-height: 0.96;
+  letter-spacing: -0.055em;
+}
+
+html[data-theme="holographic"] .lp-stone h2 {
+  font-size: clamp(2.6rem, 4.7vw, 4.8rem);
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+html[data-theme="holographic"] .lp-stone h3 {
+  color: #12254c;
+  font-weight: 600;
+}
+
+html[data-theme="holographic"] .lp-stone p {
+  color: var(--slate-700);
+}
+
+html[data-theme="holographic"] .lp-stone-hero {
+  position: relative;
+  min-height: min(820px, calc(100vh - 76px));
+  overflow: hidden;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.78);
+  background:
+    radial-gradient(circle at 85% 35%, rgba(67, 200, 255, 0.16), transparent 30%),
+    radial-gradient(circle at 73% 68%, rgba(155, 140, 255, 0.15), transparent 34%),
+    radial-gradient(circle at 30% 88%, rgba(246, 129, 195, 0.09), transparent 32%);
+}
+
+html[data-theme="holographic"] .lp-stone-hero::before,
+html[data-theme="holographic"] .lp-stone-hero::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  filter: blur(28px);
+}
+
+html[data-theme="holographic"] .lp-stone-hero::before {
+  right: -12%;
+  bottom: -24%;
+  width: 74%;
+  height: 54%;
+  background:
+    conic-gradient(from 210deg, rgba(43, 220, 216, 0), rgba(43, 220, 216, 0.22), rgba(155, 140, 255, 0.16), rgba(246, 129, 195, 0.14), transparent 68%);
+  transform: rotate(-10deg);
+  opacity: 0.76;
+}
+
+html[data-theme="holographic"] .lp-stone-hero::after {
+  top: -24%;
+  left: 28%;
+  width: 52%;
+  height: 44%;
+  background: conic-gradient(from 110deg, transparent, rgba(67, 200, 255, 0.14), rgba(155, 140, 255, 0.13), transparent 64%);
+  opacity: 0.7;
+}
+
+html[data-theme="holographic"] .lp-stone-hero__grid {
+  position: relative;
+  z-index: 1;
+}
+
+html[data-theme="holographic"] .lp-stone-hero__copy {
+  animation: holoHeroReveal 640ms var(--ease-enter) both;
+}
+
+html[data-theme="holographic"] .lp-stone-hero__lede {
+  max-width: 42rem;
+  color: var(--slate-700);
+  font-size: clamp(1.05rem, 1.7vw, 1.24rem);
+  line-height: 1.62;
+}
+
+html[data-theme="holographic"] .lp-stone-action {
+  min-height: 52px;
+  border-radius: 16px;
+}
+
+html[data-theme="holographic"] .lp-stone-action--quiet {
+  color: #22365e;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  box-shadow: var(--shadow-btn-secondary);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+  backdrop-filter: blur(18px) saturate(125%);
+}
+
+html[data-theme="holographic"] .lp-stone-action--quiet::after {
+  color: var(--violet-500);
+  border-color: rgba(155, 140, 255, 0.32);
+  background: rgba(255, 255, 255, 0.46);
+}
+
+html[data-theme="holographic"] .lp-stone-hero__art {
+  padding: 12px;
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.32)) padding-box,
+    linear-gradient(120deg, rgba(43, 220, 216, 0.54), rgba(255, 255, 255, 0.86), rgba(155, 140, 255, 0.5), rgba(246, 129, 195, 0.4)) border-box;
+  border: 1px solid transparent;
+  border-radius: 30px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 28px 70px rgba(30, 45, 72, 0.14),
+    0 0 52px rgba(125, 108, 255, 0.1);
+  -webkit-backdrop-filter: blur(24px) saturate(135%);
+  backdrop-filter: blur(24px) saturate(135%);
+  animation: holoArtReveal 700ms 80ms var(--ease-enter) both;
+}
+
+html[data-theme="holographic"] .lp-stone-hero__art .lp-stone-artwork {
+  overflow: hidden;
+  border-radius: 22px;
+}
+
+html[data-theme="holographic"] .lp-stone-hero__art img,
+html[data-theme="holographic"] .lp-stone-feature__visual img {
+  filter: saturate(0.5) hue-rotate(108deg) brightness(1.08) contrast(0.88);
+}
+
+html[data-theme="holographic"] .lp-stone-hero__art::after,
+html[data-theme="holographic"] .lp-stone-feature__visual > .lp-stone-artwork::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 12% 20%, rgba(43, 220, 216, 0.18), transparent 32%),
+    radial-gradient(circle at 88% 18%, rgba(155, 140, 255, 0.18), transparent 36%),
+    radial-gradient(circle at 62% 84%, rgba(246, 129, 195, 0.13), transparent 40%);
+  mix-blend-mode: screen;
+}
+
+html[data-theme="holographic"] .lp-stone-hero__art figcaption {
+  color: var(--slate-600);
+}
+
+html[data-theme="holographic"] .lp-stone-section {
+  border-color: rgba(255, 255, 255, 0.74);
+}
+
+html[data-theme="holographic"] :is(.lp-stone-truth__list li, .lp-stone-principles__list li, .lp-stone-steps li) {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(155, 140, 255, 0.07), transparent 34%),
+    rgba(255, 255, 255, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
+  -webkit-backdrop-filter: blur(18px) saturate(122%);
+  backdrop-filter: blur(18px) saturate(122%);
+  transition:
+    transform var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+html[data-theme="holographic"] :is(.lp-stone-truth__list li, .lp-stone-principles__list li, .lp-stone-steps li):hover {
+  transform: translateY(-1px);
+  border-color: rgba(67, 200, 255, 0.3);
+  box-shadow: var(--shadow-slab-lifted);
+}
+
+html[data-theme="holographic"] :is(.lp-stone-index, .lp-stone-step-number) {
+  color: var(--violet-500);
+}
+
+html[data-theme="holographic"] .lp-stone-feature__visual,
+html[data-theme="holographic"] .lp-projection,
+html[data-theme="holographic"] .lp-stone-rollup {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(155, 140, 255, 0.1), transparent 34%),
+    radial-gradient(circle at 0% 100%, rgba(43, 220, 216, 0.09), transparent 38%),
+    rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 26px;
+  box-shadow: var(--shadow-md), 0 0 34px rgba(67, 200, 255, 0.05);
+  -webkit-backdrop-filter: blur(22px) saturate(130%);
+  backdrop-filter: blur(22px) saturate(130%);
+}
+
+html[data-theme="holographic"] .lp-stone-feature__visual > .lp-stone-artwork {
+  position: relative;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+html[data-theme="holographic"] .lp-stone-history-proof {
+  background: rgba(255, 255, 255, 0.64);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 18px;
+  box-shadow: var(--shadow-md);
+  -webkit-backdrop-filter: blur(20px) saturate(130%);
+  backdrop-filter: blur(20px) saturate(130%);
+}
+
+html[data-theme="holographic"] .lp-stone-history-proof li::after {
+  background: linear-gradient(var(--teal-500), var(--violet-400));
+}
+
+html[data-theme="holographic"] .lp-stone-history-proof li i {
+  background: var(--teal-500);
+  border-color: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 0 12px rgba(43, 220, 216, 0.28);
+}
+
+html[data-theme="holographic"] .lp-stone-history-proof li.is-current i {
+  background: var(--cyan-500);
+  box-shadow:
+    0 0 0 5px rgba(67, 200, 255, 0.13),
+    0 0 18px rgba(125, 108, 255, 0.28);
+}
+
+html[data-theme="holographic"] .lp-projection__grid line {
+  stroke: rgba(71, 85, 105, 0.08);
+}
+
+html[data-theme="holographic"] .lp-projection__history {
+  stroke: var(--teal-500);
+  filter: drop-shadow(0 0 5px rgba(24, 198, 197, 0.24));
+}
+
+html[data-theme="holographic"] .lp-projection__higher,
+html[data-theme="holographic"] .lp-projection__steady {
+  stroke: var(--violet-500);
+}
+
+html[data-theme="holographic"] .lp-projection__marker {
+  fill: var(--cyan-500);
+  stroke: rgba(255, 255, 255, 0.9);
+  filter: drop-shadow(0 0 6px rgba(67, 200, 255, 0.42));
+}
+
+html[data-theme="holographic"] .lp-projection__assumptions li,
+html[data-theme="holographic"] .lp-projection__assumptions dl {
+  background: rgba(255, 255, 255, 0.38);
+  border-color: rgba(255, 255, 255, 0.72);
+  border-radius: 14px;
+}
+
+html[data-theme="holographic"] .lp-stone-rollup table {
+  color: var(--slate-800);
+}
+
+html[data-theme="holographic"] .lp-stone-rollup :is(th, td) {
+  border-color: var(--holo-rule);
+}
+
+html[data-theme="holographic"] .lp-stone-rollup thead {
+  color: var(--slate-600);
+  background: rgba(255, 255, 255, 0.28);
+}
+
+html[data-theme="holographic"] .lp-stone-rollup tbody tr:hover {
+  background: linear-gradient(90deg, rgba(43, 220, 216, 0.06), rgba(155, 140, 255, 0.05));
+}
+
+html[data-theme="holographic"] .lp-stone-rollup tfoot {
+  color: var(--ink-900);
+  background: rgba(255, 255, 255, 0.4);
+}
+
+html[data-theme="holographic"] .lp-stone-rollup .is-liability {
+  color: #b23f76;
+}
+
+html[data-theme="holographic"] .lp-stone-final {
+  background:
+    radial-gradient(circle at 15% 20%, rgba(43, 220, 216, 0.13), transparent 30%),
+    radial-gradient(circle at 85% 75%, rgba(155, 140, 255, 0.16), transparent 34%);
+}
+
+html[data-theme="holographic"] .lp-stone-final__plane {
+  overflow: hidden;
+  color: var(--ink-900);
+  background:
+    radial-gradient(circle at 10% 15%, rgba(43, 220, 216, 0.16), transparent 34%),
+    radial-gradient(circle at 90% 85%, rgba(246, 129, 195, 0.12), transparent 38%),
+    rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  border-radius: 30px;
+  box-shadow: var(--shadow-lg), 0 0 48px rgba(125, 108, 255, 0.08);
+  -webkit-backdrop-filter: blur(26px) saturate(135%);
+  backdrop-filter: blur(26px) saturate(135%);
+}
+
+html[data-theme="holographic"] .lp-stone-final__plane :is(h2, p, .lp-stone-overline) {
+  color: inherit;
+}
+
+html[data-theme="holographic"] .lp-stone-action--light {
+  color: #fff;
+  background: var(--holo-ai);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 16px;
+  box-shadow: var(--shadow-btn-primary);
+}
+
+html[data-theme="holographic"] .lp-stone-footer {
+  color: var(--slate-700);
+  background: rgba(248, 250, 255, 0.58);
+  border-top: 1px solid rgba(255, 255, 255, 0.8);
+  -webkit-backdrop-filter: blur(20px) saturate(125%);
+  backdrop-filter: blur(20px) saturate(125%);
+}
+
+html[data-theme="holographic"] .lp-stone-footer a:hover {
+  color: var(--violet-500);
+}
+
+/* Motion */
+@keyframes holoBackdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes holoPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes holoPopoverIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes holoHeroReveal {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes holoArtReveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (min-width: 900px) {
+  html[data-theme="holographic"] .app-shell.nav-open {
+    transform: none;
+  }
+
+  html[data-theme="holographic"] .side-nav {
+    border-right-color: rgba(255, 255, 255, 0.74);
+  }
+
+  html[data-theme="holographic"] .dashboard {
+    max-width: 1040px;
+    margin-inline: auto;
+  }
+
+  html[data-theme="holographic"] .hero {
+    padding-inline: 32px;
+  }
+
+  html[data-theme="holographic"] .modal-sheet {
+    border-radius: 30px;
+  }
+}
+
+@media (max-width: 700px) {
+  html[data-theme="holographic"] {
+    --text-display: clamp(48px, 14vw, 60px);
+  }
+
+  html[data-theme="holographic"] .hero {
+    padding-inline: 24px;
+  }
+
+  html[data-theme="holographic"] .lp-stone-hero {
+    min-height: auto;
+  }
+
+  html[data-theme="holographic"] .lp-stone h1 {
+    font-size: clamp(3.25rem, 15vw, 5rem);
+  }
+
+  html[data-theme="holographic"] .lp-stone h2 {
+    font-size: clamp(2.35rem, 11vw, 3.7rem);
+  }
+
+  html[data-theme="holographic"] .lp-stone-hero__art {
+    border-radius: 24px;
+  }
+
+  html[data-theme="holographic"] .modal-sheet,
+  html[data-theme="holographic"] .ask-panel {
+    border-radius: 26px 26px 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="holographic"] *,
+  html[data-theme="holographic"] *::before,
+  html[data-theme="holographic"] *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 120ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 120ms !important;
+  }
+
+  html[data-theme="holographic"] .app-shell.nav-open {
+    transform: translateX(min(84vw, 360px));
+  }
+
+  html[data-theme="holographic"] .nw-medallion {
+    animation: none !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  html[data-theme="holographic"] :is(.card, .modal-sheet, .ask-panel, .popover-menu, .auth-card, [data-surface]) {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-color: var(--slate-700);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (forced-colors: active) {
+  html[data-theme="holographic"] :is(.btn-primary, .top-nav-ask, .ask-compose form > button) {
+    color: ButtonText;
+    background: ButtonFace;
+    border-color: ButtonText;
+    box-shadow: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Refraction pass v2
+
+   Light is pooled rather than banded: one primary material for actions, one
+   pearl-glass material for floating controls, and a shared viewport light that
+   moves every refractive edge and interior bloom together. */
+
+@property --holo-light-x {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 50%;
+}
+
+@property --holo-light-y {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 34%;
+}
+
+@property --holo-drift-x {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 0%;
+}
+
+@property --holo-drift-y {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 0%;
+}
+
+@property --holo-light-angle {
+  syntax: "<angle>";
+  inherits: true;
+  initial-value: 215deg;
+}
+
+html[data-theme="holographic"] {
+  --holo-light-x: 50%;
+  --holo-light-y: 34%;
+  --holo-drift-x: 0%;
+  --holo-drift-y: 0%;
+  --holo-light-angle: 215deg;
+
+  /* One primary material. The color is made from overlapping light pools over
+     a deep cyan-blue body; none of the visible transitions are linear bands. */
+  --holo-primary:
+    radial-gradient(
+      circle at calc(12% + var(--holo-drift-x)) calc(18% + var(--holo-drift-y)),
+      #5bfff1 0%,
+      rgba(24, 214, 210, 0.98) 16%,
+      rgba(18, 181, 202, 0.72) 34%,
+      transparent 58%
+    ),
+    radial-gradient(
+      circle at calc(var(--holo-light-x) - 5%) calc(var(--holo-light-y) + 26%),
+      rgba(53, 174, 255, 0.98) 0%,
+      rgba(45, 113, 245, 0.88) 28%,
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at calc(91% - var(--holo-drift-x)) calc(20% - var(--holo-drift-y)),
+      #ff9de2 0%,
+      rgba(171, 119, 255, 0.96) 24%,
+      rgba(96, 87, 245, 0.72) 48%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse at 73% 92%,
+      rgba(72, 83, 242, 0.96) 0%,
+      transparent 64%
+    ),
+    #087d9f;
+
+  /* The edge reaches white at the hottest points, then breaks into cyan,
+     violet, and rose as the light turns around the material. */
+  --holo-refractive-stroke: conic-gradient(
+    from calc(var(--holo-light-angle) + var(--holo-edge-turn, 0deg)),
+    rgba(255, 255, 255, 0.99) 0deg,
+    rgba(114, 255, 244, 0.98) 24deg,
+    rgba(255, 255, 255, 0.96) 58deg,
+    rgba(121, 205, 255, 0.98) 104deg,
+    rgba(164, 139, 255, 0.96) 176deg,
+    rgba(255, 164, 225, 0.94) 232deg,
+    rgba(255, 255, 255, 0.99) 286deg,
+    rgba(78, 236, 231, 0.96) 334deg,
+    rgba(255, 255, 255, 0.99) 360deg
+  );
+
+  --holo-quiet-glass:
+    radial-gradient(
+      circle at calc(5% + var(--holo-drift-x)) calc(50% + var(--holo-drift-y)),
+      rgba(83, 241, 233, 0.13) 0%,
+      rgba(67, 200, 255, 0.055) 27%,
+      transparent 49%
+    ),
+    radial-gradient(
+      circle at calc(96% - var(--holo-drift-x)) calc(42% - var(--holo-drift-y)),
+      rgba(255, 151, 217, 0.1) 0%,
+      rgba(155, 140, 255, 0.05) 28%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at var(--holo-light-x) var(--holo-light-y),
+      rgba(255, 255, 255, 0.62) 0%,
+      transparent 36%
+    ),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.72), rgba(244, 248, 255, 0.5));
+
+  --holo-surface-light:
+    radial-gradient(
+      circle at calc(var(--holo-light-x) + var(--holo-drift-x)) calc(var(--holo-light-y) + var(--holo-drift-y)),
+      rgba(255, 255, 255, 0.54) 0%,
+      rgba(67, 200, 255, 0.085) 18%,
+      transparent 41%
+    ),
+    radial-gradient(
+      circle at calc(100% - var(--holo-light-x)) calc(100% - var(--holo-light-y)),
+      rgba(246, 129, 195, 0.065) 0%,
+      rgba(155, 140, 255, 0.04) 25%,
+      transparent 44%
+    ),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.48), rgba(247, 250, 255, 0.28));
+
+  /* Compatibility names now both point to the same primary material. */
+  --holo-aurora: var(--holo-primary);
+  --holo-ai: var(--holo-primary);
+}
+
+/* The color field belongs to the page, never to an individual surface. The
+   entire blurred layer drifts as one very slow ambient wash. */
+html[data-theme="holographic"] :is(
+  .app-bg,
+  .app-shell,
+  .scenario-stage--out,
+  .auth-shell,
+  .lp,
+  .ds-page
+) {
+  background-image: none;
+}
+
+html[data-theme="holographic"] :is(.app-bg, .lp.lp-stone, .auth-shell, .ds-page)::before {
+  content: "";
+  display: block;
+  position: fixed;
+  inset: -18%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 42% 36% at 15% 22%, rgba(43, 220, 216, 0.2), transparent 68%),
+    radial-gradient(ellipse 38% 40% at 84% 16%, rgba(155, 140, 255, 0.18), transparent 70%),
+    radial-gradient(ellipse 34% 42% at 78% 82%, rgba(67, 200, 255, 0.13), transparent 72%),
+    radial-gradient(ellipse 32% 34% at 24% 86%, rgba(246, 129, 195, 0.11), transparent 70%),
+    radial-gradient(ellipse 46% 32% at 52% 46%, rgba(255, 255, 255, 0.44), transparent 74%);
+  filter: blur(44px) saturate(132%);
+  opacity: 0.66;
+  transform: translate3d(-0.4%, -0.25%, 0) rotate(-0.2deg) scale(1.035);
+  transform-origin: center;
+  animation: holoCausticDrift 110s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+  will-change: transform, opacity;
+}
+
+html[data-theme="holographic"] :is(.lp-stone-nav, .lp-stone-main, .lp-stone-footer),
+html[data-theme="holographic"] .auth-shell > *,
+html[data-theme="holographic"] .ds-page > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Every primary action uses the single pooled-light material. */
+html[data-theme="holographic"] :is(
+  .btn-primary,
+  .top-nav-ask,
+  .ask-compose form > button,
+  .lp-stone-nav__start,
+  .lp-stone-action--primary,
+  .lp-stone-action--light
+) {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--holo-primary);
+  background-size: 118% 118%;
+  background-position: center;
+  border-color: transparent;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.66),
+    inset 0 -1px 0 rgba(60, 70, 220, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.68),
+    0 0 12px rgba(62, 238, 229, 0.4),
+    0 0 28px rgba(61, 149, 255, 0.32),
+    0 0 42px rgba(162, 112, 255, 0.22),
+    0 12px 34px rgba(38, 83, 170, 0.24);
+}
+
+html[data-theme="holographic"] :is(
+  .btn-primary,
+  .top-nav-ask,
+  .ask-compose form > button,
+  .lp-stone-nav__start,
+  .lp-stone-action--primary,
+  .lp-stone-action--light
+)::before {
+  content: "";
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  padding: 1.5px;
+  pointer-events: none;
+  border-radius: inherit;
+  background: var(--holo-refractive-stroke);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  filter:
+    drop-shadow(0 0 2px rgba(255, 255, 255, 0.98))
+    drop-shadow(0 0 5px rgba(67, 231, 255, 0.82))
+    drop-shadow(0 0 9px rgba(177, 111, 255, 0.6));
+  opacity: 1;
+}
+
+html[data-theme="holographic"] :is(
+  .btn-primary,
+  .top-nav-ask,
+  .ask-compose form > button,
+  .lp-stone-nav__start,
+  .lp-stone-action--primary,
+  .lp-stone-action--light
+)::after {
+  content: "";
+  display: block;
+  position: absolute;
+  inset: 2px;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: calc(var(--r-btn) - 2px);
+  background:
+    radial-gradient(circle at var(--holo-light-x) 0%, rgba(255, 255, 255, 0.7), transparent 32%),
+    radial-gradient(circle at 12% 90%, rgba(85, 255, 241, 0.28), transparent 34%);
+  mix-blend-mode: screen;
+  opacity: 0.72;
+}
+
+html[data-theme="holographic"] :is(
+  .btn-primary,
+  .top-nav-ask,
+  .ask-compose form > button,
+  .lp-stone-nav__start,
+  .lp-stone-action--primary,
+  .lp-stone-action--light
+):hover:not(:disabled) {
+  background: var(--holo-primary);
+  background-size: 126% 126%;
+  filter: brightness(1.06) saturate(1.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.76),
+    0 0 0 1px rgba(255, 255, 255, 0.78),
+    0 0 15px rgba(62, 238, 229, 0.48),
+    0 0 34px rgba(61, 149, 255, 0.38),
+    0 0 52px rgba(162, 112, 255, 0.28),
+    0 15px 38px rgba(38, 83, 170, 0.26);
+}
+
+/* Cards share the same optical edge. Interior color remains restrained and
+   follows the viewport light instead of being assigned a fixed gradient. */
+html[data-theme="holographic"] :is(
+  .card,
+  [data-surface="slab"],
+  [data-surface="raised"],
+  .settings-card,
+  .sync-card,
+  .import-preview,
+  .import-row,
+  .recovery-phrase,
+  .modal-sheet,
+  .popover-menu,
+  .auth-card,
+  .ask-panel,
+  .ask-consent-card,
+  .ask-evidence,
+  .ask-message--assistant,
+  .ds-token-group,
+  .ds-type-list,
+  .ds-specimen,
+  .lp-stone-truth__list li,
+  .lp-stone-principles__list li,
+  .lp-stone-steps li,
+  .lp-stone-feature__visual,
+  .lp-projection,
+  .lp-stone-rollup,
+  .lp-stone-final__plane,
+  .lp-stone-hero__art
+) {
+  position: relative;
+  isolation: isolate;
+  background-color: rgba(250, 252, 255, 0.34);
+  background-image: none;
+  border-color: transparent;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.86),
+    0 0 0 1px rgba(255, 255, 255, 0.55),
+    0 14px 36px rgba(27, 38, 58, 0.09);
+  -webkit-backdrop-filter: blur(34px) saturate(118%);
+  backdrop-filter: blur(34px) saturate(118%);
+}
+
+html[data-theme="holographic"] :is(
+  .card,
+  [data-surface="slab"],
+  [data-surface="raised"],
+  .settings-card,
+  .sync-card,
+  .import-preview,
+  .import-row,
+  .recovery-phrase,
+  .modal-sheet,
+  .popover-menu,
+  .auth-card,
+  .ask-panel,
+  .ask-consent-card,
+  .ask-evidence,
+  .ask-message--assistant,
+  .ds-token-group,
+  .ds-type-list,
+  .ds-specimen,
+  .lp-stone-truth__list li,
+  .lp-stone-principles__list li,
+  .lp-stone-steps li,
+  .lp-stone-feature__visual,
+  .lp-projection,
+  .lp-stone-rollup,
+  .lp-stone-final__plane,
+  .lp-stone-hero__art
+)::before {
+  content: "";
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  padding: 1.2px;
+  pointer-events: none;
+  border-radius: inherit;
+  background: var(--holo-refractive-stroke);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  filter:
+    drop-shadow(0 0 2px rgba(255, 255, 255, 0.94))
+    drop-shadow(0 0 4px rgba(70, 231, 255, 0.48))
+    drop-shadow(0 0 7px rgba(174, 116, 255, 0.34));
+  opacity: 0.9;
+}
+
+html[data-theme="holographic"] :is(
+  .card,
+  .settings-card,
+  .sync-card,
+  .ds-specimen,
+  .lp-stone-truth__list li,
+  .lp-stone-principles__list li,
+  .lp-stone-steps li
+):nth-child(3n + 1) {
+  --holo-edge-turn: 52deg;
+}
+
+html[data-theme="holographic"] :is(
+  .card,
+  .settings-card,
+  .sync-card,
+  .ds-specimen,
+  .lp-stone-truth__list li,
+  .lp-stone-principles__list li,
+  .lp-stone-steps li
+):nth-child(3n + 2) {
+  --holo-edge-turn: 137deg;
+}
+
+/* Semantic meaning stays in type, rather than painting a separate light field
+   into each summary card. */
+html[data-theme="holographic"] .summary-cell.assets {
+  background-image: none;
+}
+
+html[data-theme="holographic"] .summary-cell.liabilities {
+  --holo-edge-turn: 92deg;
+  background-image: none;
+}
+
+/* Floating selections are mostly glossy pearl. Their low-chroma side pools
+   hint at the spectrum without becoming a second gradient system. */
+html[data-theme="holographic"] :is(
+  .month-selector,
+  .back-to-month,
+  .range-pills,
+  .type-toggle,
+  .sign-toggle,
+  .side-nav-item.active,
+  .range-pill.active,
+  .type-toggle-thumb,
+  .sign-toggle .type-toggle-thumb
+) {
+  position: relative;
+  isolation: isolate;
+  background-color: rgba(251, 253, 255, 0.46);
+  background-image: none;
+  border-color: rgba(255, 255, 255, 0.86);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.98),
+    inset 0 -1px 0 rgba(182, 197, 225, 0.16),
+    0 0 0 1px rgba(255, 255, 255, 0.58),
+    0 10px 28px rgba(31, 46, 74, 0.1);
+  -webkit-backdrop-filter: blur(30px) saturate(116%);
+  backdrop-filter: blur(30px) saturate(116%);
+}
+
+html[data-theme="holographic"] :is(
+  .month-selector,
+  .back-to-month,
+  .side-nav-item.active,
+  .range-pill.active,
+  .type-toggle-thumb,
+  .sign-toggle .type-toggle-thumb
+)::before {
+  content: "";
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  padding: 1px;
+  pointer-events: none;
+  border-radius: inherit;
+  background: var(--holo-refractive-stroke);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  filter:
+    drop-shadow(0 0 2px rgba(255, 255, 255, 0.9))
+    drop-shadow(0 0 4px rgba(75, 224, 255, 0.26));
+  opacity: 0.58;
+}
+
+html[data-theme="holographic"] .range-pill.active {
+  color: #233a63;
+}
+
+html[data-theme="holographic"] .side-nav-item.active {
+  overflow: hidden;
+}
+
+html[data-theme="holographic"] .side-nav-item.active::after {
+  background: radial-gradient(circle, #54fff2 0%, #3dcce8 44%, transparent 74%);
+  box-shadow: 0 0 8px rgba(80, 248, 238, 0.62), 0 0 16px rgba(99, 147, 255, 0.34);
+}
+
+/* Quiet secondary controls lose the prior spectral fill entirely. */
+html[data-theme="holographic"] :is(
+  .btn-secondary,
+  .btn-icon,
+  .fab,
+  .settings-fab,
+  .lp-stone-action--quiet
+) {
+  background-color: rgba(251, 253, 255, 0.48);
+  background-image: none;
+  border-color: rgba(255, 255, 255, 0.84);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.94),
+    0 0 0 1px rgba(255, 255, 255, 0.46),
+    0 8px 24px rgba(31, 46, 74, 0.08);
+  -webkit-backdrop-filter: blur(28px) saturate(116%);
+  backdrop-filter: blur(28px) saturate(116%);
+}
+
+/* Optical hierarchy: these surfaces do not generate color. They only tint and
+   blur the single ambient field behind them. More-specific selectors here
+   intentionally neutralize the earlier component illustrations. */
+html[data-theme="holographic"],
+html[data-theme="holographic"] body,
+html[data-theme="holographic"] #root {
+  background: var(--pearl-050);
+}
+
+html[data-theme="holographic"] :is(
+  .side-nav,
+  .cat-card.card,
+  .summary-cell.card,
+  .auth-card.card,
+  .modal-sheet,
+  .popover-menu,
+  .ask-panel,
+  .settings-card,
+  .sync-card,
+  .manage-cat-card,
+  .update-cat-section,
+  .empty-state,
+  .ds-token-group,
+  .ds-type-list,
+  .ds-specimen,
+  .lp-stone-hero__art,
+  .lp-stone-feature__visual,
+  .lp-projection,
+  .lp-stone-rollup,
+  .lp-stone-final__plane,
+  .lp-stone-truth__list li,
+  .lp-stone-principles__list li,
+  .lp-stone-steps li
+) {
+  background-color: rgba(250, 252, 255, 0.34);
+  background-image: none;
+  -webkit-backdrop-filter: blur(34px) saturate(118%);
+  backdrop-filter: blur(34px) saturate(118%);
+}
+
+html[data-theme="holographic"] .lp.lp-stone,
+html[data-theme="holographic"] :is(.lp-stone-hero, .lp-stone-final) {
+  background-color: transparent;
+  background-image: none;
+}
+
+@keyframes holoCausticDrift {
+  0% {
+    opacity: 0.64;
+    transform: translate3d(-0.4%, -0.25%, 0) rotate(-0.2deg) scale(1.035);
+  }
+  45% {
+    opacity: 0.68;
+    transform: translate3d(0.2%, 0.1%, 0) rotate(0.08deg) scale(1.04);
+  }
+  100% {
+    opacity: 0.65;
+    transform: translate3d(0.55%, 0.38%, 0) rotate(0.2deg) scale(1.037);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="holographic"] :is(.app-bg, .lp.lp-stone, .auth-shell, .ds-page)::before {
+    animation: none !important;
+  }
+}
+
+@media (prefers-contrast: more), (forced-colors: active) {
+  html[data-theme="holographic"] :is(
+    .card,
+    .modal-sheet,
+    .popover-menu,
+    .auth-card,
+    .ask-panel,
+    .btn,
+    .month-selector,
+    .range-pill.active,
+    .side-nav-item.active
+  )::before {
+    display: none;
+  }
+
+  html[data-theme="holographic"] :is(.app-bg, .lp.lp-stone, .auth-shell, .ds-page)::before {
+    display: none;
+  }
+}

@@ -3,6 +3,7 @@ import Modal from './Modal'
 import ImportSheet from './ImportSheet'
 import { CHART_VARIANTS } from '../lib/chartVariant'
 import { GRAIN_DIALS, GRAIN_MAX } from '../lib/grainOpacity'
+import { PROTOTYPE_THEMES } from '../lib/prototypeTheme'
 
 export const SCENARIOS = [
   { value: 'none', label: 'None' },
@@ -19,6 +20,7 @@ export default function PrototypeSettings({
   open, onClose, initialView = 'main',
   scenario, onScenarioChange, onSignOut,
   categories, selectedMonth, onImport, onOpenStickerSheet,
+  theme, onThemeChange,
   chartVariant, onChartVariantChange,
   grain, onGrainChange,
 }) {
@@ -64,6 +66,27 @@ export default function PrototypeSettings({
                   </svg>
                 </div>
               </div>
+
+              {onThemeChange && (
+                <div className="form-group">
+                  <label className="form-label" htmlFor="theme-select">Theme</label>
+                  <div className="select-wrap">
+                    <select
+                      id="theme-select"
+                      className="select"
+                      value={theme}
+                      onChange={e => onThemeChange(e.target.value)}
+                    >
+                      {PROTOTYPE_THEMES.map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                    <svg className="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </div>
+                </div>
+              )}
 
               {onChartVariantChange && (
                 <div className="form-group">

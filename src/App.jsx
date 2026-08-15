@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard'
 import PrototypeSettings from './components/PrototypeSettings'
 import { readChartVariant, writeChartVariant } from './lib/chartVariant'
 import { applyGrain, readGrain, writeGrain } from './lib/grainOpacity'
+import { readPrototypeTheme, writePrototypeTheme } from './lib/prototypeTheme'
 import StickerSheet from './components/StickerSheet'
 import TopNav from './components/TopNav'
 import SideNav from './components/SideNav'
@@ -36,6 +37,11 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
   const [settingsView, setSettingsView] = useState(null)
   const [chartVariant, setChartVariant] = useState(readChartVariant)
   const changeChartVariant = (v) => { setChartVariant(v); writeChartVariant(v) }
+  const [prototypeTheme, setPrototypeTheme] = useState(readPrototypeTheme)
+  const changePrototypeTheme = (value) => {
+    setPrototypeTheme(value)
+    writePrototypeTheme(value)
+  }
   // Grain dials. main.jsx has already applied the saved values to the document;
   // this holds them so the sliders have something to render, and pushes each
   // change straight onto the root so the surfaces respond as the user drags.
@@ -214,6 +220,8 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
         selectedMonth={selectedMonth}
         onImport={dataHook.bulkImport}
         onOpenStickerSheet={() => { setSettingsView(null); setStickerOpen(true) }}
+        theme={prototypeTheme}
+        onThemeChange={changePrototypeTheme}
         chartVariant={chartVariant}
         onChartVariantChange={changeChartVariant}
         grain={grain}
