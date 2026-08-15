@@ -560,6 +560,44 @@ textarea {
   color: var(--c-ink-mute);
 }
 
+/* Header for a group of dials, carrying the control that returns them to the
+   values they were designed at. The rule and the darker label are what
+   separate it from the dial labels below — without them it sits at the same
+   level as the first slider's own label and the two read as one row. */
+.dial-group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: var(--space-5) 0 var(--space-4);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--c-border);
+}
+
+.dial-group-head .form-label {
+  color: var(--c-ink);
+  font-weight: 600;
+}
+
+.dial-reset {
+  padding: 4px 0;
+  font-family: var(--font-interface);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Disabled while the dials are already at their defaults, so there is nothing
+   to undo and the state is legible without reading every slider. */
+.dial-reset:disabled {
+  color: var(--c-ink-mute);
+  opacity: 0.55;
+  cursor: default;
+}
+
 .type-toggle,
 .sign-toggle {
   background: var(--c-surface-muted);

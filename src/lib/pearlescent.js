@@ -169,9 +169,15 @@ void main() {
   light *= mix(0.70, 1.0, smoothstep(0.0, 1.0, dot(c, c)));
 
   /* Nearly white, a half step cool. The undertone deepens toward the edges so
-     the pane reads as curved glass rather than flat paper. */
+     the pane reads as curved glass rather than flat paper.
+
+     The exact level is what governs how legible the folds are, because they
+     compose by screen: a fold can only ever lift a pixel by (1 - base), so a
+     ground at 0.93 leaves seven percent of range for the entire effect no
+     matter how hard the folds are driven. Dropping it a few points is worth
+     far more contrast than raising amplitude, and costs nothing in calm. */
   float edge = smoothstep(0.15, 1.75, length(p * vec2(1.0, 0.62)));
-  vec3 base = mix(vec3(0.926, 0.932, 0.952), vec3(0.836, 0.848, 0.895), edge);
+  vec3 base = mix(vec3(0.898, 0.905, 0.926), vec3(0.802, 0.816, 0.864), edge);
 
   /* Exposure rather than a clamp: where folds pile up, a clamp flattens the
      overlap into a plate of pure white with a visible edge, while this rolls

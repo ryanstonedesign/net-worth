@@ -64,6 +64,13 @@ export function readRefraction() {
   }
 }
 
+// Whether the dials are still where the shader was tuned. Drives the reset
+// control's disabled state, so the button doubles as a read on whether
+// anything has been moved.
+export function isDefaultRefraction(values) {
+  return REFRACTION_DIALS.every(d => (values?.[d.key] ?? d.def) === d.def)
+}
+
 export function writeRefraction(values) {
   try { localStorage.setItem(KEY, JSON.stringify(values)) } catch { /* private mode */ }
 }

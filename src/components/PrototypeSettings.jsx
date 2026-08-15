@@ -4,7 +4,7 @@ import ImportSheet from './ImportSheet'
 import { CHART_VARIANTS } from '../lib/chartVariant'
 import { GRAIN_DIALS, GRAIN_MAX } from '../lib/grainOpacity'
 import { PROTOTYPE_THEMES } from '../lib/prototypeTheme'
-import { REFRACTION_DIALS } from '../lib/refraction'
+import { REFRACTION_DIALS, isDefaultRefraction } from '../lib/refraction'
 
 export const SCENARIOS = [
   { value: 'none', label: 'None' },
@@ -24,7 +24,7 @@ export default function PrototypeSettings({
   theme, onThemeChange,
   chartVariant, onChartVariantChange,
   grain, onGrainChange,
-  refraction, onRefractionChange,
+  refraction, onRefractionChange, onRefractionReset,
 }) {
   const [view, setView] = useState(initialView)
 
@@ -141,6 +141,20 @@ export default function PrototypeSettings({
 
               {/* The pane these drive only exists in Holographic, so on any
                   other theme the dials would move nothing visible. */}
+              {onRefractionChange && theme === 'holographic' && (
+                <div className="dial-group-head">
+                  <span className="form-label">Background refraction</span>
+                  <button
+                    type="button"
+                    className="dial-reset"
+                    disabled={isDefaultRefraction(refraction)}
+                    onClick={() => onRefractionReset?.()}
+                  >
+                    Reset
+                  </button>
+                </div>
+              )}
+
               {onRefractionChange && theme === 'holographic' && REFRACTION_DIALS.map(dial => {
                 const value = refraction?.[dial.key] ?? dial.def
                 // Shown as a percentage of the tuned design, so 100% is the

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   REFRACTION_DIALS, DEFAULT_REFRACTION,
   readRefraction, writeRefraction,
-  getRefraction, applyRefraction, subscribeRefraction,
+  getRefraction, applyRefraction, subscribeRefraction, isDefaultRefraction,
 } from './refraction'
 
 const KEY = 'wf.prototype.refraction'
@@ -54,6 +54,20 @@ describe('readRefraction', () => {
   it('round-trips a written value', () => {
     writeRefraction({ vibrancy: 0.5, speed: 2, thickness: 0.4, travel: 1.5 })
     expect(readRefraction()).toEqual({ vibrancy: 0.5, speed: 2, thickness: 0.4, travel: 1.5 })
+  })
+})
+
+describe('isDefaultRefraction', () => {
+  it('is true for the defaults and for a missing set', () => {
+    expect(isDefaultRefraction(DEFAULT_REFRACTION)).toBe(true)
+    expect(isDefaultRefraction(undefined)).toBe(true)
+  })
+
+  it('is false as soon as any single dial has moved', () => {
+    REFRACTION_DIALS.forEach(d => {
+      const moved = { ...DEFAULT_REFRACTION, [d.key]: d.max }
+      expect(isDefaultRefraction(moved)).toBe(false)
+    })
   })
 })
 

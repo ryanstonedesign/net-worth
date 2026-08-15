@@ -10,7 +10,7 @@ import Dashboard from './pages/Dashboard'
 import PrototypeSettings from './components/PrototypeSettings'
 import { readChartVariant, writeChartVariant } from './lib/chartVariant'
 import { applyGrain, readGrain, writeGrain } from './lib/grainOpacity'
-import { applyRefraction, readRefraction, writeRefraction } from './lib/refraction'
+import { applyRefraction, DEFAULT_REFRACTION, readRefraction, writeRefraction } from './lib/refraction'
 import { readPrototypeTheme, writePrototypeTheme } from './lib/prototypeTheme'
 import StickerSheet from './components/StickerSheet'
 import TopNav from './components/TopNav'
@@ -51,6 +51,12 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
   // uniforms rather than CSS custom properties — applyRefraction hands them to
   // the renderer, which picks them up on its next frame.
   const [refraction, setRefraction] = useState(readRefraction)
+  const resetRefraction = () => {
+    const next = { ...DEFAULT_REFRACTION }
+    setRefraction(next)
+    applyRefraction(next)
+    writeRefraction(next)
+  }
   const changeRefraction = (key, value) => {
     setRefraction(prev => {
       const next = { ...prev, [key]: value }
@@ -241,6 +247,7 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
         onGrainChange={changeGrain}
         refraction={refraction}
         onRefractionChange={changeRefraction}
+        onRefractionReset={resetRefraction}
         {...settingsProps}
       />
 
