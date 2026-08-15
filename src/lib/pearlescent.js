@@ -4,11 +4,17 @@ import { getRefraction, subscribeRefraction } from './refraction'
  *
  * The picture is light passing through a sheet of frosted iridescent glass:
  * a nearly-white ground, a handful of very large curved caustic folds running
- * off every edge, and thin dispersed colour riding the folds. Nothing here is
- * a moving gradient — each fold is a distance field with a caustic falloff,
- * the colour comes from sampling that field at a per-channel offset the way a
- * prism splits a wavefront, and the whole pane is bent by a smooth refraction
- * field before any of it is evaluated.
+ * off every edge, and blue, violet and pink banked along their shoulders.
+ * Nothing here is a moving gradient — each fold is a distance field with a
+ * caustic falloff, and the whole pane is bent by a smooth refraction field
+ * before any of it is evaluated.
+ *
+ * Luminance and colour are built separately and joined at the end. The folds
+ * compose by screen, which can only add, so on a ground this light they can
+ * only ever approach white — which is right for a highlight and useless for a
+ * hue. Colour is therefore accumulated as chroma with its luminance removed
+ * and added after the blend, banded to a ring around each filament so the
+ * cores stay white and the shoulders carry the tint.
  *
  * Everything moves on its own period, and the periods are mutually
  * incommensurate to five decimal places, so the composite does not return to
@@ -38,14 +44,24 @@ uniform float uVibrancy;
 uniform float uThickness;
 uniform float uTravel;
 
-/* Iridescent tints. Cool for most of the cycle; the warm pearl is held out of
-   the ramp and mixed in separately so it surfaces occasionally rather than on
-   every pass, the way a warm glint only appears at certain angles. */
-const vec3 TINT_CYAN   = vec3(0.52, 0.98, 0.96);
-const vec3 TINT_ICE    = vec3(0.62, 0.85, 1.00);
-const vec3 TINT_VIOLET = vec3(0.78, 0.72, 1.00);
-const vec3 TINT_PINK   = vec3(1.00, 0.79, 0.92);
-const vec3 TINT_PEARL  = vec3(1.00, 0.93, 0.82);
+/* Iridescent tints, running azure -> blue -> violet -> pink. The warm pearl is
+   held out of the ramp and mixed in separately so it surfaces occasionally
+   rather than on every pass, the way a warm glint only appears at certain
+   angles.
+
+   Each stop is chosen so its green channel sits at or below its own luminance.
+   Only the chroma of these is used, and a stop with green above its luma
+   contributes a green cast — which is how a blue-and-pink pane picks up the
+   mint fringes that read as a rainbow. */
+const vec3 TINT_AZURE  = vec3(0.36, 0.62, 1.00);
+const vec3 TINT_BLUE   = vec3(0.42, 0.52, 1.00);
+const vec3 TINT_VIOLET = vec3(0.66, 0.44, 1.00);
+const vec3 TINT_PINK   = vec3(1.00, 0.52, 0.90);
+const vec3 TINT_PEARL  = vec3(1.00, 0.86, 0.66);
+
+/* Rec.601 weights. Used to strip the luminance out of a tint so only its
+   chroma is left — see the fold below. */
+const vec3 LUMA = vec3(0.299, 0.587, 0.114);
 
 mat2 rot(float a) {
   float s = sin(a);
@@ -61,8 +77,8 @@ vec3 iridescence(float phase, float warm) {
   float t = fract(phase) * 4.0;
   float i = floor(t);
   float f = smoothstep(0.0, 1.0, t - i);
-  vec3 a = i < 0.5 ? TINT_CYAN : (i < 1.5 ? TINT_ICE    : (i < 2.5 ? TINT_VIOLET : TINT_PINK));
-  vec3 b = i < 0.5 ? TINT_ICE  : (i < 1.5 ? TINT_VIOLET : (i < 2.5 ? TINT_PINK   : TINT_CYAN));
+  vec3 a = i < 0.5 ? TINT_AZURE : (i < 1.5 ? TINT_BLUE   : (i < 2.5 ? TINT_VIOLET : TINT_PINK));
+  vec3 b = i < 0.5 ? TINT_BLUE  : (i < 1.5 ? TINT_VIOLET : (i < 2.5 ? TINT_PINK   : TINT_AZURE));
   return mix(mix(a, b, f), TINT_PEARL, warm);
 }
 
@@ -93,16 +109,20 @@ const float HALO_SPREAD = 3.6;
    what smears a spectrum across the whole band and reads as a rainbow. */
 vec3 causticLight(float d, float w, float spread) {
   float mid = exp(-abs(d) / w);
-  vec3 split = vec3(
-    exp(-abs(d - spread) / w),
-    mid,
-    exp(-abs(d + spread) / w)
-  );
+  float lo = exp(-abs(d - spread) / w);
+  float hi = exp(-abs(d + spread) / w);
+
+  /* Green is the mean of the two shifted samples rather than a third sample of
+     its own. Taken at the centre it would peak alone there — both neighbours
+     are offset away from the ridge, green is not — and that spike is a yellow
+     green line down the middle of every fold. Averaging leaves dispersion as a
+     clean red-to-blue axis with no green excursion anywhere on it. */
+  vec3 split = vec3(lo, (lo + hi) * 0.5, hi);
   /* Held back most of the way to the achromatic core. At full strength the
      flanks separate into saturated red and cyan lines and the fold reads as a
      little rainbow; this leaves the shift as a fringe on an otherwise white
      filament, which is what the glass actually does. */
-  vec3 core = mix(vec3(mid), split, 0.52);
+  vec3 core = mix(vec3(mid), split, 0.50);
 
   float h = w * HALO_SPREAD;
   float halo = exp(-(d * d) / (h * h));
@@ -113,15 +133,19 @@ vec3 causticLight(float d, float w, float spread) {
    and the set stays mutually incommensurate across folds. The ratios are
    deliberately not whole numbers: at 9.0 the ripple would close on the arc
    every ninth pass and the fold would repeat on the arc's period. */
+/* How hard the banked chroma is pushed into the pane. */
+const float CHROMA_GAIN = 0.46;
+
 const float BREATHE_RATIO = 4.73;
 const float RIPPLE_RATIO = 9.19;
 
 /* One caustic fold: a curved ridge, the distance to it, and the caustic
    falloff of that distance. The ridge is three sines of unrelated period, so
    the curve is asymmetric and never straightens out as the phases drift. */
-vec3 fold(
+void fold(
   vec2 p, float t, float angle, float drift, float bowFreq, float bow,
-  float width, float offset, float tintPhase, float tintRate, float amp
+  float width, float offset, float tintPhase, float tintRate, float amp,
+  inout vec3 light, inout vec3 chroma
 ) {
   vec2 q = rot(angle) * p;
   float ph = t * drift;
@@ -145,15 +169,30 @@ vec3 fold(
   float d = q.y - offset - ridge;
 
   float w = width * uThickness;
-  vec3 light = causticLight(d, w, w * 0.32);
+  vec3 lobe = causticLight(d, w, w * 0.32);
+  float strength = lobe.g;
 
   float warm = smoothstep(0.88, 1.0, sin(t * tintRate * 0.37 + tintPhase * 5.7));
+  vec3 tint = iridescence(tintPhase + t * tintRate, warm);
 
-  /* Vibrancy moves colour and presence together. Below 1 the tint pales toward
-     plain white light and the fold dims, but only to half — it keeps its shape
-     rather than vanishing, so the dial reads as "less colour", not "less pane". */
-  vec3 tint = mix(vec3(1.0), iridescence(tintPhase + t * tintRate, warm), uVibrancy);
-  return light * tint * amp * mix(0.5, 1.0, min(uVibrancy, 1.0));
+  /* Hue rides a band around the filament — not the core, and not the far
+     shoulder either. The core is where the most light lands, and light that
+     bright reads white however it was split, so tinting it only stains the
+     highlight. The outer shoulder is the other failure: let colour run all the
+     way down it and the fold stops being an edge with a fringe and becomes a
+     wide coloured wash. Banding it at both ends is what keeps the hue reading
+     as a fringe on white light. */
+  float flank = smoothstep(0.06, 0.30, strength) * (1.0 - smoothstep(0.34, 0.88, strength));
+
+  /* Luminance carries no tint of its own beyond the dispersion already in the
+     core, which is what keeps highlights white. */
+  light += lobe * amp;
+
+  /* Chroma with its luminance removed, so adding it colours the pane without
+     lifting or dropping brightness anywhere. On a ground this light that is
+     the only way hue can read at all: screen blending can only add, and adding
+     blue to something already near white just returns near white. */
+  chroma += (tint - dot(tint, LUMA)) * (strength * flank * amp * uVibrancy);
 }
 
 void main() {
@@ -177,21 +216,24 @@ void main() {
   vec2 w = bend(rot(0.09 * sin(t * 0.01039)) * f, t);
 
   vec3 light = vec3(0.0);
+  vec3 chroma = vec3(0.0);
   /* Angle, drift, bow frequency, bow, core width, offset, tint phase, tint
      rate, amplitude. Bow frequencies sit near a half cycle across the pane, so
      each fold is one gentle arc rather than a wave; the angles are spread so
      the arcs cross each other instead of stacking into a grain. */
-  light += fold(w, t,  0.21, 0.00787, 1.32, 0.40, 0.09, -1.02, 0.00, 0.00411, 1.20);
-  light += fold(w, t, -0.74, 0.00541, 1.07, 0.52, 0.15, -0.34, 0.37, 0.00271, 1.08);
-  light += fold(w, t,  0.58, 0.00997, 1.63, 0.34, 0.07,  0.28, 0.62, 0.00533, 0.96);
-  light += fold(w, t, -1.19, 0.00673, 1.19, 0.46, 0.12,  0.86, 0.81, 0.00193, 1.14);
-  light += fold(w, t,  1.42, 0.00439, 0.91, 0.61, 0.19,  1.42, 0.14, 0.00347, 0.90);
+  fold(w, t,  0.21, 0.00787, 1.32, 0.40, 0.09, -1.02, 0.00, 0.00411, 1.20, light, chroma);
+  fold(w, t, -0.74, 0.00541, 1.07, 0.52, 0.15, -0.34, 0.37, 0.00271, 1.08, light, chroma);
+  fold(w, t,  0.58, 0.00997, 1.63, 0.34, 0.07,  0.28, 0.62, 0.00533, 0.96, light, chroma);
+  fold(w, t, -1.19, 0.00673, 1.19, 0.46, 0.12,  0.86, 0.81, 0.00193, 1.14, light, chroma);
+  fold(w, t,  1.42, 0.00439, 0.91, 0.61, 0.19,  1.42, 0.14, 0.00347, 0.90, light, chroma);
 
   /* The card stack sits in the middle of the screen, so light is pulled down
      over a tall ellipse there. It is attenuated rather than cut: the folds
      still cross the middle, they just stop competing with the numbers. */
   vec2 c = vec2(p.x * 0.95, p.y * 0.62);
-  light *= mix(0.70, 1.0, smoothstep(0.0, 1.0, dot(c, c)));
+  float calm = mix(0.70, 1.0, smoothstep(0.0, 1.0, dot(c, c)));
+  light *= calm;
+  chroma *= calm;
 
   /* Nearly white, a half step cool. The undertone deepens toward the edges so
      the pane reads as curved glass rather than flat paper.
@@ -212,6 +254,9 @@ void main() {
   /* Screen, so the folds only ever add light and can never darken the ground
      where two of them cross. */
   vec3 col = 1.0 - (1.0 - base) * (1.0 - lit);
+
+  /* The hue goes on after the blend, not through it. */
+  col += chroma * CHROMA_GAIN;
 
   /* A broad sheen crossing the pane on its own much longer period, well below
      the threshold where it reads as a separate element. */

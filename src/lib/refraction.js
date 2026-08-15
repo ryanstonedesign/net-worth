@@ -12,7 +12,7 @@ export const REFRACTION_DIALS = [
   {
     key: 'vibrancy',
     label: 'Refraction vibrancy',
-    hint: 'How far the fold tints sit from white, and how much light they carry.',
+    hint: 'How strongly the folds carry blue, violet and pink. Highlights stay white.',
     def: 1,
     min: 0,
     max: 2,
