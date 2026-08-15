@@ -4,6 +4,7 @@ import ImportSheet from './ImportSheet'
 import { CHART_VARIANTS } from '../lib/chartVariant'
 import { GRAIN_DIALS, GRAIN_MAX } from '../lib/grainOpacity'
 import { PROTOTYPE_THEMES } from '../lib/prototypeTheme'
+import { REFRACTION_DIALS } from '../lib/refraction'
 
 export const SCENARIOS = [
   { value: 'none', label: 'None' },
@@ -23,6 +24,7 @@ export default function PrototypeSettings({
   theme, onThemeChange,
   chartVariant, onChartVariantChange,
   grain, onGrainChange,
+  refraction, onRefractionChange,
 }) {
   const [view, setView] = useState(initialView)
 
@@ -131,6 +133,37 @@ export default function PrototypeSettings({
                       // filled half of the track is painted from this.
                       style={{ '--slider-fill': `${(pct / max) * 100}%` }}
                       onChange={e => onGrainChange(dial.key, Number(e.target.value) / 100)}
+                    />
+                    <p className="slider-hint">{dial.hint}</p>
+                  </div>
+                )
+              })}
+
+              {/* The pane these drive only exists in Holographic, so on any
+                  other theme the dials would move nothing visible. */}
+              {onRefractionChange && theme === 'holographic' && REFRACTION_DIALS.map(dial => {
+                const value = refraction?.[dial.key] ?? dial.def
+                // Shown as a percentage of the tuned design, so 100% is the
+                // shader as written and the dials read against a common zero.
+                const pct = Math.round(value * 100)
+                return (
+                  <div className="form-group" key={dial.key}>
+                    <div className="slider-head">
+                      <label className="form-label" htmlFor={`refraction-${dial.key}`}>{dial.label}</label>
+                      <span className="slider-value">{pct}%</span>
+                    </div>
+                    <input
+                      id={`refraction-${dial.key}`}
+                      className="slider"
+                      type="range"
+                      min={Math.round(dial.min * 100)}
+                      max={Math.round(dial.max * 100)}
+                      step={5}
+                      value={pct}
+                      style={{
+                        '--slider-fill': `${((value - dial.min) / (dial.max - dial.min)) * 100}%`,
+                      }}
+                      onChange={e => onRefractionChange(dial.key, Number(e.target.value) / 100)}
                     />
                     <p className="slider-hint">{dial.hint}</p>
                   </div>

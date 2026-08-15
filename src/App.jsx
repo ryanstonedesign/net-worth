@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard'
 import PrototypeSettings from './components/PrototypeSettings'
 import { readChartVariant, writeChartVariant } from './lib/chartVariant'
 import { applyGrain, readGrain, writeGrain } from './lib/grainOpacity'
+import { applyRefraction, readRefraction, writeRefraction } from './lib/refraction'
 import { readPrototypeTheme, writePrototypeTheme } from './lib/prototypeTheme'
 import StickerSheet from './components/StickerSheet'
 import TopNav from './components/TopNav'
@@ -46,6 +47,18 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
   // this holds them so the sliders have something to render, and pushes each
   // change straight onto the root so the surfaces respond as the user drags.
   const [grain, setGrain] = useState(readGrain)
+  // Same shape as the grain dials, but these reach the background shader as
+  // uniforms rather than CSS custom properties — applyRefraction hands them to
+  // the renderer, which picks them up on its next frame.
+  const [refraction, setRefraction] = useState(readRefraction)
+  const changeRefraction = (key, value) => {
+    setRefraction(prev => {
+      const next = { ...prev, [key]: value }
+      applyRefraction(next)
+      writeRefraction(next)
+      return next
+    })
+  }
   const changeGrain = (key, value) => {
     setGrain(prev => {
       const next = { ...prev, [key]: value }
@@ -226,6 +239,8 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
         onChartVariantChange={changeChartVariant}
         grain={grain}
         onGrainChange={changeGrain}
+        refraction={refraction}
+        onRefractionChange={changeRefraction}
         {...settingsProps}
       />
 

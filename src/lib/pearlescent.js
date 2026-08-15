@@ -1,3 +1,5 @@
+import { getRefraction, subscribeRefraction } from './refraction'
+
 /* Procedural pearlescent pane for the Holographic theme.
  *
  * The picture is light passing through a sheet of frosted iridescent glass:
@@ -26,6 +28,15 @@ precision highp float;
 
 uniform vec2  uResolution;
 uniform float uTime;
+
+/* Prototype dials (lib/refraction). Each is a multiplier on the constants
+   below, so 1.0 is the tuned design and the numbers in this file stay the
+   thing being adjusted rather than being replaced. Speed is not here: it
+   scales the clock on the JS side, so moving it changes the rate from now on
+   instead of rescaling the phase already accumulated and jumping the pane. */
+uniform float uVibrancy;
+uniform float uThickness;
+uniform float uTravel;
 
 /* Iridescent tints. Cool for most of the cycle; the warm pearl is held out of
    the ramp and mixed in separately so it surfaces occasionally rather than on
@@ -102,15 +113,22 @@ vec3 fold(
 ) {
   vec2 q = rot(angle) * p;
   float ph = t * drift;
-  float ridge = sin(q.x * bowFreq + ph) * bow
-              + sin(q.x * bowFreq * 0.53 - ph * 0.79) * bow * 0.52
-              + sin(q.x * bowFreq * 0.23 + ph * 0.37) * bow * 0.86;
+  float sweep = bow * uTravel;
+  float ridge = sin(q.x * bowFreq + ph) * sweep
+              + sin(q.x * bowFreq * 0.53 - ph * 0.79) * sweep * 0.52
+              + sin(q.x * bowFreq * 0.23 + ph * 0.37) * sweep * 0.86;
   float d = q.y - offset - ridge;
 
-  vec3 light = causticLight(d, width, width * 0.32);
+  float w = width * uThickness;
+  vec3 light = causticLight(d, w, w * 0.32);
 
   float warm = smoothstep(0.88, 1.0, sin(t * tintRate * 0.37 + tintPhase * 5.7));
-  return light * iridescence(tintPhase + t * tintRate, warm) * amp;
+
+  /* Vibrancy moves colour and presence together. Below 1 the tint pales toward
+     plain white light and the fold dims, but only to half — it keeps its shape
+     rather than vanishing, so the dial reads as "less colour", not "less pane". */
+  vec3 tint = mix(vec3(1.0), iridescence(tintPhase + t * tintRate, warm), uVibrancy);
+  return light * tint * amp * mix(0.5, 1.0, min(uVibrancy, 1.0));
 }
 
 void main() {
@@ -261,6 +279,9 @@ export function createPearlescentRenderer(canvas) {
   const aPosition = gl.getAttribLocation(program, 'aPosition')
   const uResolution = gl.getUniformLocation(program, 'uResolution')
   const uTime = gl.getUniformLocation(program, 'uTime')
+  const uVibrancy = gl.getUniformLocation(program, 'uVibrancy')
+  const uThickness = gl.getUniformLocation(program, 'uThickness')
+  const uTravel = gl.getUniformLocation(program, 'uTravel')
 
   gl.useProgram(program)
   gl.enableVertexAttribArray(aPosition)
@@ -276,6 +297,7 @@ export function createPearlescentRenderer(canvas) {
   let needsResize = true
   let destroyed = false
   let onLost = null
+  let stillDials = null
 
   const markResize = () => { needsResize = true }
 
@@ -297,9 +319,13 @@ export function createPearlescentRenderer(canvas) {
   function draw(time) {
     if (destroyed || gl.isContextLost()) return
     resize()
+    const dials = getRefraction()
     gl.useProgram(program)
     gl.uniform2f(uResolution, canvas.width, canvas.height)
     gl.uniform1f(uTime, time)
+    gl.uniform1f(uVibrancy, dials.vibrancy)
+    gl.uniform1f(uThickness, dials.thickness)
+    gl.uniform1f(uTravel, dials.travel)
     gl.drawArrays(gl.TRIANGLES, 0, 3)
   }
 
@@ -310,7 +336,10 @@ export function createPearlescentRenderer(canvas) {
        jumping the folds forward by however long it was hidden. */
     const dt = lastDraw ? Math.min((now - lastDraw) / 1000, 0.5) : 0
     lastDraw = now
-    clock += dt
+    /* Speed scales the clock rather than the phase, so turning the dial
+       changes the rate from here on instead of rescaling everything already
+       accumulated and snapping the folds to a new arrangement. */
+    clock += dt * getRefraction().speed
     draw(clock)
   }
 
@@ -318,14 +347,17 @@ export function createPearlescentRenderer(canvas) {
     if (raf) window.cancelAnimationFrame(raf)
     raf = 0
     lastDraw = 0
+    if (stillDials) { stillDials(); stillDials = null }
   }
 
   function start() {
     if (destroyed || raf) return
     if (motionQuery && motionQuery.matches) {
-      /* Still frame, no loop: the pane is composed but holds its angle. */
+      /* Still frame, no loop: the pane is composed but holds its angle. The
+         dials still need to show, so a change repaints the one frame. */
       needsResize = true
       draw(STILL_TIME)
+      stillDials = subscribeRefraction(() => draw(STILL_TIME))
       return
     }
     raf = window.requestAnimationFrame(frame)
