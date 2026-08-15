@@ -143,7 +143,7 @@ export default function PrototypeSettings({
                   other theme the dials would move nothing visible. */}
               {onRefractionChange && theme === 'holographic' && (
                 <div className="dial-group-head">
-                  <span className="form-label">Background refraction</span>
+                  <span className="form-label">Background blobs</span>
                   <button
                     type="button"
                     className="dial-reset"

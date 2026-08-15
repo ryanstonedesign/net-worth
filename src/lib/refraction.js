@@ -3,40 +3,44 @@
 // design controls for evaluating the material, not user data, so they must not
 // travel with a scenario or reach the cloud.
 //
+// The module and its storage key still say "refraction", from the pane's
+// previous incarnation. The keys are deliberately left alone: renaming them
+// would orphan every value anyone has already dialled in.
+//
 // Every value is a multiplier on the shader's own tuned constants, so 1.0 is
 // always "as designed" and the stylesheet-equivalent — the shader source —
-// stays the source of truth. A dial scales a whole family of folds together
+// stays the source of truth. A dial moves the whole set of blobs together
 // rather than pulling one out of step with its neighbours.
 
 export const REFRACTION_DIALS = [
   {
     key: 'vibrancy',
-    label: 'Refraction vibrancy',
-    hint: 'How strongly the folds carry blue, violet and pink. Highlights stay white.',
+    label: 'Blob colour',
+    hint: 'How much of the accent the blobs carry. At zero the pane is bare.',
     def: 1,
     min: 0,
     max: 2,
   },
   {
     key: 'speed',
-    label: 'Refraction speed',
-    hint: 'How fast the folds drift. At zero the pane holds its current angle.',
+    label: 'Blob speed',
+    hint: 'How fast they drift and change shape. At zero the pane holds still.',
     def: 1,
     min: 0,
     max: 3,
   },
   {
     key: 'thickness',
-    label: 'Refraction thickness',
-    hint: 'Width of each fold — a thin filament through to a broad soft band.',
+    label: 'Blob size',
+    hint: 'How large each one is — separate shapes through to one soft wash.',
     def: 1,
     min: 0.3,
     max: 3,
   },
   {
     key: 'travel',
-    label: 'Refraction travel',
-    hint: 'How far a fold sweeps across the pane before it turns back.',
+    label: 'Blob travel',
+    hint: 'How far each one roams from where it sits.',
     def: 1,
     min: 0,
     max: 2.5,
