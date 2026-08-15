@@ -2,19 +2,24 @@ import { getRefraction, subscribeRefraction } from './refraction'
 
 /* Procedural pearlescent pane for the Holographic theme.
  *
- * The picture is light passing through a sheet of frosted iridescent glass:
- * a nearly-white ground, a handful of very large curved caustic folds running
- * off every edge, and blue, violet and pink banked along their shoulders.
- * Nothing here is a moving gradient — each fold is a distance field with a
- * caustic falloff, and the whole pane is bent by a smooth refraction field
- * before any of it is evaluated.
+ * The picture is sunlight through a prism falling across a neutral surface:
+ * a flat grey ground and a fan of shafts thrown from one source off the top
+ * left, each blown white along its axis with the spectrum separating out
+ * along its flanks.
  *
- * Luminance and colour are built separately and joined at the end. The folds
+ * The colour is not painted on. Each shaft is summed from six samples of the
+ * visible spectrum, offset across the beam's width the way a prism spreads
+ * wavelengths by angle. Where the copies still overlap they sum to white;
+ * where only one end of the range reaches, what is left is that wavelength.
+ * Red on one flank and violet on the other is then a property of the
+ * geometry, and it stays consistent as the shaft moves.
+ *
+ * Luminance and colour are built separately and joined at the end. The shafts
  * compose by screen, which can only add, so on a ground this light they can
- * only ever approach white — which is right for a highlight and useless for a
- * hue. Colour is therefore accumulated as chroma with its luminance removed
- * and added after the blend, banded to a ring around each filament so the
- * cores stay white and the shoulders carry the tint.
+ * only ever approach white — right for a highlight, useless for a hue. Colour
+ * is accumulated instead as chroma with its luminance removed and added after
+ * the blend, weighted by each shaft's own brightness so it falls away both at
+ * the white core and out in the dark.
  *
  * Everything moves on its own period, and the periods are mutually
  * incommensurate to five decimal places, so the composite does not return to
@@ -44,42 +49,37 @@ uniform float uVibrancy;
 uniform float uThickness;
 uniform float uTravel;
 
-/* Iridescent tints, running azure -> blue -> violet -> pink. The warm pearl is
-   held out of the ramp and mixed in separately so it surfaces occasionally
-   rather than on every pass, the way a warm glint only appears at certain
-   angles.
-
-   Each stop is chosen so its green channel sits at or below its own luminance.
-   Only the chroma of these is used, and a stop with green above its luma
-   contributes a green cast — which is how a blue-and-pink pane picks up the
-   mint fringes that read as a rainbow. */
-const vec3 TINT_AZURE  = vec3(0.36, 0.62, 1.00);
-const vec3 TINT_BLUE   = vec3(0.42, 0.52, 1.00);
-const vec3 TINT_VIOLET = vec3(0.66, 0.44, 1.00);
-const vec3 TINT_PINK   = vec3(1.00, 0.52, 0.90);
-const vec3 TINT_PEARL  = vec3(1.00, 0.86, 0.66);
-
-/* Rec.601 weights. Used to strip the luminance out of a tint so only its
-   chroma is left — see the fold below. */
+/* Rec.601 weights. Used to split a beam's colour into the achromatic part that
+   composes by screen and the chroma that is added after it. */
 const vec3 LUMA = vec3(0.299, 0.587, 0.114);
+
+/* The visible spectrum sampled at six points, red through violet, from three
+   lobes: gauss(t, 0.07, 0.17) + 0.45 * gauss(t, 0.96, 0.13) for red, then
+   gauss(t, 0.43, 0.18) and gauss(t, 0.79, 0.20). Lobes rather than a hue
+   rotation — a hue ramp gives every band equal weight and reads as a colour
+   wheel laid on the screen, while dispersed light is dominated by the middle
+   of the range with the ends falling away. The second red lobe up at the
+   violet end is what gives violet its magenta cast instead of a flat blue.
+
+   Precomputed because the weights never change, and six live evaluations would
+   cost more than the beam samples they weight. SPECTRUM_SUM is their total;
+   dividing by it is what makes a fully overlapped beam come out exactly white.
+   Recompute the two together if either is touched. */
+const vec3 SPEC_0 = vec3(0.919, 0.058, 0.000);
+const vec3 SPEC_1 = vec3(0.747, 0.442, 0.013);
+const vec3 SPEC_2 = vec3(0.152, 0.986, 0.149);
+const vec3 SPEC_3 = vec3(0.008, 0.640, 0.637);
+const vec3 SPEC_4 = vec3(0.211, 0.121, 0.999);
+const vec3 SPEC_5 = vec3(0.429, 0.007, 0.576);
+const vec3 SPECTRUM_SUM = vec3(2.466, 2.254, 2.374);
+
+/* How hard the separated colour is pushed into the pane. */
+const float CHROMA_GAIN = 1.0;
 
 mat2 rot(float a) {
   float s = sin(a);
   float c = cos(a);
   return mat2(c, -s, s, c);
-}
-
-/* Cyclic four-stop ramp. The interpolant is smoothstepped so the ramp is
-   continuous in its first derivative at every stop — a linear mix leaves a
-   crease at each one, and a crease across a fold this wide reads as a
-   rainbow band. */
-vec3 iridescence(float phase, float warm) {
-  float t = fract(phase) * 4.0;
-  float i = floor(t);
-  float f = smoothstep(0.0, 1.0, t - i);
-  vec3 a = i < 0.5 ? TINT_AZURE : (i < 1.5 ? TINT_BLUE   : (i < 2.5 ? TINT_VIOLET : TINT_PINK));
-  vec3 b = i < 0.5 ? TINT_BLUE  : (i < 1.5 ? TINT_VIOLET : (i < 2.5 ? TINT_PINK   : TINT_AZURE));
-  return mix(mix(a, b, f), TINT_PEARL, warm);
 }
 
 /* Refraction through an uneven pane: the path bends by the local gradient of a
@@ -94,105 +94,74 @@ vec2 bend(vec2 p, float t) {
   return p + vec2(
     sin(p.y * 1.19 + t * 0.01253) + 0.42 * sin(p.y * 2.31 - t * 0.04871),
     cos(p.x * 1.07 - t * 0.01031) + 0.42 * cos(p.x * 2.53 + t * 0.04139)
-  ) * 0.19;
+  ) * 0.10;
 }
 
-/* A caustic is a fold in the wavefront, not a blurred line: a narrow bright
-   core sitting inside a much wider shoulder. The two widths are deliberately
-   far apart — tie them together and the core dissolves into the shoulder, and
-   every fold overlaps every other into one flat wash. */
-const float HALO_SPREAD = 3.6;
-
-/* Dispersion belongs to the sharp edge of the fold. By the time light has
-   scattered out into the shoulder the wavelengths have mixed back together,
-   so only the core is split per channel — splitting the shoulder as well is
-   what smears a spectrum across the whole band and reads as a rainbow. */
-vec3 causticLight(float d, float w, float spread) {
-  float mid = exp(-abs(d) / w);
-  float lo = exp(-abs(d - spread) / w);
-  float hi = exp(-abs(d + spread) / w);
-
-  /* Green is the mean of the two shifted samples rather than a third sample of
-     its own. Taken at the centre it would peak alone there — both neighbours
-     are offset away from the ridge, green is not — and that spike is a yellow
-     green line down the middle of every fold. Averaging leaves dispersion as a
-     clean red-to-blue axis with no green excursion anywhere on it. */
-  vec3 split = vec3(lo, (lo + hi) * 0.5, hi);
-  /* Held back most of the way to the achromatic core. At full strength the
-     flanks separate into saturated red and cyan lines and the fold reads as a
-     little rainbow; this leaves the shift as a fringe on an otherwise white
-     filament, which is what the glass actually does. */
-  vec3 core = mix(vec3(mid), split, 0.50);
-
-  float h = w * HALO_SPREAD;
-  float halo = exp(-(d * d) / (h * h));
-  return core * 0.70 + vec3(halo * 0.30);
+/* A shaft of light: soft edged, brightest on its axis, no boundary anywhere. */
+float beam(float d, float w) {
+  float z = d / w;
+  return exp(-z * z);
 }
 
-/* Both are multiples of a fold's own drift, so each fold keeps its own periods
-   and the set stays mutually incommensurate across folds. The ratios are
-   deliberately not whole numbers: at 9.0 the ripple would close on the arc
-   every ninth pass and the fold would repeat on the arc's period. */
-/* How hard the banked chroma is pushed into the pane. */
-const float CHROMA_GAIN = 0.46;
-
-const float BREATHE_RATIO = 4.73;
+/* Multiple of a shaft's own drift, so each keeps its own period and the set
+   stays incommensurate. Fractional on purpose: at a whole number the ripple
+   would close on the wander every nth pass and the shaft would repeat. */
 const float RIPPLE_RATIO = 9.19;
 
-/* One caustic fold: a curved ridge, the distance to it, and the caustic
-   falloff of that distance. The ridge is three sines of unrelated period, so
-   the curve is asymmetric and never straightens out as the phases drift. */
-void fold(
-  vec2 p, float t, float angle, float drift, float bowFreq, float bow,
-  float width, float offset, float tintPhase, float tintRate, float amp,
+/* One shaft through the prism.
+
+   Each wavelength leaves the glass at its own angle, so the beam is a stack of
+   copies of itself offset across its width. Where they all still overlap the
+   sum is white — that is the blown core — and out at the edges, where only the
+   long or the short end of the range still reaches, what is left is the
+   wavelength itself. The fringe is a consequence of the geometry, not a colour
+   painted onto an edge, which is why the separation runs red on one flank and
+   violet on the other rather than cycling through a palette.
+
+   The dispersion has to stay well under the beam width. Push it past that and
+   the wavelengths stop overlapping anywhere, the core turns green — green
+   being the middle of the range and so the middle of the fan — and the shaft
+   reads as a striped ribbon instead of light. */
+void ray(
+  vec2 p, float t, float angle, float drift, float bow, float width,
+  float spread, float offset, float amp,
   inout vec3 light, inout vec3 chroma
 ) {
   vec2 q = rot(angle) * p;
   float ph = t * drift;
 
-  /* The arc opens and closes on its own cycle, so the fold is never sitting at
-     one fixed curvature waiting for its phase to come round. */
-  float sweep = bow * uTravel * (1.0 + 0.25 * sin(t * drift * BREATHE_RATIO + tintPhase * 4.1));
+  /* Shafts stay close to straight. A beam is the path light took; curvature
+     much past this reads as a bent object rather than a cast of light, so what
+     moves is where the shaft falls, not how bent it is. The fast term is the
+     travelling ripple that stops it drifting as one rigid piece. */
+  float wander = bow * uTravel * (
+      sin(q.x * 0.52 + ph)
+    + 0.55 * sin(q.x * 0.19 - ph * 0.71)
+    + 0.20 * sin(q.x * 1.30 - ph * RIPPLE_RATIO)
+  );
 
-  float ridge = sin(q.x * bowFreq + ph) * sweep
-              + sin(q.x * bowFreq * 0.53 - ph * 0.79) * sweep * 0.52
-              + sin(q.x * bowFreq * 0.23 + ph * 0.37) * sweep * 0.86;
-
-  /* A ripple travelling along the fold: a fraction of the arc's amplitude at
-     many times its phase velocity. The arc alone only rocks, and a rock this
-     slow reads as a rigid thing being moved rather than as light — this is
-     what keeps the curve moving through itself while the arc drifts. */
-  float rp = t * drift * RIPPLE_RATIO;
-  ridge += sin(q.x * bowFreq * 2.7 - rp) * sweep * 0.17
-         + sin(q.x * bowFreq * 4.3 + rp * 0.63) * sweep * 0.085;
-
-  float d = q.y - offset - ridge;
-
+  float d = q.y - offset - wander;
   float w = width * uThickness;
-  vec3 lobe = causticLight(d, w, w * 0.32);
-  float strength = lobe.g;
+  float disp = spread * w;
 
-  float warm = smoothstep(0.88, 1.0, sin(t * tintRate * 0.37 + tintPhase * 5.7));
-  vec3 tint = iridescence(tintPhase + t * tintRate, warm);
+  vec3 sum = SPEC_0 * beam(d + 0.50 * disp, w)
+           + SPEC_1 * beam(d + 0.30 * disp, w)
+           + SPEC_2 * beam(d + 0.10 * disp, w)
+           + SPEC_3 * beam(d - 0.10 * disp, w)
+           + SPEC_4 * beam(d - 0.30 * disp, w)
+           + SPEC_5 * beam(d - 0.50 * disp, w);
 
-  /* Hue rides a band around the filament — not the core, and not the far
-     shoulder either. The core is where the most light lands, and light that
-     bright reads white however it was split, so tinting it only stains the
-     highlight. The outer shoulder is the other failure: let colour run all the
-     way down it and the fold stops being an edge with a fringe and becomes a
-     wide coloured wash. Banding it at both ends is what keeps the hue reading
-     as a fringe on white light. */
-  float flank = smoothstep(0.06, 0.30, strength) * (1.0 - smoothstep(0.34, 0.88, strength));
+  vec3 c = sum / SPECTRUM_SUM;
+  float lum = dot(c, LUMA);
 
-  /* Luminance carries no tint of its own beyond the dispersion already in the
-     core, which is what keeps highlights white. */
-  light += lobe * amp;
-
-  /* Chroma with its luminance removed, so adding it colours the pane without
-     lifting or dropping brightness anywhere. On a ground this light that is
-     the only way hue can read at all: screen blending can only add, and adding
-     blue to something already near white just returns near white. */
-  chroma += (tint - dot(tint, LUMA)) * (strength * flank * amp * uVibrancy);
+  /* Luminance composes by screen with every other shaft; colour is carried
+     separately and added after that blend, so a crossing stays white instead
+     of stacking two tints. Weighting chroma by the shaft's own brightness is
+     what keeps colour where there is light to be split — it falls to nothing
+     at the white core, where every wavelength is still present, and again out
+     in the dark where none of them are. */
+  light += vec3(lum) * amp;
+  chroma += (c - lum) * lum * (amp * uVibrancy * CHROMA_GAIN);
 }
 
 void main() {
@@ -217,21 +186,30 @@ void main() {
 
   vec3 light = vec3(0.0);
   vec3 chroma = vec3(0.0);
-  /* Angle, drift, bow frequency, bow, core width, offset, tint phase, tint
-     rate, amplitude. Bow frequencies sit near a half cycle across the pane, so
-     each fold is one gentle arc rather than a wave; the angles are spread so
-     the arcs cross each other instead of stacking into a grain. */
-  fold(w, t,  0.21, 0.00787, 1.32, 0.40, 0.09, -1.02, 0.00, 0.00411, 1.20, light, chroma);
-  fold(w, t, -0.74, 0.00541, 1.07, 0.52, 0.15, -0.34, 0.37, 0.00271, 1.08, light, chroma);
-  fold(w, t,  0.58, 0.00997, 1.63, 0.34, 0.07,  0.28, 0.62, 0.00533, 0.96, light, chroma);
-  fold(w, t, -1.19, 0.00673, 1.19, 0.46, 0.12,  0.86, 0.81, 0.00193, 1.14, light, chroma);
-  fold(w, t,  1.42, 0.00439, 0.91, 0.61, 0.19,  1.42, 0.14, 0.00347, 0.90, light, chroma);
+  /* Angle, drift, wander, width, dispersion, offset, amplitude. The angles sit
+     within a few degrees of each other so the shafts read as one cast of light
+     from a single source off the top left, the way a prism throws them, rather
+     than as a set of independent streaks. Widths and dispersions vary the most:
+     a narrow shaft with a wide fan is the one that shows colour, a broad soft
+     one is mostly the glow between them. A negative dispersion turns the fan
+     over, putting violet on the flank that would otherwise be red — without a
+     couple of those every shaft leans the same way and the pane reads as one
+     gradient rather than as separate casts. */
+  ray(w, t, -0.58, 0.00787, 0.08, 0.22,  0.42, -1.32, 0.95, light, chroma);
+  ray(w, t, -0.72, 0.00541, 0.07, 0.09, -0.62, -0.58, 1.70, light, chroma);
+  ray(w, t, -0.66, 0.00997, 0.10, 0.34,  0.30,  0.12, 0.70, light, chroma);
+  ray(w, t, -0.80, 0.00673, 0.06, 0.13,  0.58,  0.86, 1.30, light, chroma);
+  ray(w, t, -0.52, 0.00439, 0.11, 0.26,  0.38,  1.58, 0.85, light, chroma);
 
   /* The card stack sits in the middle of the screen, so light is pulled down
      over a tall ellipse there. It is attenuated rather than cut: the folds
      still cross the middle, they just stop competing with the numbers. */
+  /* Shafts this bright and this saturated need a deeper well than the folds
+     did: a rainbow running across a column of figures is the one thing the
+     pane must not do. The drama stays out at the edges, which is where the
+     cast reads anyway. */
   vec2 c = vec2(p.x * 0.95, p.y * 0.62);
-  float calm = mix(0.70, 1.0, smoothstep(0.0, 1.0, dot(c, c)));
+  float calm = mix(0.42, 1.0, smoothstep(0.0, 1.0, dot(c, c)));
   light *= calm;
   chroma *= calm;
 
@@ -243,8 +221,8 @@ void main() {
      ground at 0.93 leaves seven percent of range for the entire effect no
      matter how hard the folds are driven. Dropping it a few points is worth
      far more contrast than raising amplitude, and costs nothing in calm. */
-  float edge = smoothstep(0.15, 1.75, length(p * vec2(1.0, 0.62)));
-  vec3 base = mix(vec3(0.898, 0.905, 0.926), vec3(0.802, 0.816, 0.864), edge);
+  float edge = smoothstep(0.15, 1.85, length(p * vec2(1.0, 0.62)));
+  vec3 base = mix(vec3(0.862, 0.864, 0.871), vec3(0.812, 0.815, 0.826), edge);
 
   /* Exposure rather than a clamp: where folds pile up, a clamp flattens the
      overlap into a plate of pure white with a visible edge, while this rolls
@@ -256,7 +234,7 @@ void main() {
   vec3 col = 1.0 - (1.0 - base) * (1.0 - lit);
 
   /* The hue goes on after the blend, not through it. */
-  col += chroma * CHROMA_GAIN;
+  col += chroma;
 
   /* A broad sheen crossing the pane on its own much longer period, well below
      the threshold where it reads as a separate element. */
