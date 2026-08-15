@@ -225,6 +225,35 @@ html[data-theme="holographic"] .app-shell {
   background-color: transparent;
 }
 
+/* Procedural pane (components/PearlescentBackground). It sits on the same
+   layer as .app-bg and later in the DOM, so it covers the flat fill while
+   every shell — all of which start at z-index 1 — still paints above it. */
+.holo-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* With the canvas live, the shells that paint over it drop their own
+   atmosphere — those gradients were standing in for this, and left on top they
+   would tint it. .app-bg deliberately keeps its fill: it sits underneath as
+   the ground the canvas is drawn against. The flag is only set once a context
+   is actually running, so losing WebGL restores the gradients. */
+html[data-theme="holographic"][data-holo-bg="live"] :is(
+  .app-shell,
+  .scenario-stage--out,
+  .auth-shell,
+  .lp,
+  .ds-page
+) {
+  background-color: transparent;
+  background-image: none;
+}
+
 html[data-theme="holographic"] :is(
   .app-bg,
   .app-shell,
