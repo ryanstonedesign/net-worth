@@ -927,15 +927,26 @@ html[data-theme="holographic"] .cat-total-label {
   color: var(--slate-700);
 }
 
+/* These values are part of the record, not fields to fill in — at rest they are
+   just the number in the row, with no rule under them. The underline is the
+   edit affordance and appears only while the field is focused; it is reserved
+   as transparent so focus adds no layout shift. */
 html[data-theme="holographic"] :is(.cat-account-input, .cat-contrib-input) {
   color: var(--ink-900);
-  border-bottom-color: rgba(86, 97, 116, 0.24);
+  border-bottom-color: transparent;
 }
 
-html[data-theme="holographic"] :is(.cat-account-input, .cat-contrib-input):focus {
+/* The underline is the whole focus indicator here. The theme's global focus
+   ring is suppressed on these two inputs — it draws a box around a value that
+   is meant to read as text, and text fields match :focus-visible on pointer
+   focus too, so it would appear on every tap. Both declarations need
+   !important to beat the global rule's own. */
+html[data-theme="holographic"] :is(.cat-account-input, .cat-contrib-input):focus,
+html[data-theme="holographic"] :is(.cat-account-input, .cat-contrib-input):focus-visible {
   color: #135078;
   border-bottom-color: var(--cyan-500);
-  box-shadow: 0 2px 0 rgba(155, 140, 255, 0.18);
+  outline: none !important;
+  box-shadow: 0 2px 0 rgba(155, 140, 255, 0.18) !important;
 }
 
 html[data-theme="holographic"] .cat-total-amount {
