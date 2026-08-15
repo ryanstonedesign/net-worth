@@ -815,13 +815,13 @@ html[data-theme="holographic"] .net-worth-chart-well {
   overflow: visible;
 }
 
+/* No drafting grid on this theme. It was borrowed from the stone plane, where
+   the rules read as scored into the surface; over the refraction pane they are
+   a second, rigid geometry laid across a moving one, and the two fight. The
+   element still renders — Dashboard measures it to phase the columns — it just
+   draws nothing. */
 html[data-theme="holographic"] .nw-grid-plane {
-  opacity: 0.9;
-  background-image:
-    linear-gradient(to right, rgba(71, 85, 105, 0.075) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(71, 85, 105, 0.055) 1px, transparent 1px);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 88%, transparent 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 88%, transparent 100%);
+  background-image: none;
 }
 
 html[data-theme="holographic"] .net-worth-chart-well svg [id$="-socket"] stop:first-child {
