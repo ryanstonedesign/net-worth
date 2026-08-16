@@ -15,8 +15,8 @@
 export const REFRACTION_DIALS = [
   {
     key: 'vibrancy',
-    label: 'Blob colour',
-    hint: 'How much of the accent the blobs carry. At zero the pane is bare.',
+    label: 'Blob opacity',
+    hint: 'Peak opacity for each blob. Every blob fades from fully clear up to this level.',
     def: 1,
     min: 0,
     max: 2,

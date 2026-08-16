@@ -37,6 +37,7 @@ uniform float uTime;
 uniform float uVibrancy;
 uniform float uThickness;
 uniform float uTravel;
+uniform float uBlobFade[6];
 
 /* Sampled from --holo-primary, the gradient the primary button is painted
    with: its teal, its blue, its violet and the indigo it settles into. The
@@ -100,19 +101,30 @@ float blob(vec2 p, vec2 centre, float radius, float t, float seed) {
    painting over the earlier. */
 void place(
   vec2 p, float t, vec2 home, float radius, float driftX, float driftY,
-  float phase, float tintPhase, float tintRate, float seed,
+  float phase, float tintPhase, float tintRate, float seed, float visibility,
   inout vec3 tint, inout float cover
 ) {
+  /* The original rates took 11–30 minutes to complete one positional orbit,
+     which made a running pane look still. Keep the same paths and their
+     incommensurate relationship, but bring the default into a calm 1–4 minute
+     range. Shape and colour remain slower than position so the pane does not
+     become busy. */
+  const float DRIFT_RATE = 8.0;
+  const float SHAPE_RATE = 2.5;
+  const float TINT_RATE = 3.0;
   vec2 centre = home + uTravel * vec2(
-    0.46 * sin(t * driftX + phase),
-    0.38 * cos(t * driftY + phase * 1.7)
+    0.46 * sin(t * driftX * DRIFT_RATE + phase),
+    0.38 * cos(t * driftY * DRIFT_RATE + phase * 1.7)
   );
   /* Breathing on a period of its own, so size and position never come round
      together and the blob is never twice the same shape in the same place. */
-  float r = radius * uThickness * (1.0 + 0.22 * sin(t * driftX * 2.31 + seed));
+  float r = radius * uThickness * (1.0 + 0.22 * sin(t * driftX * DRIFT_RATE * 2.31 + seed));
 
-  float m = blob(p, centre, r, t, seed);
-  tint += accent(tintPhase + t * tintRate) * m;
+  /* visibility is supplied by an independent randomized cadence on the JS
+     side. Multiplying coverage here makes the blob truly disappear at zero;
+     uVibrancy remains the peak opacity selected in settings. */
+  float m = blob(p, centre, r, t * SHAPE_RATE, seed) * visibility;
+  tint += accent(tintPhase + t * tintRate * TINT_RATE) * m;
   cover += m;
 }
 
@@ -140,12 +152,12 @@ void main() {
   /* Home, radius, drift rates, path phase, colour phase, colour rate, seed.
      Every rate is mutually incommensurate, so the set never returns to an
      arrangement it has held before — there is no loop to notice. */
-  place(g, t, vec2(-0.62, -0.78), 0.62, 0.00731, 0.00519, 0.00, 0.00, 0.00317, 1.7, tint, cover);
-  place(g, t, vec2( 0.58, -0.34), 0.48, 0.00463, 0.00817, 1.90, 0.28, 0.00211, 3.1, tint, cover);
-  place(g, t, vec2(-0.34,  0.41), 0.71, 0.00907, 0.00371, 3.70, 0.55, 0.00409, 5.2, tint, cover);
-  place(g, t, vec2( 0.67,  0.92), 0.54, 0.00587, 0.00673, 5.10, 0.79, 0.00173, 0.9, tint, cover);
-  place(g, t, vec2(-0.12,  1.24), 0.44, 0.00349, 0.00941, 2.40, 0.13, 0.00283, 4.4, tint, cover);
-  place(g, t, vec2( 0.24, -1.18), 0.58, 0.00659, 0.00427, 4.60, 0.66, 0.00361, 2.6, tint, cover);
+  place(g, t, vec2(-0.62, -0.78), 0.62, 0.00731, 0.00519, 0.00, 0.00, 0.00317, 1.7, uBlobFade[0], tint, cover);
+  place(g, t, vec2( 0.58, -0.34), 0.48, 0.00463, 0.00817, 1.90, 0.28, 0.00211, 3.1, uBlobFade[1], tint, cover);
+  place(g, t, vec2(-0.34,  0.41), 0.71, 0.00907, 0.00371, 3.70, 0.55, 0.00409, 5.2, uBlobFade[2], tint, cover);
+  place(g, t, vec2( 0.67,  0.92), 0.54, 0.00587, 0.00673, 5.10, 0.79, 0.00173, 0.9, uBlobFade[3], tint, cover);
+  place(g, t, vec2(-0.12,  1.24), 0.44, 0.00349, 0.00941, 2.40, 0.13, 0.00283, 4.4, uBlobFade[4], tint, cover);
+  place(g, t, vec2( 0.24, -1.18), 0.58, 0.00659, 0.00427, 4.60, 0.66, 0.00361, 2.6, uBlobFade[5], tint, cover);
 
   /* Soft union. Adding coverage outright would clip flat wherever three blobs
      meet; this approaches full without ever reaching it, so an overlap reads
@@ -184,9 +196,74 @@ void main() {
 const MAX_PIXELS = 480000
 const TARGET_FPS = 30
 const FRAME_INTERVAL = 1000 / TARGET_FPS
-/* Time to freeze at when motion is not wanted: far enough in that the folds
+/* Time to freeze at when motion is not wanted: far enough in that the blobs
    have drifted into an interesting arrangement rather than their t=0 one. */
 const STILL_TIME = 137.0
+
+export const BLOB_COUNT = 6
+
+const FADE_PHASES = ['fade-in', 'visible', 'fade-out', 'hidden']
+const FADE_DURATION = {
+  'fade-in': [7, 15],
+  visible: [4, 12],
+  'fade-out': [8, 17],
+  hidden: [2, 8],
+}
+
+function randomBetween(random, min, max) {
+  return min + (max - min) * random()
+}
+
+function phaseDuration(phase, random) {
+  const [min, max] = FADE_DURATION[phase]
+  return randomBetween(random, min, max)
+}
+
+function nextPhase(phase) {
+  return FADE_PHASES[(FADE_PHASES.indexOf(phase) + 1) % FADE_PHASES.length]
+}
+
+function smoothUnit(value) {
+  const t = Math.min(1, Math.max(0, value))
+  return t * t * (3 - 2 * t)
+}
+
+/* Each blob owns an independent four-part cadence. Durations are chosen again
+   at every phase boundary rather than once at startup, so the fades do not
+   settle into six repeating metronomes. The index offset guarantees the first
+   frame is a mix of states even if a deterministic random source returns the
+   same value for every blob. */
+export function createBlobFadeStates(random = Math.random) {
+  return Array.from({ length: BLOB_COUNT }, (_, index) => {
+    const phase = FADE_PHASES[(index + Math.floor(random() * FADE_PHASES.length)) % FADE_PHASES.length]
+    const duration = phaseDuration(phase, random)
+    return { phase, duration, elapsed: random() * duration }
+  })
+}
+
+export function blobFadeOpacity(state) {
+  const progress = state.duration > 0 ? state.elapsed / state.duration : 1
+  if (state.phase === 'fade-in') return smoothUnit(progress)
+  if (state.phase === 'visible') return 1
+  if (state.phase === 'fade-out') return 1 - smoothUnit(progress)
+  return 0
+}
+
+/* Mutates the small renderer-owned state array and returns the six values the
+   shader consumes. Delta is already scaled by the speed setting, which means
+   speed zero freezes movement and fades together. */
+export function advanceBlobFadeStates(states, delta, random = Math.random) {
+  const step = Number.isFinite(delta) ? Math.max(0, delta) : 0
+  for (const state of states) {
+    state.elapsed += step
+    while (state.elapsed >= state.duration) {
+      state.elapsed -= state.duration
+      state.phase = nextPhase(state.phase)
+      state.duration = phaseDuration(state.phase, random)
+    }
+  }
+  return Float32Array.from(states, blobFadeOpacity)
+}
 
 function compile(gl, type, source) {
   const shader = gl.createShader(type)
@@ -264,6 +341,7 @@ export function createPearlescentRenderer(canvas) {
   const uVibrancy = gl.getUniformLocation(program, 'uVibrancy')
   const uThickness = gl.getUniformLocation(program, 'uThickness')
   const uTravel = gl.getUniformLocation(program, 'uTravel')
+  const uBlobFade = gl.getUniformLocation(program, 'uBlobFade[0]')
 
   gl.useProgram(program)
   gl.enableVertexAttribArray(aPosition)
@@ -280,6 +358,8 @@ export function createPearlescentRenderer(canvas) {
   let destroyed = false
   let onLost = null
   let stillDials = null
+  const blobFadeStates = createBlobFadeStates()
+  let blobFadeValues = Float32Array.from(blobFadeStates, blobFadeOpacity)
 
   const markResize = () => { needsResize = true }
 
@@ -308,6 +388,7 @@ export function createPearlescentRenderer(canvas) {
     gl.uniform1f(uVibrancy, dials.vibrancy)
     gl.uniform1f(uThickness, dials.thickness)
     gl.uniform1f(uTravel, dials.travel)
+    gl.uniform1fv(uBlobFade, blobFadeValues)
     gl.drawArrays(gl.TRIANGLES, 0, 3)
   }
 
@@ -320,8 +401,11 @@ export function createPearlescentRenderer(canvas) {
     lastDraw = now
     /* Speed scales the clock rather than the phase, so turning the dial
        changes the rate from here on instead of rescaling everything already
-       accumulated and snapping the folds to a new arrangement. */
-    clock += dt * getRefraction().speed
+       accumulated and snapping the blobs to a new arrangement. The same
+       scaled delta drives their fade cadence, so speed zero holds both. */
+    const scaledDt = dt * getRefraction().speed
+    clock += scaledDt
+    blobFadeValues = advanceBlobFadeStates(blobFadeStates, scaledDt)
     draw(clock)
   }
 
