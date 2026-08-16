@@ -1110,7 +1110,7 @@ html[data-theme="holographic"] .import-preview,
 html[data-theme="holographic"] .import-row,
 html[data-theme="holographic"] .recovery-phrase {
   background: rgba(255, 255, 255, 0.34);
-  border: 1px solid rgba(255, 255, 255, 0.74);
+  border: 1px solid transparent;
   border-radius: 18px;
   box-shadow: var(--shadow-card);
   -webkit-backdrop-filter: blur(16px) saturate(120%);
@@ -1153,7 +1153,10 @@ html[data-theme="holographic"] .auth-card.card {
     radial-gradient(circle at 100% 0%, rgba(155, 140, 255, 0.11), transparent 34%),
     radial-gradient(circle at 0% 100%, rgba(43, 220, 216, 0.1), transparent 38%),
     rgba(255, 255, 255, 0.54);
-  border: 1px solid rgba(255, 255, 255, 0.88);
+  /* Transparent: the gradient ring is this card's only edge. A painted one
+     here outranks the shared card rule — two classes to its one — and comes
+     back as a second, flatter line beside the ring. */
+  border: 1px solid transparent;
   border-radius: 28px;
   box-shadow: var(--shadow-lg), 0 0 42px rgba(125, 108, 255, 0.09);
   -webkit-backdrop-filter: blur(28px) saturate(135%);
@@ -1958,9 +1961,9 @@ html[data-theme="holographic"] {
   --holo-primary:
     radial-gradient(
       circle at calc(12% + var(--holo-drift-x)) calc(18% + var(--holo-drift-y)),
-      #5bfff1 0%,
-      rgba(24, 214, 210, 0.98) 16%,
-      rgba(18, 181, 202, 0.72) 34%,
+      #3ed3e6 0%,
+      rgba(28, 186, 216, 0.98) 16%,
+      rgba(22, 162, 205, 0.72) 34%,
       transparent 58%
     ),
     radial-gradient(
@@ -1987,6 +1990,16 @@ html[data-theme="holographic"] {
      the top edge, falling to almost nothing at the bottom, the way a single
      light above the surface would catch it. It replaces a conic spectrum that
      had to be rotated per element and layered with glows to read at all. */
+  /* The primary button carries the same edge at a quarter strength. Its fill
+     is saturated rather than near-white, so an edge that reads as a highlight
+     on a card reads as a hard white outline here. */
+  --holo-primary-stroke: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.25) 0%,
+    rgba(255, 255, 255, 0.12) 45%,
+    rgba(255, 255, 255, 0) 100%
+  );
+
   --holo-refractive-stroke: linear-gradient(
     180deg,
     rgba(255, 255, 255, 1) 0%,
@@ -2116,7 +2129,7 @@ html[data-theme="holographic"] :is(
   padding: 1.5px;
   pointer-events: none;
   border-radius: inherit;
-  background: var(--holo-refractive-stroke);
+  background: var(--holo-primary-stroke);
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
@@ -2484,4 +2497,22 @@ html[data-theme="holographic"] :is(
    item, where it eats half the track and shoves both labels off their slots. */
 html[data-theme="holographic"] :is(.type-toggle-thumb, .sign-toggle .type-toggle-thumb) {
   position: absolute;
+}
+
+/* Focus is one 1px ring outside the field. The theme's global focus-visible
+   rule paints a 2px outline at a 3px offset and a two-layer shadow under it,
+   and a text field matches focus-visible on pointer focus too — so tapping a
+   field drew an outline, a ring, and a coloured border all at once. */
+html[data-theme="holographic"] :is(
+  .input,
+  .select,
+  .select-wrap > select,
+  .custom-range-input,
+  .update-amount-input,
+  .side-nav-item-input,
+  textarea
+):is(:focus, :focus-visible) {
+  outline: none !important;
+  border-color: transparent;
+  box-shadow: 0 0 0 1px var(--cyan-500);
 }
