@@ -38,13 +38,14 @@ uniform float uVibrancy;
 uniform float uThickness;
 uniform float uTravel;
 
-/* The four stops of --holo-ai, the gradient the primary button is painted
-   with. The blobs are that colour and nothing else — they are the product's
-   accent drifting behind it, not a separate palette. */
-const vec3 STOP_0 = vec3(0.039, 0.671, 0.592);
-const vec3 STOP_1 = vec3(0.094, 0.776, 0.773);
-const vec3 STOP_2 = vec3(0.122, 0.686, 1.000);
-const vec3 STOP_3 = vec3(0.490, 0.424, 1.000);
+/* Sampled from --holo-primary, the gradient the primary button is painted
+   with: its teal, its blue, its violet and the indigo it settles into. The
+   blobs are that colour and nothing else — they are the product's accent
+   drifting behind it, not a separate palette. Follow the button if it moves. */
+const vec3 STOP_0 = vec3(0.357, 1.000, 0.945);
+const vec3 STOP_1 = vec3(0.208, 0.682, 1.000);
+const vec3 STOP_2 = vec3(0.663, 0.639, 1.000);
+const vec3 STOP_3 = vec3(0.282, 0.325, 0.949);
 
 /* How far a blob is allowed to pull the ground toward its own colour at full
    coverage. Low on purpose: these are a tint on the pane, not shapes on it. */
