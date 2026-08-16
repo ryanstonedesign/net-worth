@@ -240,12 +240,14 @@ html[data-theme="holographic"] .app-shell {
    would tint it. .app-bg deliberately keeps its fill: it sits underneath as
    the ground the canvas is drawn against. The flag is only set once a context
    is actually running, so losing WebGL restores the gradients. */
+/* .ds-page is deliberately not here. It is a fixed, full-screen overlay at
+   z-index 300 rather than a shell sitting over the pane, so clearing its fill
+   does not reveal the canvas — it reveals the dashboard underneath it. */
 html[data-theme="holographic"][data-holo-bg="live"] :is(
   .app-shell,
   .scenario-stage--out,
   .auth-shell,
-  .lp,
-  .ds-page
+  .lp
 ) {
   background-color: transparent;
   background-image: none;
@@ -1035,10 +1037,9 @@ html[data-theme="holographic"] .month-nav-btn:hover {
 /* Overlays, settings, auth, and Ask */
 html[data-theme="holographic"] .modal-overlay,
 html[data-theme="holographic"] .ask-overlay {
-  background:
-    radial-gradient(circle at 24% 20%, rgba(43, 220, 216, 0.1), transparent 34%),
-    radial-gradient(circle at 78% 70%, rgba(155, 140, 255, 0.12), transparent 38%),
-    rgba(37, 48, 68, 0.16);
+  /* A light scrim. The dark one under this used to sink every sheet on top of
+     it toward grey, however white the sheet's own fill was. */
+  background: rgba(222, 232, 247, 0.38);
   -webkit-backdrop-filter: blur(18px) saturate(115%);
   backdrop-filter: blur(18px) saturate(115%);
   animation: holoBackdropIn 280ms var(--ease-standard) both;
@@ -2086,7 +2087,9 @@ html[data-theme="holographic"] :is(
 ) {
   position: relative;
   isolation: isolate;
-  overflow: hidden;
+  /* Visible, so the ring outside the edge is not clipped off. The sheen below
+     is inset and carries its own radius, so it never needed clipping. */
+  overflow: visible;
   background: var(--holo-primary);
   background-size: 118% 118%;
   background-position: center;
@@ -2109,7 +2112,7 @@ html[data-theme="holographic"] :is(
   content: "";
   display: block;
   position: absolute;
-  inset: 0;
+  inset: -1px;
   z-index: 2;
   padding: 1.5px;
   pointer-events: none;
@@ -2234,7 +2237,7 @@ html[data-theme="holographic"] :is(
   content: "";
   display: block;
   position: absolute;
-  inset: 0;
+  inset: -1px;
   z-index: 3;
   padding: 1.2px;
   pointer-events: none;
@@ -2275,15 +2278,22 @@ html[data-theme="holographic"] :is(
   isolation: isolate;
   background-color: rgba(251, 253, 255, 0.46);
   background-image: none;
-  border-color: rgba(255, 255, 255, 0.86);
+  /* Transparent, not white: a painted border here sits directly alongside the
+     gradient ring below and the two read as a doubled edge. */
+  border-color: transparent;
   box-shadow: 0 10px 28px rgba(31, 46, 74, 0.1);
   -webkit-backdrop-filter: blur(30px) saturate(116%);
   backdrop-filter: blur(30px) saturate(116%);
 }
 
+/* The tracks are in here too. They used to carry a painted white border and
+   nothing else; with that gone they had no edge at all. */
 html[data-theme="holographic"] :is(
   .month-selector,
   .back-to-month,
+  .range-pills,
+  .type-toggle,
+  .sign-toggle,
   .side-nav-item.active,
   .range-pill.active,
   .type-toggle-thumb,
@@ -2292,7 +2302,7 @@ html[data-theme="holographic"] :is(
   content: "";
   display: block;
   position: absolute;
-  inset: 0;
+  inset: -1px;
   z-index: 2;
   padding: 1px;
   pointer-events: none;
@@ -2428,8 +2438,9 @@ html[data-theme="holographic"] :is(.lp-stone-hero, .lp-stone-final) {
 /* One tone through the whole modal. The sheet sat darker than its own head and
    foot, which read as a grey panel with pale bands stuck on each end; this
    lifts the body to the lighter blur and lets the two bands inherit it. */
+/* The same fill as a card, so a sheet and a card read as the same material. */
 html[data-theme="holographic"] .modal-sheet {
-  background-color: rgba(253, 254, 255, 0.74);
+  background-color: rgba(250, 252, 255, 0.34);
   background-image: none;
 }
 
@@ -2456,7 +2467,7 @@ html[data-theme="holographic"] :is(
   content: "";
   display: block;
   position: absolute;
-  inset: 0;
+  inset: -1px;
   z-index: 2;
   padding: 1px;
   pointer-events: none;
