@@ -22,8 +22,11 @@ const RECOVERY_MODE_KEY = 'networth_recovery_mode'
 
 // How long to wait for the session check before giving up on it. A paused or
 // unreachable backend can leave the request hanging indefinitely, and 'loading'
-// draws nothing but the background — a blank screen with no way out.
-const SESSION_TIMEOUT_MS = 8000
+// draws nothing but the background — so this is how long the app shows a blank
+// screen on every load where the backend is slow, not just where it is down.
+// Short is safe because a session arriving after the deadline still routes:
+// onAuthStateChange lifts the stage off 'auth' when it lands.
+const SESSION_TIMEOUT_MS = 2500
 
 function recoveryModeActive() {
   try { return sessionStorage.getItem(RECOVERY_MODE_KEY) === '1' } catch { return false }
@@ -120,6 +123,12 @@ export function useVault() {
         // here. Stay on the Restore Access screen.
         if (arrivedFromPasswordReset || recoveryModeActive()) {
           setStage(prev => prev === 'recovery-reset' || prev === 'loading' ? 'recovery-reset' : prev)
+        } else {
+          // A session that lands after the deadline above, or after a slow
+          // check resolved to the signed-out screen, still has to route. Only
+          // 'auth' and 'loading' are lifted: any later stage means the user is
+          // already past this point and must not be dragged back to unlock.
+          setStage(prev => (prev === 'auth' || prev === 'loading') ? 'lock' : prev)
         }
       }
     })
