@@ -368,7 +368,9 @@ html[data-theme="holographic"] :is(.btn-primary, .top-nav-ask, .ask-compose form
   background: var(--holo-ai);
   border: 1px solid rgba(255, 255, 255, 0.72);
   box-shadow: var(--shadow-btn-primary);
-  text-shadow: 0 1px 1px rgba(8, 17, 31, 0.16);
+  /* None rather than dropped: the base stylesheet sets an unscoped shadow on
+     .top-nav-ask, which would come back the moment this stopped overriding it. */
+  text-shadow: none;
 }
 
 html[data-theme="holographic"] :is(.btn-primary, .top-nav-ask, .ask-compose form > button):hover:not(:disabled) {
@@ -1423,7 +1425,7 @@ html[data-theme="holographic"] .lp-stone-action--primary {
   border: 1px solid rgba(255, 255, 255, 0.72);
   border-radius: 16px;
   box-shadow: var(--shadow-btn-primary);
-  text-shadow: 0 1px 1px rgba(8, 17, 31, 0.14);
+  text-shadow: none;
 }
 
 html[data-theme="holographic"] :is(.lp-stone-nav__start, .lp-stone-action--primary):hover {
