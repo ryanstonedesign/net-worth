@@ -222,6 +222,14 @@ html[data-theme="holographic"] .app-shell {
   background-color: transparent;
 }
 
+/* The procedural canvas is mounted after App at z-index 0 so it can cover the
+   flat .app-bg fill. Keep the landing shell one layer above it; its base-theme
+   z-index is also 0, which otherwise lets the later canvas paint over all of
+   the loaded landing content on WebGL-capable desktops. */
+html[data-theme="holographic"] .lp {
+  z-index: 1;
+}
+
 /* Procedural pane (components/PearlescentBackground). It sits on the same
    layer as .app-bg and later in the DOM, so it covers the flat fill while
    every shell — all of which start at z-index 1 — still paints above it. */
