@@ -2210,6 +2210,14 @@ html[data-theme="holographic"] :is(
   backdrop-filter: blur(34px) saturate(118%);
 }
 
+/* Popovers are portaled to <body> and positioned with viewport coordinates.
+   The shared optical-surface rule above needs relative positioning for cards,
+   but applying it to this portal turns those coordinates into normal-flow
+   offsets and sends the menu off-screen. */
+html[data-theme="holographic"] body > .popover-menu.popover-menu {
+  position: fixed;
+}
+
 html[data-theme="holographic"] :is(
   .card,
   [data-surface="slab"],
