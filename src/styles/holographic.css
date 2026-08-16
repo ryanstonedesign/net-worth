@@ -2138,27 +2138,9 @@ html[data-theme="holographic"] :is(
   opacity: 1;
 }
 
-html[data-theme="holographic"] :is(
-  .btn-primary,
-  .top-nav-ask,
-  .ask-compose form > button,
-  .lp-stone-nav__start,
-  .lp-stone-action--primary,
-  .lp-stone-action--light
-)::after {
-  content: "";
-  display: block;
-  position: absolute;
-  inset: 2px;
-  z-index: -1;
-  pointer-events: none;
-  border-radius: calc(var(--r-btn) - 2px);
-  background:
-    radial-gradient(circle at var(--holo-light-x) 0%, rgba(255, 255, 255, 0.7), transparent 32%),
-    radial-gradient(circle at 12% 90%, rgba(85, 255, 241, 0.28), transparent 34%);
-  mix-blend-mode: screen;
-  opacity: 0.72;
-}
+/* No inner sheen. It was inset 2px with a radius of its own, which drew a
+   second rounded rectangle just inside the edge — the extra border on the
+   primary button — and its lower radial was the last of the mint. */
 
 html[data-theme="holographic"] :is(
   .btn-primary,
