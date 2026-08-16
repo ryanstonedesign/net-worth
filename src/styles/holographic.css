@@ -275,27 +275,18 @@ html[data-theme="holographic"] :is(
   .type-toggle,
   .sign-toggle
 )::after,
+/* Only the shells. Every card, button and control used to be listed here too,
+   which is why they showed no edge: :is() takes the specificity of its most
+   specific argument, and `.cat-card.card` lifted this whole rule above the
+   card ring rule below. The month selector was in the same list and did show
+   its ring — its ring rule happens to carry a descendant selector that lifts
+   it higher still — which is the asymmetry that made this look like a paint
+   problem rather than a cascade one. */
 html[data-theme="holographic"] :is(
   .app-bg,
   .app-shell,
   .auth-shell,
-  .side-nav,
-  .modal-sheet,
-  .popover-menu,
-  .auth-card,
-  .ask-panel,
-  .cat-card.card,
-  .summary-cell.card,
-  .settings-card,
-  .side-nav-item.active,
-  .btn,
-  .btn-icon,
-  .fab,
-  .back-to-month,
-  .month-selector,
-  .cat-card-edit,
-  .top-nav-ask,
-  .ask-compose form > button
+  .side-nav
 )::before {
   display: none;
 }
@@ -422,6 +413,13 @@ html[data-theme="holographic"] :is(.btn-secondary, .btn-icon, .fab, .settings-fa
 
 html[data-theme="holographic"] .btn-tertiary {
   color: var(--violet-500);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* A tertiary button is type, not a surface — it gets no ring. */
+html[data-theme="holographic"] .btn-tertiary::before {
+  display: none;
 }
 
 html[data-theme="holographic"] .btn-tertiary:hover {
@@ -451,7 +449,9 @@ html[data-theme="holographic"] :is(.input, .custom-range-input, .update-amount-i
   color: var(--ink-900);
   background: rgba(255, 255, 255, 0.44);
   background-image: none;
-  border: 1px solid rgba(255, 255, 255, 0.82);
+  /* No border. The fill and its recess are what say "type here"; a lit edge
+     would make a field read as one more card. */
+  border: 1px solid transparent;
   border-radius: var(--r-btn);
   box-shadow:
     inset 0 1px 2px rgba(41, 61, 91, 0.06),
@@ -475,7 +475,7 @@ html[data-theme="holographic"] :is(.select, .select-wrap > select) {
   color: var(--ink-900);
   background: rgba(255, 255, 255, 0.46);
   background-image: none;
-  border: 1px solid rgba(255, 255, 255, 0.82);
+  border: 1px solid transparent;
   border-radius: var(--r-btn);
   box-shadow: var(--shadow-btn-secondary);
   -webkit-backdrop-filter: blur(18px) saturate(125%);
@@ -2339,11 +2339,11 @@ html[data-theme="holographic"] :is(
 ) {
   background-color: rgba(251, 253, 255, 0.48);
   background-image: none;
-  border-color: rgba(255, 255, 255, 0.84);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.94),
-    0 0 0 1px rgba(255, 255, 255, 0.46),
-    0 8px 24px rgba(31, 46, 74, 0.08);
+  /* This block ran later than the one that cleared these, and put all three
+     edges back: a painted border, an inset top line, and a 1px ring — plus the
+     gradient ring, which is the one that stays. */
+  border-color: transparent;
+  box-shadow: 0 8px 24px rgba(31, 46, 74, 0.08);
   -webkit-backdrop-filter: blur(28px) saturate(116%);
   backdrop-filter: blur(28px) saturate(116%);
 }
