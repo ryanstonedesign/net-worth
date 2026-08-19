@@ -323,32 +323,11 @@ html[data-theme="holographic"] [data-rule="engraved"] {
   box-shadow: none;
 }
 
-/* Brand placeholder: the existing W is framed as an optical mark until the
-   final logo is ready. */
+/* The logo is the iridescent glass tile itself, so the theme adds no frame of
+   its own — only the wordmark beside it takes holographic type. */
 html[data-theme="holographic"] .brand-lockup {
   gap: 12px;
   color: var(--ink-900);
-}
-
-html[data-theme="holographic"] .brand-lockup__picture {
-  position: relative;
-  padding: 4px;
-  overflow: hidden;
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.54)) padding-box,
-    var(--holo-aurora) border-box;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 8px 22px rgba(64, 82, 130, 0.1),
-    0 0 20px rgba(125, 108, 255, 0.1);
-}
-
-html[data-theme="holographic"] .brand-lockup__mark {
-  width: 100%;
-  height: 100%;
-  filter: saturate(0.2) hue-rotate(125deg) brightness(0.74) contrast(1.1);
 }
 
 html[data-theme="holographic"] .brand-lockup__wordmark {
@@ -1177,11 +1156,6 @@ html[data-theme="holographic"] .auth-card.card {
 html[data-theme="holographic"] .auth-eyebrow {
   color: var(--violet-500);
   letter-spacing: 0.16em;
-}
-
-html[data-theme="holographic"] .auth-eyebrow::before {
-  background: linear-gradient(var(--teal-400), var(--violet-400));
-  box-shadow: 0 0 12px rgba(43, 220, 216, 0.34);
 }
 
 html[data-theme="holographic"] .auth-title {

@@ -4,7 +4,7 @@ export default function LandingNav({ scrolled, onGetStarted, onSignIn }) {
   return (
     <header className={`lp-stone-nav${scrolled ? ' is-scrolled' : ''}`}>
       <div className="lp-stone-shell lp-stone-nav__inner">
-        <BrandLockup as="a" href="#top" compact flat className="lp-stone-nav__brand" />
+        <BrandLockup as="a" href="#top" compact className="lp-stone-nav__brand" />
 
         <nav className="lp-stone-nav__navigation" aria-label="Primary navigation">
           <div className="lp-stone-nav__anchors">

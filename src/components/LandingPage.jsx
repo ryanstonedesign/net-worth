@@ -368,7 +368,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
       <footer className="lp-stone-footer">
         <div className="lp-stone-shell lp-stone-footer__inner">
           <div className="lp-stone-footer__brand">
-            <BrandLockup as="a" href="#top" compact flat />
+            <BrandLockup as="a" href="#top" compact />
             <p>A calm record of your financial life, through time.</p>
           </div>
           <nav aria-label="Footer navigation">

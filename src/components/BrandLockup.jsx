@@ -1,4 +1,5 @@
-import markPrimary from '../assets/worthfolio/brand/worthfolio-mark-primary.svg'
+import logoPng from '../assets/worthfolio/brand/worthfolio-logo.png'
+import logoWebp from '../assets/worthfolio/brand/worthfolio-logo.webp'
 import markFlat from '../assets/worthfolio/brand/worthfolio-mark-flat.svg'
 import markReversed from '../assets/worthfolio/brand/worthfolio-mark-reversed.svg'
 
@@ -6,7 +7,6 @@ export default function BrandLockup({
   as: Element = 'span',
   href,
   compact = false,
-  flat = false,
   reversed = false,
   className = '',
 }) {
@@ -17,13 +17,16 @@ export default function BrandLockup({
       {...props}
     >
       <picture className="brand-lockup__picture" aria-hidden="true">
+        {/* The iridescent logo carries its colour in the artwork itself, so
+            forced-colours and high-contrast modes fall back to the flat mark. */}
         <source
           media="(forced-colors: active), (prefers-contrast: more)"
-          srcSet={markFlat}
+          srcSet={reversed ? markReversed : markFlat}
         />
+        <source srcSet={logoWebp} type="image/webp" />
         <img
           className="brand-lockup__mark"
-          src={reversed ? markReversed : flat ? markFlat : markPrimary}
+          src={logoPng}
           width="48"
           height="48"
           alt=""

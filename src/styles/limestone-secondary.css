@@ -496,7 +496,7 @@ button.settings-row:active {
 }
 
 .auth-eyebrow {
-  min-height: 32px;
+  min-height: 36px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -511,10 +511,16 @@ button.settings-row:active {
 
 .auth-eyebrow::before {
   content: "";
-  width: 32px;
-  height: 32px;
-  flex: 0 0 32px;
-  background: url("../assets/worthfolio/brand/worthfolio-mark-flat.svg") center / contain no-repeat;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  background: url("../assets/worthfolio/brand/worthfolio-logo.png") center / contain no-repeat;
+}
+
+@media (forced-colors: active), (prefers-contrast: more) {
+  .auth-eyebrow::before {
+    background-image: url("../assets/worthfolio/brand/worthfolio-mark-flat.svg");
+  }
 }
 
 .auth-title {
