@@ -2368,6 +2368,22 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
   color: var(--c-danger);
   margin: 0 0 12px;
 }
+/* Alternate actions under the form: a secondary and a tertiary button, stacked
+   with their own spacing rather than the divider rules .auth-switch carries. */
+.auth-alt {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+/* Floats over the shell, clear of the card, so leaving the screen never reads
+   as one of the card's own actions. */
+.auth-back {
+  position: absolute;
+  top: 16px;
+  left: 12px;
+  z-index: 2;
+}
 .auth-switch {
   display: block;
   width: 100%;

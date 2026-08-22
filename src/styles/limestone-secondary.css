@@ -482,6 +482,21 @@ button.settings-row:active {
   background: var(--c-bg);
 }
 
+/* The floating back button lives above the card. When the card is tall enough
+   to push past the viewport, the shell scrolls and the extra top padding keeps
+   the two from meeting. */
+.auth-shell--with-back {
+  padding-top: calc(var(--safe-top) + clamp(68px, 6vh + 48px, 112px));
+}
+
+.auth-back {
+  top: calc(var(--safe-top) + 12px);
+  left: max(12px, env(safe-area-inset-left, 0px));
+  min-height: 44px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
 .auth-card.card {
   width: min(100%, 420px);
   max-width: 420px;

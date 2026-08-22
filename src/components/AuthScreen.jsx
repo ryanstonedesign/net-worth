@@ -110,7 +110,12 @@ export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, onBac
   }
 
   return (
-    <div className="auth-shell">
+    <div className={`auth-shell${onBack ? ' auth-shell--with-back' : ''}`}>
+      {onBack && (
+        <button type="button" className="btn btn-tertiary auth-back" onClick={onBack}>
+          ← Back to home
+        </button>
+      )}
       <div className="auth-card card">
         <div className="auth-eyebrow">Worthfolio</div>
         <h1 className="auth-title">
@@ -214,20 +219,24 @@ export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, onBac
           </button>
         </form>
 
-        {mode === 'signin' && onForgotPassword && (
-          <button className="auth-switch" onClick={() => setMode('forgot')}>
-            Forgot password?
+        <div className="auth-alt">
+          {mode === 'signin' && onForgotPassword && (
+            <button
+              type="button"
+              className="btn btn-secondary btn-full"
+              onClick={() => setMode('forgot')}
+            >
+              Forgot password?
+            </button>
+          )}
+          <button
+            type="button"
+            className="btn btn-tertiary btn-full"
+            onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
+          >
+            {mode === 'signin' ? 'Need an account? Create one' : 'Have an account? Sign in'}
           </button>
-        )}
-        <button
-          className="auth-switch"
-          onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
-        >
-          {mode === 'signin' ? 'Need an account? Create one' : 'Have an account? Sign in'}
-        </button>
-        {onBack && (
-          <button className="auth-switch" onClick={onBack}>← Back to home</button>
-        )}
+        </div>
       </div>
     </div>
   )

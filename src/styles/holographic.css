@@ -425,37 +425,45 @@ html[data-theme="holographic"] .btn-destructive {
     0 6px 20px rgba(197, 61, 110, 0.07);
 }
 
+/* Disabled still has to read as a button. The old fill was a hair off the card
+   it sits on and the label a hair off the fill, which left the primary action
+   on a form nobody had filled in yet looking like empty space. */
 html[data-theme="holographic"] .btn:disabled {
-  color: rgba(86, 97, 116, 0.45);
-  background: rgba(238, 242, 250, 0.48);
-  border-color: rgba(255, 255, 255, 0.52);
+  color: rgba(61, 71, 90, 0.58);
+  background: rgba(222, 229, 241, 0.78);
+  border-color: rgba(86, 97, 116, 0.16);
   box-shadow: none;
   filter: none;
 }
 
-html[data-theme="holographic"] :is(.input, .custom-range-input, .update-amount-input, .side-nav-item-input) {
+html[data-theme="holographic"] :is(.input, .custom-range-input, .update-amount-input, .side-nav-item-input, textarea) {
   min-height: 52px;
   color: var(--ink-900);
   background: rgba(255, 255, 255, 0.44);
   background-image: none;
-  /* No border and no recess. The fill alone says "type here"; a lit edge made
-     a field read as one more card, and the inset put a second line under the
-     top edge in place of the border that had just been taken off it. */
-  border: 1px solid transparent;
+  /* One plain line and nothing else. A field is not a surface in this theme:
+     the drop shadow it used to carry lifted it off the card it sits on, which
+     read as a second slab rather than something to type into. */
+  border: 1px solid var(--color-line-strong);
   border-radius: var(--r-btn);
-  box-shadow: 0 4px 14px rgba(35, 50, 76, 0.04);
+  box-shadow: none;
   -webkit-backdrop-filter: blur(16px) saturate(120%);
   backdrop-filter: blur(16px) saturate(120%);
   transition:
     border-color var(--duration-fast) var(--ease-standard),
-    box-shadow var(--duration-fast) var(--ease-standard),
     background var(--duration-fast) var(--ease-standard);
 }
 
-html[data-theme="holographic"] :is(.input, .custom-range-input, .update-amount-input, .side-nav-item-input):focus {
+html[data-theme="holographic"] :is(.input, .custom-range-input, .update-amount-input, .side-nav-item-input, textarea):hover:not(:focus) {
+  border-color: rgba(86, 97, 116, 0.46);
+}
+
+/* Focus recolours the same line — no ring, no glow, nothing that changes the
+   field's footprint. */
+html[data-theme="holographic"] :is(.input, .custom-range-input, .update-amount-input, .side-nav-item-input, textarea):focus {
   background: rgba(255, 255, 255, 0.64);
-  border-color: rgba(67, 200, 255, 0.8);
-  box-shadow: var(--holo-focus);
+  border-color: var(--cyan-500);
+  box-shadow: none;
 }
 
 html[data-theme="holographic"] :is(.select, .select-wrap > select) {
@@ -2065,11 +2073,22 @@ html[data-theme="holographic"] :is(.app-bg, .lp.lp-stone, .auth-shell, .ds-page)
   will-change: transform, opacity;
 }
 
+/* :not(.auth-back) — the back button is positioned against the shell, and
+   relative here would drop it back into the centred flex flow beside the card. */
 html[data-theme="holographic"] :is(.lp-stone-nav, .lp-stone-main, .lp-stone-footer),
-html[data-theme="holographic"] .auth-shell > *,
+html[data-theme="holographic"] .auth-shell > *:not(.auth-back),
 html[data-theme="holographic"] .ds-page > * {
   position: relative;
   z-index: 1;
+}
+
+html[data-theme="holographic"] .auth-back {
+  color: var(--violet-500);
+}
+
+html[data-theme="holographic"] .auth-back:hover {
+  color: #5949d8;
+  background: rgba(125, 108, 255, 0.08);
 }
 
 /* Every primary action uses the single pooled-light material. */
@@ -2473,18 +2492,27 @@ html[data-theme="holographic"] :is(.type-toggle-thumb, .sign-toggle .type-toggle
   position: absolute;
 }
 
-/* Focus is one 1px ring outside the field. The theme's global focus-visible
-   rule paints a 2px outline at a 3px offset and a two-layer shadow under it,
-   and a text field matches focus-visible on pointer focus too — so tapping a
-   field drew an outline, a ring, and a coloured border all at once. */
+/* Focus on a text field is the field's own border in cyan — nothing more. The
+   theme's global focus-visible rule paints a 2px outline at a 3px offset and a
+   two-layer shadow under it, and a text field matches focus-visible on pointer
+   focus too, so tapping one drew an outline, a ring, and a coloured border all
+   at once. */
 html[data-theme="holographic"] :is(
   .input,
-  .select,
-  .select-wrap > select,
   .custom-range-input,
   .update-amount-input,
   .side-nav-item-input,
   textarea
+):is(:focus, :focus-visible) {
+  outline: none !important;
+  border-color: var(--cyan-500);
+  box-shadow: none;
+}
+
+/* Selects stay slabs, so theirs is a 1px ring outside the edge instead. */
+html[data-theme="holographic"] :is(
+  .select,
+  .select-wrap > select
 ):is(:focus, :focus-visible) {
   outline: none !important;
   border-color: transparent;
