@@ -378,9 +378,10 @@ html[data-theme="holographic"] :is(.btn-primary, .top-nav-ask, .ask-compose form
 }
 
 /* A flat tint of the palette's mist and nothing else. No shadow and no lift on
-   hover: a secondary control is a quieter step down from the primary, not a
-   slab hovering above the surface it sits on. */
-html[data-theme="holographic"] :is(.btn-secondary, .btn-icon, .fab, .settings-fab, .back-to-month) {
+   hover: a secondary button sitting in the flow is a quieter step down from
+   the primary, not a slab hovering above the surface it sits on. The floating
+   controls below are the exception — they really are above the page. */
+html[data-theme="holographic"] .btn-secondary {
   position: relative;
   isolation: isolate;
   color: var(--ink-900);
@@ -389,16 +390,41 @@ html[data-theme="holographic"] :is(.btn-secondary, .btn-icon, .fab, .settings-fa
   box-shadow: none;
 }
 
-html[data-theme="holographic"] :is(.btn-secondary, .btn-icon, .fab, .settings-fab, .back-to-month):hover:not(:disabled) {
+html[data-theme="holographic"] .btn-secondary:hover:not(:disabled) {
   color: var(--ink-950);
   background: var(--mist-300);
   box-shadow: none;
 }
 
-html[data-theme="holographic"] :is(.btn-secondary, .btn-icon, .fab, .settings-fab, .back-to-month):active:not(:disabled) {
+html[data-theme="holographic"] .btn-secondary:active:not(:disabled) {
   transform: scale(0.985);
   background: var(--mist-300);
   box-shadow: none;
+}
+
+/* Icon buttons, the FABs and the back-to-month pill float over the page, so
+   they keep the glass and the elevation that says so. */
+html[data-theme="holographic"] :is(.btn-icon, .fab, .settings-fab, .back-to-month) {
+  position: relative;
+  isolation: isolate;
+  color: var(--ink-900);
+  background: rgba(255, 255, 255, 0.46);
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-btn-secondary);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+  backdrop-filter: blur(18px) saturate(125%);
+}
+
+html[data-theme="holographic"] :is(.btn-icon, .fab, .settings-fab, .back-to-month):hover:not(:disabled) {
+  transform: translateY(-1px);
+  color: var(--ink-950);
+  background: rgba(255, 255, 255, 0.64);
+  box-shadow: var(--shadow-slab-lifted);
+}
+
+html[data-theme="holographic"] :is(.btn-icon, .fab, .settings-fab, .back-to-month):active:not(:disabled) {
+  transform: scale(0.985);
+  box-shadow: var(--surface-pressed-shadow);
 }
 
 html[data-theme="holographic"] .btn-tertiary {
@@ -2337,13 +2363,7 @@ html[data-theme="holographic"] .side-nav-item.active::after {
 
 /* Quiet secondary controls lose the prior spectral fill entirely. The mist
    tint is opaque, so there is nothing left for a backdrop blur to pick up. */
-html[data-theme="holographic"] :is(
-  .btn-secondary,
-  .btn-icon,
-  .fab,
-  .settings-fab,
-  .lp-stone-action--quiet
-) {
+html[data-theme="holographic"] :is(.btn-secondary, .lp-stone-action--quiet) {
   background-color: var(--mist-200);
   background-image: none;
   /* This block ran later than the one that cleared these, and put all three
@@ -2353,6 +2373,16 @@ html[data-theme="holographic"] :is(
   box-shadow: none;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
+}
+
+/* The floating controls keep their glass here too. */
+html[data-theme="holographic"] :is(.btn-icon, .fab, .settings-fab) {
+  background-color: rgba(251, 253, 255, 0.48);
+  background-image: none;
+  border-color: transparent;
+  box-shadow: 0 8px 24px rgba(31, 46, 74, 0.08);
+  -webkit-backdrop-filter: blur(28px) saturate(116%);
+  backdrop-filter: blur(28px) saturate(116%);
 }
 
 /* Optical hierarchy: these surfaces do not generate color. They only tint and
