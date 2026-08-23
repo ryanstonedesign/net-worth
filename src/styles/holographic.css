@@ -515,26 +515,29 @@ html[data-theme="holographic"] :is(.input, .custom-range-input, .update-amount-i
   box-shadow: none;
 }
 
+/* A select is a field, so it wears the field's edge: one plain line, no slab
+   shadow, recolouring to cyan on focus exactly as an input does. */
 html[data-theme="holographic"] :is(.select, .select-wrap > select) {
   min-height: 52px;
   color: var(--ink-900);
   background: rgba(255, 255, 255, 0.46);
   background-image: none;
-  border: 1px solid transparent;
+  border: 1px solid var(--color-line-strong);
   border-radius: var(--r-btn);
-  box-shadow: var(--shadow-btn-secondary);
-  -webkit-backdrop-filter: blur(18px) saturate(125%);
-  backdrop-filter: blur(18px) saturate(125%);
+  box-shadow: none;
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+  backdrop-filter: blur(16px) saturate(120%);
 }
 
-html[data-theme="holographic"] :is(.select, .select-wrap > select):hover {
-  border-color: rgba(67, 200, 255, 0.34);
-  box-shadow: var(--shadow-slab-lifted);
+html[data-theme="holographic"] :is(.select, .select-wrap > select):hover:not(:focus) {
+  border-color: rgba(86, 97, 116, 0.46);
+  box-shadow: none;
 }
 
 html[data-theme="holographic"] :is(.select, .select-wrap > select):focus {
-  border-color: rgba(67, 200, 255, 0.78);
-  box-shadow: var(--holo-focus);
+  background: rgba(255, 255, 255, 0.64);
+  border-color: var(--cyan-500);
+  box-shadow: none;
 }
 
 html[data-theme="holographic"] .form-label {
@@ -657,8 +660,12 @@ html[data-theme="holographic"] .app-shell {
     margin-right 220ms var(--ease-enter);
 }
 
+/* Exactly the drawer's own width, and no scale. The theme used to translate by
+   min(84vw, 360px) — a couple of vw wider than --drawer-w — and shrink the
+   shell by 1.5% on top of that, so the content never lined up with the drawer's
+   edge and the shell stopped covering the viewport. */
 html[data-theme="holographic"] .app-shell.nav-open {
-  transform: translateX(min(84vw, 360px)) scale(0.985);
+  transform: translateX(var(--drawer-w));
   border-radius: 28px;
   box-shadow:
     -18px 0 52px rgba(37, 48, 68, 0.14),
@@ -1080,13 +1087,17 @@ html[data-theme="holographic"] .month-nav-btn:hover {
 }
 
 /* Overlays, settings, auth, and Ask */
+/* A light scrim. The dark one under this used to sink every sheet on top of it
+   toward grey, however white the sheet's own fill was.
+   No blur: fading in an opacity on a backdrop-filtered layer makes the
+   compositor re-rasterise everything behind it every frame, which is what made
+   the sheet judder on the way up. Stone drops it here for the same reason, and
+   a solid sheet has no frosting left to sell anyway. */
 html[data-theme="holographic"] .modal-overlay,
 html[data-theme="holographic"] .ask-overlay {
-  /* A light scrim. The dark one under this used to sink every sheet on top of
-     it toward grey, however white the sheet's own fill was. */
   background: rgba(222, 232, 247, 0.38);
-  -webkit-backdrop-filter: blur(18px) saturate(115%);
-  backdrop-filter: blur(18px) saturate(115%);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   animation: holoBackdropIn 280ms var(--ease-standard) both;
 }
 
@@ -1099,7 +1110,7 @@ html[data-theme="holographic"] .modal-sheet {
     inset 0 1px 0 rgba(255, 255, 255, 0.9),
     0 24px 64px rgba(20, 30, 55, 0.16),
     0 0 42px rgba(125, 108, 255, 0.09);
-  animation: holoPanelIn 360ms var(--ease-enter) both;
+  animation: holoPanelIn var(--duration-surface) var(--ease-enter) both;
 }
 
 html[data-theme="holographic"] .modal-head,
@@ -1816,7 +1827,7 @@ html[data-theme="holographic"] .lp-stone-footer a:hover {
 @keyframes holoPanelIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -1927,10 +1938,6 @@ html[data-theme="holographic"] .lp-stone-footer a:hover {
     animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 120ms !important;
-  }
-
-  html[data-theme="holographic"] .app-shell.nav-open {
-    transform: translateX(min(84vw, 360px));
   }
 
   html[data-theme="holographic"] .nw-medallion {
@@ -2551,6 +2558,8 @@ html[data-theme="holographic"] :is(.type-toggle-thumb, .sign-toggle .type-toggle
    at once. */
 html[data-theme="holographic"] :is(
   .input,
+  .select,
+  .select-wrap > select,
   .custom-range-input,
   .update-amount-input,
   .side-nav-item-input,
@@ -2559,14 +2568,4 @@ html[data-theme="holographic"] :is(
   outline: none !important;
   border-color: var(--cyan-500);
   box-shadow: none;
-}
-
-/* Selects stay slabs, so theirs is a 1px ring outside the edge instead. */
-html[data-theme="holographic"] :is(
-  .select,
-  .select-wrap > select
-):is(:focus, :focus-visible) {
-  outline: none !important;
-  border-color: transparent;
-  box-shadow: 0 0 0 1px var(--cyan-500);
 }
