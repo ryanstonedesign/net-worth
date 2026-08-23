@@ -1090,19 +1090,15 @@ html[data-theme="holographic"] .ask-overlay {
   animation: holoBackdropIn 280ms var(--ease-standard) both;
 }
 
+/* Fill is set once, further down, where this sheet is pulled back out of the
+   shared card surface. */
 html[data-theme="holographic"] .modal-sheet {
-  background:
-    radial-gradient(circle at 100% 0%, rgba(155, 140, 255, 0.1), transparent 34%),
-    radial-gradient(circle at 0% 100%, rgba(43, 220, 216, 0.09), transparent 36%),
-    rgba(255, 255, 255, 0.58);
   border: 1px solid rgba(255, 255, 255, 0.88);
   border-radius: 28px;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.9),
     0 24px 64px rgba(20, 30, 55, 0.16),
     0 0 42px rgba(125, 108, 255, 0.09);
-  -webkit-backdrop-filter: blur(28px) saturate(135%);
-  backdrop-filter: blur(28px) saturate(135%);
   animation: holoPanelIn 360ms var(--ease-enter) both;
 }
 
@@ -1909,7 +1905,14 @@ html[data-theme="holographic"] .lp-stone-footer a:hover {
     border-radius: 24px;
   }
 
-  html[data-theme="holographic"] .modal-sheet,
+  /* Equal corners: the overlay leaves a margin under the sheet, so its bottom
+     edge is on screen and a squared one there read as a cut-off drawer. */
+  html[data-theme="holographic"] .modal-sheet {
+    border-radius: 26px;
+  }
+
+  /* The Ask panel is a real bottom drawer — flush to the edge, nothing below
+     it to round against. */
   html[data-theme="holographic"] .ask-panel {
     border-radius: 26px 26px 0 0;
   }
@@ -2485,13 +2488,17 @@ html[data-theme="holographic"] :is(.lp-stone-hero, .lp-stone-final) {
   }
 }
 
-/* One tone through the whole modal. The sheet sat darker than its own head and
-   foot, which read as a grey panel with pale bands stuck on each end; this
-   lifts the body to the lighter blur and lets the two bands inherit it. */
-/* The same fill as a card, so a sheet and a card read as the same material. */
-html[data-theme="holographic"] .modal-sheet {
-  background-color: rgba(250, 252, 255, 0.34);
+/* One tone through the whole modal, and a solid one: a sheet is the only thing
+   you are meant to be reading while it is open, so it stops borrowing the page
+   behind it. Opaque, so the blur the shared card rule sets has nothing left to
+   pick up and comes off with it. The class is doubled because the shared card
+   surface rule carries a descendant selector in its :is() list, which outranks
+   a single .modal-sheet whatever the order. */
+html[data-theme="holographic"] .modal-sheet.modal-sheet {
+  background-color: #fff;
   background-image: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 /* No fill and no blur of their own. Stacking a second backdrop-filter over the
