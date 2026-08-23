@@ -20,8 +20,8 @@ function ForgotPasswordView({ defaultEmail, onSubmit, onBack }) {
   if (sent) {
     return (
       <div className="auth-shell">
+        <div className="auth-mark" aria-hidden="true" />
         <div className="auth-card card">
-          <div className="auth-eyebrow">Check your email</div>
           <h1 className="auth-title">Reset link sent</h1>
           <p className="auth-sub">
           We sent a password reset link to <strong>{email}</strong>.
@@ -46,9 +46,10 @@ function ForgotPasswordView({ defaultEmail, onSubmit, onBack }) {
   }
 
   return (
-    <div className="auth-shell">
+    <div className="auth-shell auth-shell--with-back">
+      <AuthBackButton onClick={onBack} label="Back to sign in" />
+      <div className="auth-mark" aria-hidden="true" />
       <div className="auth-card card">
-        <div className="auth-eyebrow">Forgot password</div>
         <h1 className="auth-title">Reset your password</h1>
         <p className="auth-sub">
           We'll email you a link to set a new password. To then unlock your
@@ -69,7 +70,6 @@ function ForgotPasswordView({ defaultEmail, onSubmit, onBack }) {
             {busy ? 'Sending…' : 'Send reset link'}
           </button>
         </form>
-        <button className="auth-switch" onClick={onBack}>Back to sign in</button>
       </div>
     </div>
   )

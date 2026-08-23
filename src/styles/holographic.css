@@ -2106,10 +2106,10 @@ html[data-theme="holographic"] :is(.app-bg, .lp.lp-stone, .auth-shell, .ds-page)
   will-change: transform, opacity;
 }
 
-/* The back button and the nav fade are pinned to the viewport, and relative
-   here would drop them back into the centred grid beside the card. */
+/* The back button is pinned to the viewport, and relative here would drop it
+   back into the centred grid beside the card. */
 html[data-theme="holographic"] :is(.lp-stone-nav, .lp-stone-main, .lp-stone-footer),
-html[data-theme="holographic"] .auth-shell > *:not(.auth-back):not(.top-nav-fade),
+html[data-theme="holographic"] .auth-shell > *:not(.auth-back),
 html[data-theme="holographic"] .ds-page > * {
   position: relative;
   z-index: 1;

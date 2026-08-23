@@ -2385,19 +2385,12 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
 }
 /* Pinned to the viewport, clear of the card, so leaving the screen never reads
    as one of the card's own actions and stays reachable while a tall card
-   scrolls under it. Above .top-nav-fade, which blurs that content as it goes. */
+   scrolls under it. */
 .auth-back {
   position: fixed;
   top: 16px;
   left: 12px;
   z-index: 20;
-}
-
-/* The product shell's nav fade, reused over the auth shell. Fixed rather than
-   absolute: here the shell is itself the scroll container, so an absolute fade
-   would scroll away with the content it is meant to dissolve. */
-.auth-shell > .top-nav-fade {
-  position: fixed;
 }
 .auth-switch {
   display: block;
