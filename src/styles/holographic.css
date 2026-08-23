@@ -350,6 +350,12 @@ html[data-theme="holographic"] .btn {
     background var(--duration-fast) var(--ease-standard);
 }
 
+/* Primary and secondary buttons are pills. The primary's gradient ring takes
+   border-radius: inherit, so it follows the edge without a second rule. */
+html[data-theme="holographic"] :is(.btn-primary, .btn-secondary) {
+  border-radius: var(--radius-round);
+}
+
 html[data-theme="holographic"] :is(.btn-primary, .top-nav-ask, .ask-compose form > button) {
   color: #fff;
   background: var(--holo-ai);
@@ -434,7 +440,7 @@ html[data-theme="holographic"] :is(.btn-icon, .fab, .settings-fab, .back-to-mont
 }
 
 html[data-theme="holographic"] .btn-tertiary {
-  color: var(--violet-500);
+  color: var(--ink-900);
   border-color: transparent;
   box-shadow: none;
 }
@@ -445,8 +451,8 @@ html[data-theme="holographic"] .btn-tertiary::before {
 }
 
 html[data-theme="holographic"] .btn-tertiary:hover {
-  color: #5949d8;
-  background: rgba(125, 108, 255, 0.08);
+  color: var(--ink-950);
+  background: rgba(37, 48, 68, 0.06);
 }
 
 html[data-theme="holographic"] .btn-destructive {
@@ -1212,7 +1218,7 @@ html[data-theme="holographic"] .auth-switch {
 }
 
 html[data-theme="holographic"] .auth-switch:hover {
-  color: var(--violet-500);
+  color: var(--ink-900);
 }
 
 html[data-theme="holographic"] .auth-error {
