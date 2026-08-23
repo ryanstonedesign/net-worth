@@ -116,8 +116,8 @@ export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, onBac
           ← Back to home
         </button>
       )}
+      <div className="auth-mark" aria-hidden="true" />
       <div className="auth-card card">
-        <div className="auth-eyebrow">Worthfolio</div>
         <h1 className="auth-title">
           {mode === 'signin' ? 'Welcome back' : 'Create your vault'}
         </h1>

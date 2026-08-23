@@ -69,13 +69,10 @@ export default function LockScreen({
 
   return (
     <div className="auth-shell">
+      <div className="auth-mark" aria-hidden="true" />
       <div className="auth-card card">
-        <div className="auth-eyebrow">Locked</div>
         <h1 className="auth-title">Enter your password</h1>
-        <p className="auth-sub">
-          {email ? `Signed in as ${email}. ` : ''}
-          Your data is encrypted on this device — re-enter your password to unlock.
-        </p>
+        {email && <p className="auth-sub">Signed in as {email}.</p>}
 
         <form onSubmit={submit}>
           <div className="form-group">
@@ -98,12 +95,20 @@ export default function LockScreen({
           </button>
         </form>
 
-        {onRecoveryUnlock && (
-          <button className="auth-switch" onClick={() => setView('recovery')}>
-            I have a recovery phrase
+        <div className="auth-alt">
+          {onRecoveryUnlock && (
+            <button
+              type="button"
+              className="btn btn-secondary btn-full"
+              onClick={() => setView('recovery')}
+            >
+              I have a recovery phrase
+            </button>
+          )}
+          <button type="button" className="btn btn-tertiary btn-full" onClick={onSignOut}>
+            Sign out
           </button>
-        )}
-        <button className="auth-switch" onClick={onSignOut}>Sign out</button>
+        </div>
       </div>
     </div>
   )

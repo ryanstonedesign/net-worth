@@ -510,6 +510,22 @@ button.settings-row:active {
     16px 24px 64px var(--shade-ambient);
 }
 
+/* The brand mark stands on its own above the card on the sign-in and lock
+   screens, at twice the size it wears inside an eyebrow. */
+.auth-mark {
+  width: 72px;
+  height: 72px;
+  flex: 0 0 72px;
+  margin-bottom: 32px;
+  background: url("../assets/worthfolio/brand/worthfolio-logo.png") center / contain no-repeat;
+}
+
+@media (forced-colors: active), (prefers-contrast: more) {
+  .auth-mark {
+    background-image: url("../assets/worthfolio/brand/worthfolio-mark-flat.svg");
+  }
+}
+
 .auth-eyebrow {
   min-height: 36px;
   display: flex;
