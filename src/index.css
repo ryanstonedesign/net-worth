@@ -2317,17 +2317,23 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
 }
 
 /* ── Auth / lock screens ── */
+/* Three rows: the mark sits centred in the space above the card, the card is
+   centred in the shell, and the last row balances the first. Explicit row
+   placement, so a screen with no mark still centres its card instead of
+   letting it take row 1. */
 .auth-shell {
   position: relative;
   z-index: 1;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;
+  justify-items: center;
   align-items: center;
-  justify-content: center;
   padding: 20px;
 }
+.auth-mark { grid-row: 1; }
 .auth-card {
+  grid-row: 2;
   width: 100%;
   max-width: 380px;
   padding: 28px 24px;
@@ -2377,13 +2383,21 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
   gap: 10px;
   margin-top: 16px;
 }
-/* Floats over the shell, clear of the card, so leaving the screen never reads
-   as one of the card's own actions. */
+/* Pinned to the viewport, clear of the card, so leaving the screen never reads
+   as one of the card's own actions and stays reachable while a tall card
+   scrolls under it. Above .top-nav-fade, which blurs that content as it goes. */
 .auth-back {
-  position: absolute;
+  position: fixed;
   top: 16px;
   left: 12px;
-  z-index: 2;
+  z-index: 20;
+}
+
+/* The product shell's nav fade, reused over the auth shell. Fixed rather than
+   absolute: here the shell is itself the scroll container, so an absolute fade
+   would scroll away with the content it is meant to dissolve. */
+.auth-shell > .top-nav-fade {
+  position: fixed;
 }
 .auth-switch {
   display: block;

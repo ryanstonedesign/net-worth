@@ -472,21 +472,24 @@ button.settings-row:active {
    Authentication and recovery planes
    -------------------------------------------------------------------------- */
 
+/* Symmetric top and bottom, so the middle grid row — the card — lands on the
+   viewport's centre rather than the centre of whatever padding is left over. */
 .auth-shell {
   min-height: 100dvh;
   padding:
     calc(var(--safe-top) + clamp(20px, 6vh, 64px))
     20px
-    calc(var(--safe-bottom) + 20px);
+    calc(var(--safe-bottom) + clamp(20px, 6vh, 64px));
   overflow-y: auto;
   background: var(--c-bg);
 }
 
-/* The floating back button lives above the card. When the card is tall enough
-   to push past the viewport, the shell scrolls and the extra top padding keeps
-   the two from meeting. */
+/* The back button is pinned over the shell, so the row above the card starts
+   where the button ends: that keeps a tall card clear of it when the shell
+   scrolls, and puts the mark exactly halfway between the two. */
 .auth-shell--with-back {
-  padding-top: calc(var(--safe-top) + clamp(68px, 6vh + 48px, 112px));
+  padding-top: calc(var(--safe-top) + 60px);
+  padding-bottom: calc(var(--safe-bottom) + 60px);
 }
 
 .auth-back {
@@ -515,8 +518,9 @@ button.settings-row:active {
 .auth-mark {
   width: 72px;
   height: 72px;
-  flex: 0 0 72px;
-  margin-bottom: 32px;
+  /* Symmetric, so the mark stays centred in the space above the card while
+     still keeping 32px clear of it when that space runs short. */
+  margin: 32px 0;
   background: url("../assets/worthfolio/brand/worthfolio-logo.png") center / contain no-repeat;
 }
 

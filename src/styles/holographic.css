@@ -2100,10 +2100,10 @@ html[data-theme="holographic"] :is(.app-bg, .lp.lp-stone, .auth-shell, .ds-page)
   will-change: transform, opacity;
 }
 
-/* :not(.auth-back) — the back button is positioned against the shell, and
-   relative here would drop it back into the centred flex flow beside the card. */
+/* The back button and the nav fade are pinned to the viewport, and relative
+   here would drop them back into the centred grid beside the card. */
 html[data-theme="holographic"] :is(.lp-stone-nav, .lp-stone-main, .lp-stone-footer),
-html[data-theme="holographic"] .auth-shell > *:not(.auth-back),
+html[data-theme="holographic"] .auth-shell > *:not(.auth-back):not(.top-nav-fade),
 html[data-theme="holographic"] .ds-page > * {
   position: relative;
   z-index: 1;
@@ -2490,12 +2490,12 @@ html[data-theme="holographic"] :is(.modal-head, .modal-foot) {
   backdrop-filter: none;
 }
 
-/* Secondary controls take the same single gradient edge as cards and primary
-   buttons, so every surface in the theme is bordered exactly once and the same
-   way. Inputs are left out: their border is the affordance that says they can
-   be typed into, and a lit top edge would read as a card instead. */
+/* The floating controls take the same single gradient edge as cards and primary
+   buttons, so every surface that sits above the page is bordered exactly once
+   and the same way. Left out: inputs, whose border is the affordance that says
+   they can be typed into, and .btn-secondary, which is flat on the page — a lit
+   top edge there reads as a card. */
 html[data-theme="holographic"] :is(
-  .btn-secondary,
   .btn-icon,
   .fab,
   .settings-fab,

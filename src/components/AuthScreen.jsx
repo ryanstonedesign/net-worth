@@ -112,11 +112,16 @@ export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, onBac
   return (
     <div className={`auth-shell${onBack ? ' auth-shell--with-back' : ''}`}>
       {onBack && (
-        <button type="button" className="btn btn-tertiary auth-back" onClick={onBack}>
-          ← Back to home
-        </button>
+        <>
+          <div className="top-nav-fade" aria-hidden="true" />
+          <button type="button" className="btn btn-tertiary auth-back" onClick={onBack}>
+            ← Back to home
+          </button>
+        </>
       )}
-      <div className="auth-mark" aria-hidden="true" />
+      {/* Sign-up runs long enough to scroll on a phone; the mark would only
+          push the form further down. */}
+      {mode === 'signin' && <div className="auth-mark" aria-hidden="true" />}
       <div className="auth-card card">
         <h1 className="auth-title">
           {mode === 'signin' ? 'Welcome back' : 'Create your vault'}
