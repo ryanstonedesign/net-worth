@@ -415,6 +415,12 @@ html[data-theme="holographic"] :is(.btn-icon, .fab, .settings-fab, .back-to-mont
   backdrop-filter: blur(18px) saturate(125%);
 }
 
+/* The auth screens' back button is a .btn-icon pinned to the viewport — the
+   relative above would drop it into the centred grid beside the card. */
+html[data-theme="holographic"] .btn-icon.auth-back {
+  position: fixed;
+}
+
 html[data-theme="holographic"] :is(.btn-icon, .fab, .settings-fab, .back-to-month):hover:not(:disabled) {
   transform: translateY(-1px);
   color: var(--ink-950);
@@ -2107,15 +2113,6 @@ html[data-theme="holographic"] .auth-shell > *:not(.auth-back):not(.top-nav-fade
 html[data-theme="holographic"] .ds-page > * {
   position: relative;
   z-index: 1;
-}
-
-html[data-theme="holographic"] .auth-back {
-  color: var(--violet-500);
-}
-
-html[data-theme="holographic"] .auth-back:hover {
-  color: #5949d8;
-  background: rgba(125, 108, 255, 0.08);
 }
 
 /* Every primary action uses the single pooled-light material. */

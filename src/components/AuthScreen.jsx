@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import AuthBackButton from './AuthBackButton'
 
 function ForgotPasswordView({ defaultEmail, onSubmit, onBack }) {
   const [email, setEmail] = useState(defaultEmail || '')
@@ -111,14 +112,7 @@ export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, onBac
 
   return (
     <div className={`auth-shell${onBack ? ' auth-shell--with-back' : ''}`}>
-      {onBack && (
-        <>
-          <div className="top-nav-fade" aria-hidden="true" />
-          <button type="button" className="btn btn-tertiary auth-back" onClick={onBack}>
-            ← Back to home
-          </button>
-        </>
-      )}
+      {onBack && <AuthBackButton onClick={onBack} label="Back to home" />}
       {/* Sign-up runs long enough to scroll on a phone; the mark would only
           push the form further down. */}
       {mode === 'signin' && <div className="auth-mark" aria-hidden="true" />}

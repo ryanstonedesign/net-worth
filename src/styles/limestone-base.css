@@ -171,7 +171,8 @@ textarea {
   position: absolute;
 }
 
-.settings-fab {
+.settings-fab,
+.auth-back {
   position: fixed;
 }
 

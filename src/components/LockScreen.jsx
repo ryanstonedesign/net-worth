@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import RecoveryPhraseInput from './RecoveryPhraseInput'
+import AuthBackButton from './AuthBackButton'
 
 function RecoveryForm({ onSubmit, onCancel }) {
   const [phrase, setPhrase] = useState('')
@@ -17,9 +18,10 @@ function RecoveryForm({ onSubmit, onCancel }) {
   }
 
   return (
-    <div className="auth-shell">
+    <div className="auth-shell auth-shell--with-back">
+      <AuthBackButton onClick={onCancel} />
+      <div className="auth-mark" aria-hidden="true" />
       <div className="auth-card card">
-        <div className="auth-eyebrow">Recovery</div>
         <h1 className="auth-title">Recover with your phrase</h1>
         <p className="auth-sub">
           Enter the recovery phrase you saved at signup, plus your current
@@ -43,7 +45,6 @@ function RecoveryForm({ onSubmit, onCancel }) {
             {busy ? 'Recovering…' : 'Recover'}
           </button>
         </form>
-        <button className="auth-switch" onClick={onCancel}>Back</button>
       </div>
     </div>
   )

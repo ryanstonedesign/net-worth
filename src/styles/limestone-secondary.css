@@ -488,16 +488,17 @@ button.settings-row:active {
    where the button ends: that keeps a tall card clear of it when the shell
    scrolls, and puts the mark exactly halfway between the two. */
 .auth-shell--with-back {
-  padding-top: calc(var(--safe-top) + 60px);
-  padding-bottom: calc(var(--safe-bottom) + 60px);
+  padding-top: calc(var(--safe-top) + 56px);
+  padding-bottom: calc(var(--safe-bottom) + 56px);
 }
 
 .auth-back {
   top: calc(var(--safe-top) + 12px);
   left: max(12px, env(safe-area-inset-left, 0px));
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
   min-height: 44px;
-  font-size: 13px;
-  font-weight: 500;
 }
 
 .auth-card.card {
