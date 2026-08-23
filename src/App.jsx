@@ -11,6 +11,7 @@ import PrototypeSettings from './components/PrototypeSettings'
 import { readChartVariant, writeChartVariant } from './lib/chartVariant'
 import { applyGrain, readGrain, writeGrain } from './lib/grainOpacity'
 import { applyRefraction, DEFAULT_REFRACTION, readRefraction, writeRefraction } from './lib/refraction'
+import { readHoloMotion, writeHoloMotion } from './lib/holoBackground'
 import { readPrototypeTheme, writePrototypeTheme } from './lib/prototypeTheme'
 import StickerSheet from './components/StickerSheet'
 import TopNav from './components/TopNav'
@@ -64,6 +65,14 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
       writeRefraction(next)
       return next
     })
+  }
+  // Whether the background pane animates or holds a single composed frame.
+  // writeHoloMotion applies as it stores, and the renderer restarts itself off
+  // that, so there is nothing to push at the canvas from here.
+  const [holoMotion, setHoloMotion] = useState(readHoloMotion)
+  const changeHoloMotion = (animated) => {
+    setHoloMotion(animated)
+    writeHoloMotion(animated)
   }
   const changeGrain = (key, value) => {
     setGrain(prev => {
@@ -248,6 +257,8 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
         refraction={refraction}
         onRefractionChange={changeRefraction}
         onRefractionReset={resetRefraction}
+        holoMotion={holoMotion}
+        onHoloMotionChange={changeHoloMotion}
         {...settingsProps}
       />
 

@@ -25,6 +25,7 @@ export default function PrototypeSettings({
   chartVariant, onChartVariantChange,
   grain, onGrainChange,
   refraction, onRefractionChange, onRefractionReset,
+  holoMotion, onHoloMotionChange,
 }) {
   const [view, setView] = useState(initialView)
 
@@ -138,6 +139,32 @@ export default function PrototypeSettings({
                   </div>
                 )
               })}
+
+              {/* Off, the pane composes one frame and holds it — the same
+                  shader, the same tuning, no loop. Here to weigh what that
+                  loop costs the rest of the theme's motion. */}
+              {onHoloMotionChange && theme === 'holographic' && (
+                <div className="sync-card" style={{ marginTop: 24, marginBottom: 24 }}>
+                  <div className="sync-toggle-row">
+                    <span className="sync-toggle-title">Animate background</span>
+                    <label className="switch">
+                      <input
+                        type="checkbox"
+                        checked={holoMotion !== false}
+                        onChange={e => onHoloMotionChange(e.target.checked)}
+                        aria-label="Animate background"
+                      />
+                      <span className="switch-track" />
+                      <span className="switch-thumb" />
+                    </label>
+                  </div>
+                  <p className="sync-explain">
+                    The background pane drifts continuously. Turn this off to
+                    hold it on a single frame — same picture, no animation
+                    loop — if scrolling or the drawer feel less than smooth.
+                  </p>
+                </div>
+              )}
 
               {/* The pane these drive only exists in Holographic, so on any
                   other theme the dials would move nothing visible. */}

@@ -13,6 +13,7 @@ import './styles/holographic.css'
 import { initTheme } from './lib/theme'
 import { applyGrain, readGrain } from './lib/grainOpacity'
 import { applyRefraction, readRefraction } from './lib/refraction'
+import { applyHoloMotion, readHoloMotion } from './lib/holoBackground'
 import { applyPrototypeTheme, readPrototypeTheme } from './lib/prototypeTheme'
 
 // Apply any saved design-system token overrides before the first paint.
@@ -26,6 +27,9 @@ applyGrain(readGrain())
 // And the background pane's dials, so the shader's first frame is already the
 // arrangement the user left it on rather than the default snapping over.
 applyRefraction(readRefraction())
+// Whether that pane runs its loop at all, applied before it mounts so a pane
+// left switched off never starts one.
+applyHoloMotion(readHoloMotion())
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

@@ -1,4 +1,5 @@
 import { getRefraction, subscribeRefraction } from './refraction'
+import { getHoloMotion, subscribeHoloMotion } from './holoBackground'
 
 /* Procedural pearlescent pane for the Holographic theme.
  *
@@ -418,7 +419,9 @@ export function createPearlescentRenderer(canvas) {
 
   function start() {
     if (destroyed || raf) return
-    if (motionQuery && motionQuery.matches) {
+    /* Held still either because the reader asked the OS for less motion, or
+       because the prototype's own switch is off. Same frame either way. */
+    if ((motionQuery && motionQuery.matches) || !getHoloMotion()) {
       /* Still frame, no loop: the pane is composed but holds its angle. The
          dials still need to show, so a change repaints the one frame. */
       needsResize = true
@@ -443,6 +446,9 @@ export function createPearlescentRenderer(canvas) {
   window.addEventListener('resize', markResize)
   window.addEventListener('orientationchange', markResize)
   canvas.addEventListener('webglcontextlost', handleLost)
+  /* Flipping the switch has to tear the loop down or build it back up, which
+     start() only decides on the way in — so restart rather than repaint. */
+  const unsubscribeMotion = subscribeHoloMotion(restart)
   if (motionQuery) {
     if (motionQuery.addEventListener) motionQuery.addEventListener('change', restart)
     else if (motionQuery.addListener) motionQuery.addListener(restart)
@@ -460,6 +466,7 @@ export function createPearlescentRenderer(canvas) {
       window.removeEventListener('resize', markResize)
       window.removeEventListener('orientationchange', markResize)
       canvas.removeEventListener('webglcontextlost', handleLost)
+      unsubscribeMotion()
       if (motionQuery) {
         if (motionQuery.removeEventListener) motionQuery.removeEventListener('change', restart)
         else if (motionQuery.removeListener) motionQuery.removeListener(restart)
