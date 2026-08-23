@@ -340,7 +340,7 @@ html[data-theme="holographic"] .brand-lockup__wordmark {
 /* Controls */
 html[data-theme="holographic"] .btn {
   min-height: 48px;
-  border-radius: var(--r-btn);
+  border-radius: var(--radius-round);
   font-weight: 600;
   transition:
     transform var(--duration-fast) var(--ease-standard),
@@ -350,9 +350,19 @@ html[data-theme="holographic"] .btn {
     background var(--duration-fast) var(--ease-standard);
 }
 
-/* Primary and secondary buttons are pills. The primary's gradient ring takes
-   border-radius: inherit, so it follows the edge without a second rule. */
-html[data-theme="holographic"] :is(.btn-primary, .btn-secondary) {
+/* Every button in the theme is a pill, .btn or not. The gradient rings the
+   primary and the floating controls carry are drawn with border-radius:
+   inherit, so they follow the new edge without a rule of their own. */
+html[data-theme="holographic"] :is(
+  .top-nav-ask,
+  .ask-compose form > button,
+  .side-nav-new,
+  .back-to-month,
+  .lp-stone-nav__start,
+  .lp-stone-action--primary,
+  .lp-stone-action--light,
+  .lp-stone-action--quiet
+) {
   border-radius: var(--radius-round);
 }
 
@@ -681,7 +691,7 @@ html[data-theme="holographic"] .side-nav-header {
 html[data-theme="holographic"] .side-nav-new {
   min-height: 52px;
   color: var(--slate-700);
-  border-radius: var(--r-btn);
+  border-radius: var(--radius-round);
 }
 
 html[data-theme="holographic"] .side-nav-new svg,
@@ -782,7 +792,7 @@ html[data-theme="holographic"] .top-nav-name {
 html[data-theme="holographic"] .top-nav-ask {
   min-height: 48px;
   padding-inline: 18px;
-  border-radius: 16px;
+  border-radius: var(--radius-round);
 }
 
 html[data-theme="holographic"] .top-nav-ask svg {
@@ -1328,7 +1338,7 @@ html[data-theme="holographic"] .ask-compose form:focus-within {
 html[data-theme="holographic"] .ask-compose form > button {
   width: 46px;
   height: 46px;
-  border-radius: 14px;
+  border-radius: var(--radius-round);
 }
 
 /* Secondary pages and design-system gallery */
@@ -1452,7 +1462,7 @@ html[data-theme="holographic"] .lp-stone-action--primary {
   color: #fff;
   background: var(--holo-ai);
   border: 1px solid rgba(255, 255, 255, 0.72);
-  border-radius: 16px;
+  border-radius: var(--radius-round);
   box-shadow: var(--shadow-btn-primary);
   text-shadow: none;
 }
@@ -1785,7 +1795,7 @@ html[data-theme="holographic"] .lp-stone-action--light {
   color: #fff;
   background: var(--holo-ai);
   border: 1px solid rgba(255, 255, 255, 0.72);
-  border-radius: 16px;
+  border-radius: var(--radius-round);
   box-shadow: var(--shadow-btn-primary);
 }
 
