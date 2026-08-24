@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import PearlescentBackground from './components/PearlescentBackground.jsx'
+import HoloEntranceStagger from './components/HoloEntranceStagger.jsx'
 import './index.css'
 import './styles/limestone-tokens.css'
 import './styles/limestone-base.css'
@@ -34,6 +35,7 @@ applyHoloMotion(readHoloMotion())
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
+    <HoloEntranceStagger />
     {/* After App, not before: the background canvas and App's own .app-bg both
         sit on z-index 0, so DOM order is what puts the canvas on top of the
         flat fill while every shell (z-index 1 and up) still paints above it. */}

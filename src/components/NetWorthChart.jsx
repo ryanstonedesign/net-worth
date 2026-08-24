@@ -60,12 +60,13 @@ const UNSET_TEXT_COLOR = 'var(--chart-axis)'
 // One circular geometry for every time point; only the material changes.
 const MARKER_R = 4.2
 const SELECTED_SCALE = 1.5
+const HOLO_SELECTED_SCALE = 1.28
 
 // Filter and gradient ids are suffixed per instance so two charts on one page
 // (dashboard and the scenario switcher mid-transition) cannot collide.
 let uid = 0
 
-function chartMaterials(ns, wash, shade, height) {
+function chartMaterials(ns, wash, shade, height, holographic = false) {
   return (
     <defs>
       {/* A groove: the source is the dark upper wall, the offset white copy is
@@ -183,6 +184,24 @@ function chartMaterials(ns, wash, shade, height) {
         <stop offset="0%" stopColor={wash} stopOpacity={0.07} />
         <stop offset="100%" stopColor={wash} stopOpacity={0} />
       </linearGradient>
+
+      {holographic && (
+        <>
+          {/* A low-opacity emerald wash below an upward historical series.
+              The SVG blur keeps it atmospheric rather than reading as a
+              conventional filled area chart. */}
+          <linearGradient id={`${ns}-growth-fill`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#34d399" stopOpacity={0.2} />
+            <stop offset="55%" stopColor="#6ee7b7" stopOpacity={0.09} />
+            <stop offset="100%" stopColor="#a7f3d0" stopOpacity={0} />
+          </linearGradient>
+          <filter id={`${ns}-growth-blur`} filterUnits="userSpaceOnUse"
+            x="-50" y="-30" width="3000" height={height + 60}
+            colorInterpolationFilters="sRGB">
+            <feGaussianBlur stdDeviation="9" />
+          </filter>
+        </>
+      )}
     </defs>
   )
 }
@@ -230,15 +249,41 @@ function EmptySocket({ cx, cy, ns, r = MARKER_R, className, style }) {
   )
 }
 
+// Holographic future months are possibilities, not missing data. A solid
+// violet bead keeps them subordinate to teal history while remaining clearly
+// intentional and tappable.
+function FutureNode({ cx, cy, r = MARKER_R, className, style }) {
+  return (
+    <g className={`nw-future-node${className ? ` ${className}` : ''}`} style={style}>
+      <circle cx={cx} cy={cy} r={r + 1.35} fill="rgba(125,108,255,0.14)" />
+      <circle cx={cx} cy={cy} r={r} fill="var(--chart-projection)"
+        stroke="rgba(255,255,255,0.78)" strokeWidth={0.75} />
+      <circle cx={cx - r * 0.28} cy={cy - r * 0.3} r={Math.max(0.75, r * 0.2)}
+        fill="rgba(255,255,255,0.66)" />
+    </g>
+  )
+}
+
 // Present: a larger medallion, seated inside a concentric engraving.
-function Medallion({ cx, cy, ns, filled, animate, bronze }) {
-  const r = MARKER_R * SELECTED_SCALE
+function Medallion({ cx, cy, ns, filled, animate, bronze, holographic = false }) {
+  const r = MARKER_R * (holographic ? HOLO_SELECTED_SCALE : SELECTED_SCALE)
   return (
     <g className={animate ? 'nw-medallion' : undefined} style={{ transformOrigin: `${cx}px ${cy}px` }}>
+      {holographic && (
+        <>
+          <circle className="nw-selected-aura nw-selected-aura--outer"
+            cx={cx} cy={cy} r={r + 8} fill="rgba(125,108,255,0.08)" />
+          <circle className="nw-selected-aura nw-selected-aura--inner"
+            cx={cx} cy={cy} r={r + 3.5} fill="rgba(67,200,255,0.11)"
+            stroke="rgba(255,255,255,0.7)" strokeWidth={0.6} />
+        </>
+      )}
       <circle cx={cx} cy={cy} r={r + 5.5} fill="none" stroke={GROOVE_COLOR} strokeWidth={0.75}
         strokeOpacity={0.62} filter={`url(#${ns}-engrave)`} />
       {!filled
-        ? <EmptySocket cx={cx} cy={cy} ns={ns} r={r} />
+        ? holographic
+          ? <FutureNode cx={cx} cy={cy} r={r} />
+          : <EmptySocket cx={cx} cy={cy} ns={ns} r={r} />
         : bronze
           ? <BronzeNode cx={cx} cy={cy} ns={ns} r={r} />
           : <BrassInlay cx={cx} cy={cy} ns={ns} r={r} />}
@@ -302,7 +347,12 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
   const reduceMotion = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
     ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
     : false
-  const animate = animateRef.current && !reduceMotion
+  // Holographic owns the chart entrance at the well level. Drawing the line,
+  // grid, and sockets again underneath that settle created two competing
+  // reveals, so the material theme renders the complete chart immediately.
+  const holographicTheme = typeof document !== 'undefined'
+    && document.documentElement.dataset.theme === 'holographic'
+  const animate = animateRef.current && !reduceMotion && !holographicTheme
 
   const dataSig = (data || []).map(d => `${d.month}:${d.netWorth}`).join('|')
   const forecastSig = forecastData.map(d => `${d.month}:${d.netWorth}`).join('|')
@@ -424,6 +474,7 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
 
   const hasForecast = forecastData.length > 0
   const lastHistorical = data[data.length - 1]
+  const positiveGrowth = lastHistorical.netWorth > data[0].netWorth
 
   // Y-axis domain — expand to include the goal line if above data range. With
   // no goal set, a placeholder line floats above the data as the set-a-goal CTA.
@@ -471,7 +522,7 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
     if (!markersIn) return null
     if (payload.historical == null || !isFinite(cx) || !isFinite(cy)) return null
     if (payload.month === selectedMonth) {
-      return <Medallion key={payload.month} cx={cx} cy={cy} ns={ns} filled animate={settled} bronze={bronze} />
+      return <Medallion key={payload.month} cx={cx} cy={cy} ns={ns} filled animate={settled} bronze={bronze} holographic={holographicTheme} />
     }
     if (!showDotAt(index)) return null
     return bronze
@@ -485,10 +536,12 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
     if (!markersIn) return null
     if (payload.forecast == null || payload.historical != null || !isFinite(cx) || !isFinite(cy)) return null
     if (payload.month === selectedMonth) {
-      return <Medallion key={payload.month} cx={cx} cy={cy} ns={ns} filled={false} animate={settled} bronze={bronze} />
+      return <Medallion key={payload.month} cx={cx} cy={cy} ns={ns} filled={false} animate={settled} bronze={bronze} holographic={holographicTheme} />
     }
     if (!showDotAt(index)) return null
-    return <EmptySocket key={payload.month} cx={cx} cy={cy} ns={ns} {...settleProps(index)} />
+    return holographicTheme
+      ? <FutureNode key={payload.month} cx={cx} cy={cy} {...settleProps(index)} />
+      : <EmptySocket key={payload.month} cx={cx} cy={cy} ns={ns} {...settleProps(index)} />
   }
 
   return (
@@ -503,13 +556,28 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
         onTouchMove={(state) => { if (scrubbing.current) selectFrom(state) }}
         style={onSelectMonth ? { cursor: 'pointer', touchAction: 'pan-y' } : undefined}
       >
-        {chartMaterials(ns, washColor, '#08170f', height)}
+        {chartMaterials(ns, washColor, '#08170f', height, holographicTheme)}
         <YAxis domain={yDomain} hide />
         <XAxis dataKey="month" hide />
         <Tooltip
           content={<CustomTooltip />}
           cursor={{ stroke: GROOVE_COLOR, strokeOpacity: 0.5, strokeWidth: 1 }}
         />
+        {holographicTheme && positiveGrowth && (
+          <Area
+            type="monotone"
+            dataKey="historical"
+            stroke="none"
+            fill={`url(#${ns}-growth-fill)`}
+            dot={false}
+            activeDot={false}
+            filter={`url(#${ns}-growth-blur)`}
+            className="nw-positive-growth-wash"
+            isAnimationActive={false}
+            baseValue={yDomain[0]}
+            connectNulls={false}
+          />
+        )}
         {/* Forecast is declared first so the realised history sits over it at
             the junction, keeping the projection visually subordinate. */}
         {hasForecast && (
@@ -523,7 +591,7 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
             dot={forecastDot}
             activeDot={false}
             filter={`url(#${ns}-engrave-rule)`}
-            className={animate ? 'nw-forecast-reveal' : undefined}
+            className={`nw-forecast-line${animate ? ' nw-forecast-reveal' : ''}`}
             isAnimationActive={drawAnimationActive}
             animationBegin={140}
             animationDuration={760}
