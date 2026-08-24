@@ -118,7 +118,7 @@ export default function Dashboard({
   const [goalOpen, setGoalOpen]   = useState(false)
   const [estInfoOpen, setEstInfoOpen] = useState(false)
   const [resetConfirm, setResetConfirm] = useState(false)
-  const [resetNonce, setResetNonce] = useState(0) // bump to remount cards after a reset
+  const [resetNonce, setResetNonce] = useState(0) // bump to refresh card values after a reset
   const [timeRange, setTimeRange] = useState('1Y')
 
   // Chart draw animation: this instance's first chart draws only when
@@ -380,8 +380,10 @@ export default function Dashboard({
       <div className="cat-scroll">
         {data.categories.map(cat => (
           <CategoryCard
-            key={cat.id + selectedMonth + isEstimated + resetNonce}
+            key={cat.id}
             category={cat}
+            month={selectedMonth}
+            refreshToken={resetNonce}
             snapshot={snapshot}
             estimated={isEstimated}
             estimates={monthEstimates}

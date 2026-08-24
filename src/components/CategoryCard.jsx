@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useLayoutEffect, useRef } from 'react'
 import { formatCurrency, parseAmount } from '../utils'
 
 function formatDisplay(raw) {
@@ -8,23 +8,49 @@ function formatDisplay(raw) {
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 }
 
-export default function CategoryCard({ category, snapshot, contributions = {}, contribEstimates = {}, onUpdate, onContributionChange, onEdit, estimated = false, estimates = {} }) {
-  const [values, setValues] = useState(() => {
-    const v = {}
-    category.accounts.forEach(acc => {
-      v[acc.id] = snapshot[acc.id] != null ? String(snapshot[acc.id]) : ''
-    })
-    return v
+function valuesFor(accounts, source) {
+  const values = {}
+  accounts.forEach(acc => {
+    values[acc.id] = source?.[acc.id] != null ? String(source[acc.id]) : ''
   })
+  return values
+}
+
+export default function CategoryCard({ category, snapshot, contributions = {}, contribEstimates = {}, onUpdate, onContributionChange, onEdit, estimated = false, estimates = {}, month, refreshToken = 0 }) {
+  const [values, setValues] = useState(() => valuesFor(category.accounts, snapshot))
   // Monthly contribution edits for the selected month (each month is independent).
-  const [contribs, setContribs] = useState(() => {
-    const v = {}
-    category.accounts.forEach(acc => {
-      v[acc.id] = contributions[acc.id] != null ? String(contributions[acc.id]) : ''
-    })
-    return v
-  })
+  const [contribs, setContribs] = useState(() => valuesFor(category.accounts, contributions))
   const [focused, setFocused] = useState(null)
+  const previousMonthRef = useRef(month)
+  const numberMotionTimerRef = useRef(null)
+  const [numberMotion, setNumberMotion] = useState({ id: 0, active: false })
+  const accountSignature = category.accounts.map(acc => acc.id).join('|')
+  const monthNumberClass = numberMotion.active ? ' cat-month-number' : ''
+
+  // Keep the card mounted as the selected month changes. Sync its editable
+  // values before paint so only the number fields transition; the card surface,
+  // header, and account rows remain completely still.
+  useLayoutEffect(() => {
+    const monthChanged = previousMonthRef.current !== month
+    setValues(valuesFor(category.accounts, snapshot))
+    setContribs(valuesFor(category.accounts, contributions))
+    setFocused(null)
+
+    if (monthChanged) {
+      window.clearTimeout(numberMotionTimerRef.current)
+      setNumberMotion(state => ({ id: state.id + 1, active: true }))
+      numberMotionTimerRef.current = window.setTimeout(() => {
+        setNumberMotion(state => ({ ...state, active: false }))
+      }, 450)
+    }
+
+    previousMonthRef.current = month
+  }, [month, refreshToken, accountSignature]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Do not leave a delayed state update behind if the category is removed.
+  useEffect(() => {
+    return () => window.clearTimeout(numberMotionTimerRef.current)
+  }, [])
 
   // Contributions are deliberately excluded from the category total — they only
   // feed future estimates, not the current balance. On future months, the total
@@ -88,7 +114,8 @@ export default function CategoryCard({ category, snapshot, contributions = {}, c
                         : ''
                   return (
                     <input
-                      className={`cat-account-input${showingEst ? ' cat-account-est' : ''}`}
+                      key={`${acc.id}-${numberMotion.id}`}
+                      className={`cat-account-input${showingEst ? ' cat-account-est' : ''}${monthNumberClass}`}
                       type="text"
                       inputMode="decimal"
                       placeholder="$0"
@@ -126,7 +153,8 @@ export default function CategoryCard({ category, snapshot, contributions = {}, c
                     return (
                       <div className="cat-contrib-field">
                         <input
-                          className={`cat-contrib-input${showingEst ? ' cat-account-est' : ''}`}
+                          key={`${acc.id}-${numberMotion.id}`}
+                          className={`cat-contrib-input${showingEst ? ' cat-account-est' : ''}${monthNumberClass}`}
                           type="text"
                           inputMode="decimal"
                           placeholder="$0"
@@ -152,7 +180,8 @@ export default function CategoryCard({ category, snapshot, contributions = {}, c
           <div className="cat-account-total">
             <span className="cat-total-label">Total</span>
             <span
-              className={`cat-total-amount${estimated ? ' estimated' : ''}${category.type === 'liability' ? ' liability' : ''}`}
+              key={numberMotion.id}
+              className={`cat-total-amount${estimated ? ' estimated' : ''}${category.type === 'liability' ? ' liability' : ''}${monthNumberClass}`}
             >
               {formatCurrency(total)}{estimated ? ' (est)' : ''}
             </span>

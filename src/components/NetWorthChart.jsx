@@ -580,9 +580,10 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
           <Area
             type="monotone"
             dataKey="forecast"
-            stroke={holographicTheme ? 'transparent' : GROOVE_COLOR}
+            stroke={holographicTheme ? 'var(--violet-500)' : GROOVE_COLOR}
             strokeWidth={2.4}
             strokeLinecap="round"
+            strokeDasharray={holographicTheme ? '2 7' : undefined}
             fill="none"
             dot={forecastDot}
             activeDot={false}
