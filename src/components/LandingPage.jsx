@@ -4,6 +4,7 @@ import LandingNav from './landing/LandingNav'
 import LandingSection from './landing/LandingSection'
 import ProjectionPreview from './landing/ProjectionPreview'
 import ResponsiveArtwork from './landing/ResponsiveArtwork'
+import HolographicLandingPage from './HolographicLandingPage'
 import heroAvif from '../assets/worthfolio/art/hero-nature-valley-v2.avif'
 import heroWebp from '../assets/worthfolio/art/hero-nature-valley-v2.webp'
 import historyAvif from '../assets/worthfolio/art/illustration-history-v1.avif'
@@ -86,6 +87,20 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
     scroller.addEventListener('scroll', handleScroll, { passive: true })
     return () => scroller.removeEventListener('scroll', handleScroll)
   }, [])
+
+  const holographicTheme = typeof document !== 'undefined'
+    && document.documentElement.dataset.theme === 'holographic'
+
+  if (holographicTheme) {
+    return (
+      <HolographicLandingPage
+        scrollerRef={scrollerRef}
+        scrolled={scrolled}
+        onGetStarted={onGetStarted}
+        onSignIn={onSignIn}
+      />
+    )
+  }
 
   return (
     <div className="lp lp-stone" ref={scrollerRef}>

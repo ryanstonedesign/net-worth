@@ -8,6 +8,8 @@ const ENTRANCE_SELECTOR = [
   '.brand-lockup__picture',
   '.dashboard > .hero',
   '.dashboard > .net-worth-chart-well',
+  '.dashboard > .range-pills',
+  '.dashboard > .month-float .month-selector',
   '.card',
   '.settings-card',
   '.sync-card',
@@ -38,6 +40,9 @@ function applyStagger() {
   const ordered = [...document.querySelectorAll(ENTRANCE_SELECTOR)]
     .map(element => ({ element, rect: element.getBoundingClientRect() }))
     .filter(({ element, rect }) => {
+      // Sheets and panels own their entrance as a single surface. Children
+      // inside them should already be settled when the overlay arrives.
+      if (element.closest('.modal-overlay, .ask-overlay')) return false
       const style = getComputedStyle(element)
       return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0
     })
@@ -50,7 +55,7 @@ function applyStagger() {
     })
 
   ordered.forEach(({ element }, index) => {
-    const delay = `${index * 10}ms`
+    const delay = `${index * 20}ms`
     // Once an entrance has started, keep its original delay. Re-indexing an
     // existing element when a modal or lazy chart mounts can otherwise rewind
     // a CSS animation that is already in flight.

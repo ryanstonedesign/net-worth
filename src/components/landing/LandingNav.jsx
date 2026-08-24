@@ -1,6 +1,6 @@
 import BrandLockup from '../BrandLockup'
 
-export default function LandingNav({ scrolled, onGetStarted, onSignIn }) {
+export default function LandingNav({ scrolled, onGetStarted, onSignIn, principlesLabel = 'Principles' }) {
   return (
     <header className={`lp-stone-nav${scrolled ? ' is-scrolled' : ''}`}>
       <div className="lp-stone-shell lp-stone-nav__inner">
@@ -10,7 +10,7 @@ export default function LandingNav({ scrolled, onGetStarted, onSignIn }) {
           <div className="lp-stone-nav__anchors">
             <a href="#product">Product</a>
             <a href="#how-it-works">How it works</a>
-            <a href="#principles">Principles</a>
+            <a href="#principles">{principlesLabel}</a>
           </div>
           <div className="lp-stone-nav__actions">
             <button className="lp-stone-nav__sign-in" type="button" onClick={onSignIn}>

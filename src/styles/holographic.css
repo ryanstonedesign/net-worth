@@ -1455,7 +1455,883 @@ html[data-theme="holographic"] .ds-token-swatch {
   box-shadow: var(--shadow-sm);
 }
 
-/* Holographic translation of the existing landing-page information design. */
+/* Compact Holographic landing experience. Its visuals are interface-native
+   SVG and glass surfaces, so this branch never inherits the limestone art. */
+html[data-theme="holographic"] .lp.lp-holo {
+  --hlp-shell: 1180px;
+  --hlp-gutter: clamp(20px, 4vw, 56px);
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(84px + env(safe-area-inset-top, 0px));
+  color: var(--ink-900);
+  background:
+    radial-gradient(circle at 8% 8%, rgba(43, 220, 216, 0.1), transparent 25%),
+    radial-gradient(circle at 90% 6%, rgba(155, 140, 255, 0.13), transparent 28%),
+    linear-gradient(145deg, rgba(252, 253, 255, 0.58), rgba(243, 246, 252, 0.48));
+  -webkit-overflow-scrolling: touch;
+}
+
+html[data-theme="holographic"] .lp-holo *,
+html[data-theme="holographic"] .lp-holo *::before,
+html[data-theme="holographic"] .lp-holo *::after {
+  box-sizing: border-box;
+}
+
+html[data-theme="holographic"] .lp-holo :where(a) {
+  color: inherit;
+  text-decoration: none;
+}
+
+html[data-theme="holographic"] .lp-holo :where(button, a) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html[data-theme="holographic"] .hlp-shell {
+  width: min(calc(100% - (var(--hlp-gutter) * 2)), var(--hlp-shell));
+  margin-inline: auto;
+}
+
+html[data-theme="holographic"] .lp-holo :where(section[id], main[id]) {
+  scroll-margin-top: calc(84px + env(safe-area-inset-top, 0px));
+}
+
+html[data-theme="holographic"] .lp-holo :is(h1, h2, h3, p) {
+  text-wrap: pretty;
+}
+
+html[data-theme="holographic"] .lp-holo :is(h1, h2, h3) {
+  margin: 0;
+  color: #101c42;
+  font-family: var(--font-interface);
+}
+
+html[data-theme="holographic"] .lp-holo h1 {
+  max-width: 11ch;
+  font-size: clamp(3.4rem, 6.2vw, 5.75rem);
+  font-weight: 500;
+  line-height: 0.98;
+  letter-spacing: -0.06em;
+  text-wrap: balance;
+}
+
+html[data-theme="holographic"] .lp-holo h2 {
+  font-size: clamp(2.45rem, 4.2vw, 4rem);
+  font-weight: 500;
+  line-height: 1.02;
+  letter-spacing: -0.05em;
+  text-wrap: balance;
+}
+
+html[data-theme="holographic"] .lp-holo h3 {
+  font-size: 1.16rem;
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+html[data-theme="holographic"] .lp-holo p {
+  color: var(--slate-700);
+}
+
+html[data-theme="holographic"] .lp-holo .lp-stone-nav {
+  min-height: 72px;
+}
+
+html[data-theme="holographic"] .lp-holo .lp-stone-shell {
+  width: min(calc(100% - (var(--hlp-gutter) * 2)), var(--hlp-shell));
+}
+
+html[data-theme="holographic"] .hlp-main {
+  position: relative;
+  z-index: 1;
+}
+
+html[data-theme="holographic"] .hlp-hero {
+  position: relative;
+  display: grid;
+  align-items: center;
+  min-height: min(720px, calc(100svh - 72px));
+  padding-block: clamp(54px, 7vw, 88px);
+  overflow: hidden;
+}
+
+html[data-theme="holographic"] .hlp-hero::before {
+  content: "";
+  position: absolute;
+  width: min(850px, 72vw);
+  aspect-ratio: 1.7;
+  right: -15%;
+  top: 4%;
+  border-radius: 50%;
+  background: conic-gradient(from 220deg, rgba(43, 220, 216, 0.2), rgba(67, 200, 255, 0.05), rgba(155, 140, 255, 0.2), rgba(246, 129, 195, 0.1), rgba(43, 220, 216, 0.2));
+  filter: blur(54px);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+html[data-theme="holographic"] .hlp-hero__grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 0.88fr) minmax(520px, 1.12fr);
+  align-items: center;
+  gap: clamp(42px, 6vw, 82px);
+}
+
+html[data-theme="holographic"] .hlp-hero__copy {
+  position: relative;
+  z-index: 2;
+  animation: holoCardSettleIn 800ms var(--ease-enter) 300ms backwards;
+}
+
+html[data-theme="holographic"] .hlp-hero__copy .lp-stone-overline {
+  margin-bottom: 18px;
+}
+
+html[data-theme="holographic"] .hlp-hero__lede {
+  max-width: 38rem;
+  margin: 25px 0 0;
+  font-size: clamp(1.02rem, 1.55vw, 1.18rem);
+  line-height: 1.62;
+}
+
+html[data-theme="holographic"] .hlp-hero__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  margin-top: 30px;
+}
+
+html[data-theme="holographic"] .hlp-hero__note {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 20px 0 0;
+  font-size: 0.78rem;
+  color: var(--slate-600);
+}
+
+html[data-theme="holographic"] .hlp-hero__note span {
+  color: var(--teal-500);
+  filter: drop-shadow(0 0 5px rgba(43, 220, 216, 0.35));
+}
+
+html[data-theme="holographic"] .hlp-preview {
+  position: relative;
+  min-width: 0;
+  padding: clamp(22px, 3vw, 32px);
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 30px;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.56), rgba(255, 255, 255, 0.34)) padding-box,
+    linear-gradient(125deg, rgba(43, 220, 216, 0.55), rgba(255, 255, 255, 0.92), rgba(155, 140, 255, 0.55), rgba(246, 129, 195, 0.35)) border-box;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.94),
+    0 28px 75px rgba(32, 48, 82, 0.15),
+    0 0 62px rgba(125, 108, 255, 0.1);
+  -webkit-backdrop-filter: blur(28px) saturate(138%);
+  backdrop-filter: blur(28px) saturate(138%);
+  animation: holoCardSettleIn 800ms var(--ease-enter) 320ms backwards;
+}
+
+html[data-theme="holographic"] .hlp-preview::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 0 0, rgba(43, 220, 216, 0.12), transparent 34%),
+    radial-gradient(circle at 100% 0, rgba(155, 140, 255, 0.13), transparent 34%);
+}
+
+html[data-theme="holographic"] .hlp-preview__topline,
+html[data-theme="holographic"] .hlp-preview__footer,
+html[data-theme="holographic"] .hlp-chart {
+  position: relative;
+  z-index: 1;
+}
+
+html[data-theme="holographic"] .hlp-preview__topline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+html[data-theme="holographic"] .hlp-preview__topline > div {
+  display: grid;
+  gap: 5px;
+}
+
+html[data-theme="holographic"] .hlp-preview__topline span,
+html[data-theme="holographic"] .hlp-preview__footer span {
+  color: var(--slate-600);
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+html[data-theme="holographic"] .hlp-preview__topline strong {
+  color: #12254c;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+html[data-theme="holographic"] .hlp-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 999px;
+  color: #067154 !important;
+  background: rgba(255, 255, 255, 0.42);
+  box-shadow: 0 5px 16px rgba(19, 91, 82, 0.06);
+  letter-spacing: 0.04em !important;
+  text-transform: none !important;
+}
+
+html[data-theme="holographic"] .hlp-status i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--emerald-400);
+  box-shadow: 0 0 8px rgba(54, 217, 165, 0.62);
+}
+
+html[data-theme="holographic"] .hlp-chart {
+  margin-top: 18px;
+  padding: 15px 14px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 20px;
+  background: rgba(248, 250, 255, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+html[data-theme="holographic"] .hlp-chart__meta,
+html[data-theme="holographic"] .hlp-chart__axis {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+html[data-theme="holographic"] .hlp-chart__meta {
+  justify-content: flex-end;
+  font-size: 0.66rem;
+  color: var(--slate-600);
+}
+
+html[data-theme="holographic"] .hlp-chart__meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+html[data-theme="holographic"] .hlp-chart__meta i {
+  width: 15px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--teal-500);
+}
+
+html[data-theme="holographic"] .hlp-chart__meta i.is-forecast {
+  background: repeating-linear-gradient(90deg, var(--violet-500) 0 3px, transparent 3px 6px);
+}
+
+html[data-theme="holographic"] .hlp-chart svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+html[data-theme="holographic"] .hlp-chart__grid line {
+  stroke: rgba(61, 71, 90, 0.08);
+  stroke-width: 1;
+}
+
+html[data-theme="holographic"] .hlp-chart__area {
+  fill: url(#hlp-growth);
+  filter: blur(5px);
+}
+
+html[data-theme="holographic"] .hlp-chart__history,
+html[data-theme="holographic"] .hlp-chart__forecast {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+html[data-theme="holographic"] .hlp-chart__history {
+  stroke: url(#hlp-line);
+  filter: drop-shadow(0 0 5px rgba(24, 198, 197, 0.25));
+}
+
+html[data-theme="holographic"] .hlp-chart__forecast {
+  stroke: var(--violet-500);
+  stroke-width: 2.4;
+  stroke-dasharray: 3 8;
+  filter: drop-shadow(0 0 4px rgba(125, 108, 255, 0.2));
+}
+
+html[data-theme="holographic"] .hlp-chart__history-dot {
+  fill: var(--teal-500);
+  stroke: rgba(255, 255, 255, 0.88);
+  stroke-width: 1.2;
+}
+
+html[data-theme="holographic"] .hlp-chart__future-dot {
+  fill: var(--violet-500);
+  stroke: rgba(255, 255, 255, 0.9);
+  stroke-width: 1.2;
+  filter: drop-shadow(0 0 5px rgba(125, 108, 255, 0.42));
+}
+
+html[data-theme="holographic"] .hlp-chart__selected circle:first-child {
+  fill: rgba(125, 108, 255, 0.14);
+}
+
+html[data-theme="holographic"] .hlp-chart__selected circle:last-child {
+  fill: var(--cyan-500);
+  stroke: white;
+  stroke-width: 1.5;
+}
+
+html[data-theme="holographic"] .hlp-chart__axis {
+  color: var(--slate-500);
+  font-size: 0.6rem;
+}
+
+html[data-theme="holographic"] .hlp-preview__footer {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+}
+
+html[data-theme="holographic"] .hlp-preview__footer > div {
+  display: grid;
+  gap: 5px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.34);
+}
+
+html[data-theme="holographic"] .hlp-preview__footer strong {
+  color: #183052;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+html[data-theme="holographic"] .hlp-preview__footer strong.is-positive {
+  color: var(--emerald-700);
+}
+
+html[data-theme="holographic"] .hlp-trust {
+  position: relative;
+  z-index: 2;
+  border-block: 1px solid rgba(255, 255, 255, 0.76);
+  background: rgba(248, 250, 255, 0.34);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+  backdrop-filter: blur(18px) saturate(125%);
+}
+
+html[data-theme="holographic"] .hlp-trust .hlp-shell {
+  min-height: 82px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+  gap: 20px;
+}
+
+html[data-theme="holographic"] .hlp-trust span {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--slate-700);
+  font-size: 0.78rem;
+  font-weight: 560;
+}
+
+html[data-theme="holographic"] .hlp-trust i {
+  color: var(--violet-500);
+  font-size: 0.64rem;
+  font-style: normal;
+  letter-spacing: 0.12em;
+}
+
+html[data-theme="holographic"] .hlp-product {
+  padding-block: clamp(82px, 9vw, 118px);
+}
+
+html[data-theme="holographic"] .hlp-section-heading {
+  max-width: 680px;
+}
+
+html[data-theme="holographic"] .hlp-section-heading .lp-stone-overline {
+  margin-bottom: 16px;
+}
+
+html[data-theme="holographic"] .hlp-section-heading > p:last-child {
+  max-width: 37rem;
+  margin: 20px 0 0;
+  font-size: 1rem;
+  line-height: 1.62;
+}
+
+html[data-theme="holographic"] .hlp-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 46px;
+}
+
+html[data-theme="holographic"] .hlp-feature-card {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid transparent;
+  border-radius: 24px;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.3)) padding-box,
+    linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(67, 200, 255, 0.2), rgba(155, 140, 255, 0.24)) border-box;
+  box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.86);
+  -webkit-backdrop-filter: blur(22px) saturate(128%);
+  backdrop-filter: blur(22px) saturate(128%);
+  transition: transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+html[data-theme="holographic"] .hlp-feature-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-slab-lifted), 0 0 34px rgba(125, 108, 255, 0.07);
+}
+
+html[data-theme="holographic"] .hlp-card-visual {
+  height: 190px;
+  padding: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  border-radius: 17px;
+  background:
+    radial-gradient(circle at 100% 0, rgba(155, 140, 255, 0.1), transparent 42%),
+    rgba(248, 250, 255, 0.42);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+html[data-theme="holographic"] .hlp-feature-card__copy {
+  padding: 23px 9px 12px;
+}
+
+html[data-theme="holographic"] .hlp-feature-card__copy .lp-stone-overline {
+  margin: 0 0 11px;
+  font-size: 0.62rem;
+}
+
+html[data-theme="holographic"] .hlp-feature-card__copy > p:last-child {
+  margin: 11px 0 0;
+  font-size: 0.86rem;
+  line-height: 1.58;
+}
+
+html[data-theme="holographic"] .hlp-history-visual__value {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--slate-600);
+  font-size: 0.65rem;
+}
+
+html[data-theme="holographic"] .hlp-history-visual__value strong {
+  color: #183052;
+  font-size: 0.88rem;
+}
+
+html[data-theme="holographic"] .hlp-history-visual svg,
+html[data-theme="holographic"] .hlp-scenario-visual svg {
+  width: 100%;
+  display: block;
+  overflow: visible;
+}
+
+html[data-theme="holographic"] .hlp-history-visual svg {
+  margin-top: 9px;
+}
+
+html[data-theme="holographic"] .hlp-history-visual .area { fill: url(#hlp-mini-growth); filter: blur(3px); }
+html[data-theme="holographic"] .hlp-history-visual .line { fill: none; stroke: var(--teal-500); stroke-width: 2.5; stroke-linecap: round; }
+html[data-theme="holographic"] .hlp-history-visual circle { fill: var(--teal-500); stroke: white; stroke-width: 1; }
+
+html[data-theme="holographic"] .hlp-months,
+html[data-theme="holographic"] .hlp-scenario-visual__legend {
+  display: flex;
+  justify-content: space-between;
+  color: var(--slate-500);
+  font-size: 0.58rem;
+}
+
+html[data-theme="holographic"] .hlp-accounts-visual {
+  display: grid;
+  align-content: center;
+  gap: 12px;
+}
+
+html[data-theme="holographic"] .hlp-accounts-visual > div {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 12px;
+  color: var(--slate-700);
+  font-size: 0.66rem;
+}
+
+html[data-theme="holographic"] .hlp-accounts-visual strong {
+  color: #183052;
+  font-size: 0.68rem;
+}
+
+html[data-theme="holographic"] .hlp-accounts-visual i {
+  grid-column: 1 / -1;
+  width: var(--width);
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--teal-500), var(--cyan-500));
+  box-shadow: 0 0 8px rgba(43, 220, 216, 0.16);
+}
+
+html[data-theme="holographic"] .hlp-accounts-visual .is-liability i {
+  background: linear-gradient(90deg, var(--violet-500), var(--rose-400));
+}
+
+html[data-theme="holographic"] .hlp-scenario-visual__chips {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+html[data-theme="holographic"] .hlp-scenario-visual__chips span {
+  padding: 6px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 999px;
+  color: var(--slate-700);
+  background: rgba(255, 255, 255, 0.42);
+  font-size: 0.58rem;
+}
+
+html[data-theme="holographic"] .hlp-scenario-visual svg { margin-top: 5px; }
+html[data-theme="holographic"] .hlp-scenario-visual path { fill: none; stroke-width: 2.5; stroke-linecap: round; }
+html[data-theme="holographic"] .hlp-scenario-visual .history { stroke: var(--teal-500); }
+html[data-theme="holographic"] .hlp-scenario-visual :is(.steady, .higher) { stroke: var(--violet-500); stroke-dasharray: 3 7; }
+html[data-theme="holographic"] .hlp-scenario-visual .higher { stroke: var(--cyan-500); }
+html[data-theme="holographic"] .hlp-scenario-visual circle { fill: var(--cyan-500); stroke: white; stroke-width: 1.2; filter: drop-shadow(0 0 5px rgba(67, 200, 255, 0.46)); }
+
+html[data-theme="holographic"] .hlp-how {
+  padding-block: clamp(74px, 8vw, 104px);
+  border-block: 1px solid rgba(255, 255, 255, 0.78);
+  background:
+    radial-gradient(circle at 10% 25%, rgba(43, 220, 216, 0.08), transparent 28%),
+    radial-gradient(circle at 90% 80%, rgba(155, 140, 255, 0.09), transparent 30%),
+    rgba(248, 250, 255, 0.24);
+}
+
+html[data-theme="holographic"] .hlp-how__layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.78fr) minmax(0, 1.22fr);
+  gap: clamp(48px, 8vw, 108px);
+  align-items: start;
+}
+
+html[data-theme="holographic"] .hlp-steps {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+html[data-theme="holographic"] .hlp-steps li {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 16px;
+  align-items: start;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.36);
+  box-shadow: var(--shadow-sm);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+  backdrop-filter: blur(16px) saturate(120%);
+}
+
+html[data-theme="holographic"] .hlp-steps li > span {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(125, 108, 255, 0.16);
+  border-radius: 12px;
+  color: var(--violet-500);
+  background: rgba(255, 255, 255, 0.4);
+  font-size: 0.64rem;
+  font-weight: 650;
+}
+
+html[data-theme="holographic"] .hlp-steps p {
+  margin: 5px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+html[data-theme="holographic"] .hlp-final {
+  padding-block: clamp(72px, 8vw, 104px);
+}
+
+html[data-theme="holographic"] .hlp-final__plane {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 48px;
+  padding: clamp(34px, 5vw, 62px);
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 28px;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0.34)) padding-box,
+    linear-gradient(120deg, rgba(43, 220, 216, 0.5), rgba(255, 255, 255, 0.9), rgba(155, 140, 255, 0.5)) border-box;
+  box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.88);
+  -webkit-backdrop-filter: blur(26px) saturate(132%);
+  backdrop-filter: blur(26px) saturate(132%);
+}
+
+html[data-theme="holographic"] .hlp-final__plane::after {
+  content: "";
+  position: absolute;
+  width: 45%;
+  aspect-ratio: 1;
+  right: -18%;
+  top: -90%;
+  border-radius: 50%;
+  background: conic-gradient(rgba(43, 220, 216, 0.15), rgba(155, 140, 255, 0.18), rgba(246, 129, 195, 0.12), rgba(43, 220, 216, 0.15));
+  filter: blur(34px);
+  pointer-events: none;
+}
+
+html[data-theme="holographic"] .hlp-final__plane > * {
+  position: relative;
+  z-index: 1;
+}
+
+html[data-theme="holographic"] .hlp-final__plane h2 {
+  max-width: 14ch;
+}
+
+html[data-theme="holographic"] .hlp-final__plane .lp-stone-overline {
+  margin-bottom: 13px;
+}
+
+html[data-theme="holographic"] .hlp-final__plane p:last-child {
+  max-width: 40rem;
+  margin: 15px 0 0;
+  line-height: 1.58;
+}
+
+html[data-theme="holographic"] .hlp-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.78);
+  background: rgba(248, 250, 255, 0.45);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+  backdrop-filter: blur(18px) saturate(120%);
+}
+
+html[data-theme="holographic"] .hlp-footer__inner {
+  min-height: 170px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-content: center;
+  gap: 22px 44px;
+}
+
+html[data-theme="holographic"] .hlp-footer .brand-lockup {
+  --brand-mark-size: 34px;
+  --brand-wordmark-size: 17px;
+}
+
+html[data-theme="holographic"] .hlp-footer p {
+  margin: 10px 0 0;
+  font-size: 0.76rem;
+}
+
+html[data-theme="holographic"] .hlp-footer nav {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+html[data-theme="holographic"] .hlp-footer nav :is(a, button) {
+  padding: 8px 0;
+  border: 0;
+  color: var(--slate-700);
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+}
+
+html[data-theme="holographic"] .hlp-footer nav :is(a, button):hover {
+  color: var(--violet-500);
+}
+
+html[data-theme="holographic"] .hlp-footer__disclosure {
+  grid-column: 1 / -1;
+  padding-top: 16px;
+  border-top: 1px solid rgba(104, 114, 134, 0.12);
+  color: var(--slate-500) !important;
+}
+
+@media (max-width: 980px) {
+  html[data-theme="holographic"] .hlp-hero {
+    min-height: auto;
+  }
+
+  html[data-theme="holographic"] .hlp-hero__grid {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-theme="holographic"] .hlp-hero__copy {
+    max-width: 700px;
+  }
+
+  html[data-theme="holographic"] .lp-holo h1 {
+    max-width: 12ch;
+  }
+
+  html[data-theme="holographic"] .hlp-preview {
+    width: min(100%, 720px);
+  }
+
+  html[data-theme="holographic"] .hlp-feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-theme="holographic"] .hlp-feature-card {
+    display: grid;
+    grid-template-columns: minmax(280px, 0.9fr) 1fr;
+    align-items: center;
+  }
+
+  html[data-theme="holographic"] .hlp-card-visual {
+    height: 210px;
+  }
+}
+
+@media (max-width: 700px) {
+  html[data-theme="holographic"] .lp.lp-holo {
+    --hlp-gutter: 20px;
+  }
+
+  html[data-theme="holographic"] .hlp-hero {
+    padding-block: 54px 62px;
+  }
+
+  html[data-theme="holographic"] .lp-holo h1 {
+    font-size: clamp(3rem, 14vw, 4.5rem);
+  }
+
+  html[data-theme="holographic"] .lp-holo h2 {
+    font-size: clamp(2.25rem, 10vw, 3.25rem);
+  }
+
+  html[data-theme="holographic"] .hlp-preview {
+    padding: 17px;
+    border-radius: 24px;
+  }
+
+  html[data-theme="holographic"] .hlp-preview__topline strong {
+    font-size: 2rem;
+  }
+
+  html[data-theme="holographic"] .hlp-preview__footer {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  html[data-theme="holographic"] .hlp-preview__footer > div:last-child {
+    grid-column: 1 / -1;
+  }
+
+  html[data-theme="holographic"] .hlp-trust .hlp-shell {
+    grid-template-columns: 1fr;
+    gap: 11px;
+    padding-block: 20px;
+  }
+
+  html[data-theme="holographic"] .hlp-feature-card {
+    display: block;
+  }
+
+  html[data-theme="holographic"] .hlp-card-visual {
+    height: 190px;
+  }
+
+  html[data-theme="holographic"] .hlp-how__layout {
+    grid-template-columns: 1fr;
+    gap: 38px;
+  }
+
+  html[data-theme="holographic"] .hlp-final__plane {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  html[data-theme="holographic"] .hlp-final__plane .lp-stone-action {
+    width: 100%;
+  }
+
+  html[data-theme="holographic"] .hlp-footer__inner {
+    grid-template-columns: 1fr;
+    padding-block: 38px;
+  }
+
+  html[data-theme="holographic"] .hlp-footer nav {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 440px) {
+  html[data-theme="holographic"] .lp.lp-holo {
+    --hlp-gutter: 14px;
+  }
+
+  html[data-theme="holographic"] .hlp-chart {
+    padding-inline: 8px;
+  }
+
+  html[data-theme="holographic"] .hlp-chart__meta {
+    display: none;
+  }
+
+  html[data-theme="holographic"] .hlp-preview__footer > div {
+    padding-inline: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="holographic"] :is(.hlp-hero__copy, .hlp-preview) {
+    animation: none !important;
+  }
+}
+
+/* Holographic translation of the preserved Stone landing-page information design. */
 html[data-theme="holographic"] .lp.lp-stone {
   --lp-shell: 1280px;
   --lp-gutter: clamp(20px, 4vw, 64px);
@@ -2826,7 +3702,7 @@ html[data-theme="holographic"] .ds-specimen.ds-specimen {
 
 /* Shared card entrance. Cards start just below their resting position, softly
    defocused and a touch smaller, hold for 300ms, then resolve into the page in
-   one calm 600ms ease-out. `backwards` applies the starting frame before the
+   one calm 800ms ease-out. `backwards` applies the starting frame before the
    first paint and through the delay, but releases transform/filter after the
    animation so hover and interaction transforms continue to work normally. */
 html[data-theme="holographic"] :is(
@@ -2834,6 +3710,8 @@ html[data-theme="holographic"] :is(
   .brand-lockup__picture,
   .dashboard > .hero,
   .dashboard > .net-worth-chart-well,
+  .dashboard > .range-pills,
+  .dashboard > .month-float .month-selector,
   .card.card,
   .card,
   .settings-card,
@@ -2859,8 +3737,29 @@ html[data-theme="holographic"] :is(
   .lp-stone-steps li
 ) {
   transform-origin: center bottom;
-  animation: holoCardSettleIn 600ms cubic-bezier(0.16, 1, 0.3, 1) 300ms backwards;
+  animation: holoCardSettleIn 800ms cubic-bezier(0.16, 1, 0.3, 1) 300ms backwards;
   animation-delay: calc(300ms + var(--holo-enter-stagger, 0ms));
+}
+
+/* A modal or Ask panel enters as one composed surface. Replaying the page-card
+   settle on its children makes the contents lag behind the sheet and creates
+   nested blur/transform work, so everything inside is resolved immediately. */
+html[data-theme="holographic"] :is(.modal-overlay, .ask-overlay) :is(
+  .card,
+  .settings-card,
+  .sync-card,
+  .import-preview,
+  .import-row,
+  .recovery-phrase,
+  .ask-consent-card,
+  .manage-cat-card,
+  .update-cat-section,
+  .empty-state,
+  .cat-card-add,
+  .month-selector,
+  .range-pills
+) {
+  animation: none !important;
 }
 
 /* Update Month already wraps its visual card in a section surface. Animate
@@ -2999,6 +3898,8 @@ html[data-theme="holographic"]:has(.modal-overlay, .ask-overlay, .side-nav.open)
     .brand-lockup__picture,
     .dashboard > .hero,
     .dashboard > .net-worth-chart-well,
+    .dashboard > .range-pills,
+    .dashboard > .month-float .month-selector,
     .card,
     .settings-card,
     .sync-card,

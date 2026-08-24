@@ -255,7 +255,6 @@ function EmptySocket({ cx, cy, ns, r = MARKER_R, className, style }) {
 function FutureNode({ cx, cy, r = MARKER_R, className, style }) {
   return (
     <g className={`nw-future-node${className ? ` ${className}` : ''}`} style={style}>
-      <circle cx={cx} cy={cy} r={r + 1.35} fill="rgba(125,108,255,0.14)" />
       <circle cx={cx} cy={cy} r={r} fill="var(--chart-projection)"
         stroke="rgba(255,255,255,0.78)" strokeWidth={0.75} />
       <circle cx={cx - r * 0.28} cy={cy - r * 0.3} r={Math.max(0.75, r * 0.2)}
@@ -278,8 +277,10 @@ function Medallion({ cx, cy, ns, filled, animate, bronze, holographic = false })
             stroke="rgba(255,255,255,0.7)" strokeWidth={0.6} />
         </>
       )}
-      <circle cx={cx} cy={cy} r={r + 5.5} fill="none" stroke={GROOVE_COLOR} strokeWidth={0.75}
-        strokeOpacity={0.62} filter={`url(#${ns}-engrave)`} />
+      {(filled || !holographic) && (
+        <circle cx={cx} cy={cy} r={r + 5.5} fill="none" stroke={GROOVE_COLOR} strokeWidth={0.75}
+          strokeOpacity={0.62} filter={`url(#${ns}-engrave)`} />
+      )}
       {!filled
         ? holographic
           ? <FutureNode cx={cx} cy={cy} r={r} />
