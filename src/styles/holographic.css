@@ -703,16 +703,25 @@ html[data-theme="holographic"] .side-nav-new {
 
 html[data-theme="holographic"] .side-nav-new svg,
 html[data-theme="holographic"] .cat-card-add-icon {
-  color: var(--violet-500);
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.58)) padding-box,
-    var(--holo-aurora) border-box;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.58)),
-    var(--holo-aurora);
-  border: 1px solid transparent;
-  border-radius: 12px;
-  box-shadow: var(--shadow-btn-secondary), 0 0 18px rgba(67, 200, 255, 0.08);
+  color: #315b84;
+  background-color: rgba(252, 253, 255, 0.76);
+  background-image: none;
+  border: 1px solid rgba(111, 132, 162, 0.18);
+  border-radius: 14px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 6px 16px rgba(34, 51, 79, 0.08);
+}
+
+html[data-theme="holographic"] .side-nav-new svg {
+  width: 40px;
+  height: 40px;
+  padding: 10px;
+}
+
+html[data-theme="holographic"] .cat-card-add-icon {
+  width: 40px;
+  height: 40px;
 }
 
 html[data-theme="holographic"] .side-nav-new:hover {
@@ -747,20 +756,25 @@ html[data-theme="holographic"] .side-nav-item.active {
 }
 
 html[data-theme="holographic"] .side-nav-item.active::after {
-  content: "";
-  display: block;
-  position: absolute;
-  top: 14px;
-  bottom: 14px;
-  left: -1px;
-  width: 3px;
-  border-radius: 999px;
-  background: linear-gradient(var(--teal-400), var(--violet-400));
-  box-shadow: 0 0 14px rgba(43, 220, 216, 0.38);
+  content: none;
+}
+
+html[data-theme="holographic"] .side-nav-item.active::before {
+  content: none;
+  display: none;
 }
 
 html[data-theme="holographic"] .side-nav-footer {
-  border-top-color: rgba(37, 48, 68, 0.09);
+  border-top: 0;
+}
+
+/* The list is its own scrollport. Reserve enough space below the final row for
+   the selected surface shadow instead of shearing it against the scroll box. */
+html[data-theme="holographic"] .side-nav-list {
+  margin-inline: -12px;
+  padding: 6px 12px 30px;
+  overflow-x: hidden;
+  scroll-padding-bottom: 30px;
 }
 
 html[data-theme="holographic"] .side-nav-user {
@@ -898,9 +912,9 @@ html[data-theme="holographic"] .net-worth-chart-well svg [id$="-socket"] stop:la
 }
 
 html[data-theme="holographic"] .net-worth-chart-well .nw-forecast-line {
-  stroke: var(--violet-500);
-  stroke-dasharray: 2 7;
-  filter: drop-shadow(0 0 4px rgba(125, 108, 255, 0.18));
+  stroke: transparent;
+  stroke-dasharray: none;
+  filter: none;
 }
 
 html[data-theme="holographic"] .nw-future-node {
@@ -910,7 +924,7 @@ html[data-theme="holographic"] .nw-future-node {
 }
 
 html[data-theme="holographic"] .nw-positive-growth-wash {
-  opacity: 0.88;
+  opacity: 1;
   pointer-events: none;
 }
 
@@ -1073,7 +1087,7 @@ html[data-theme="holographic"] .cat-total-amount.liability {
 
 html[data-theme="holographic"] .cat-card-add {
   min-height: 82px;
-  color: var(--violet-500);
+  color: var(--slate-800);
   background: rgba(255, 255, 255, 0.24);
   border: 1px dashed rgba(125, 108, 255, 0.3);
   border-radius: 20px;
@@ -3287,12 +3301,33 @@ html[data-theme="holographic"] .range-pill.active {
 }
 
 html[data-theme="holographic"] .side-nav-item.active {
-  overflow: hidden;
+  overflow: visible;
 }
 
 html[data-theme="holographic"] .side-nav-item.active::after {
-  background: radial-gradient(circle, #54fff2 0%, #3dcce8 44%, transparent 74%);
-  box-shadow: 0 0 8px rgba(80, 248, 238, 0.62), 0 0 16px rgba(99, 147, 255, 0.34);
+  content: none;
+}
+
+html[data-theme="holographic"] .side-nav-item.active::before,
+html[data-theme="holographic"] .side-nav-item.active::after {
+  content: none;
+  display: none;
+}
+
+/* The name button fills only the left side of a scenario row. Drawing the
+   global focus outline around that clipped child left a stray cyan bar beside
+   the action menu after a tap. Touch gets no persistent ring; keyboard users
+   get one coherent outline around the whole row instead. */
+html[data-theme="holographic"] .side-nav-item-name:focus-visible {
+  outline: none !important;
+  box-shadow: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme="holographic"] .side-nav-item:has(.side-nav-item-name:focus-visible) {
+    outline: 2px solid var(--cyan-500);
+    outline-offset: -2px;
+  }
 }
 
 /* Quiet secondary controls lose the prior spectral fill entirely. The mist

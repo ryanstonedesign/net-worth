@@ -187,19 +187,15 @@ function chartMaterials(ns, wash, shade, height, holographic = false) {
 
       {holographic && (
         <>
-          {/* A low-opacity emerald wash below an upward historical series.
-              The SVG blur keeps it atmospheric rather than reading as a
-              conventional filled area chart. */}
+          {/* An emerald gauze below an upward historical series. The area
+              shape itself supplies the hard cutoff at the current month;
+              the vertical fade softens downward without bleeding forward. */}
           <linearGradient id={`${ns}-growth-fill`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#34d399" stopOpacity={0.2} />
-            <stop offset="55%" stopColor="#6ee7b7" stopOpacity={0.09} />
+            <stop offset="0%" stopColor="#10b981" stopOpacity={0.62} />
+            <stop offset="20%" stopColor="#34d399" stopOpacity={0.42} />
+            <stop offset="60%" stopColor="#6ee7b7" stopOpacity={0.15} />
             <stop offset="100%" stopColor="#a7f3d0" stopOpacity={0} />
           </linearGradient>
-          <filter id={`${ns}-growth-blur`} filterUnits="userSpaceOnUse"
-            x="-50" y="-30" width="3000" height={height + 60}
-            colorInterpolationFilters="sRGB">
-            <feGaussianBlur stdDeviation="9" />
-          </filter>
         </>
       )}
     </defs>
@@ -572,7 +568,6 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
             fill={`url(#${ns}-growth-fill)`}
             dot={false}
             activeDot={false}
-            filter={`url(#${ns}-growth-blur)`}
             className="nw-positive-growth-wash"
             isAnimationActive={false}
             baseValue={yDomain[0]}
@@ -585,13 +580,13 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
           <Area
             type="monotone"
             dataKey="forecast"
-            stroke={GROOVE_COLOR}
+            stroke={holographicTheme ? 'transparent' : GROOVE_COLOR}
             strokeWidth={2.4}
             strokeLinecap="round"
             fill="none"
             dot={forecastDot}
             activeDot={false}
-            filter={`url(#${ns}-engrave-rule)`}
+            filter={holographicTheme ? undefined : `url(#${ns}-engrave-rule)`}
             className={`nw-forecast-line${animate ? ' nw-forecast-reveal' : ''}`}
             isAnimationActive={drawAnimationActive}
             animationBegin={140}
