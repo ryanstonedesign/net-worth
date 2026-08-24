@@ -11,7 +11,7 @@ import PrototypeSettings from './components/PrototypeSettings'
 import { readChartVariant, writeChartVariant } from './lib/chartVariant'
 import { applyGrain, readGrain, writeGrain } from './lib/grainOpacity'
 import { applyRefraction, DEFAULT_REFRACTION, readRefraction, writeRefraction } from './lib/refraction'
-import { readHoloMotion, writeHoloMotion } from './lib/holoBackground'
+import { acquireHoloMotionPause, readHoloMotion, writeHoloMotion } from './lib/holoBackground'
 import { readPrototypeTheme, writePrototypeTheme } from './lib/prototypeTheme'
 import StickerSheet from './components/StickerSheet'
 import TopNav from './components/TopNav'
@@ -118,6 +118,20 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
   const [newOpen, setNewOpen] = useState(false)
   const [askOpen, setAskOpen] = useState(false)
 
+  // Crossing up to the persistent-sidebar layout must not preserve an old
+  // mobile drawer state that reappears when the viewport narrows again.
+  useEffect(() => {
+    if (isDesktop) setMenuOpen(false)
+  }, [isDesktop])
+
+  // Hold the ambient WebGL frame whenever a large transient surface owns the
+  // screen. This keeps the material present without asking the compositor to
+  // animate it behind drawer/panel transforms and backdrop filters.
+  useEffect(() => {
+    if (!menuOpen && !askOpen) return undefined
+    return acquireHoloMotionPause()
+  }, [menuOpen, askOpen])
+
   const { forecasts, activeForecastId } = dataHook
   const activeForecast = forecasts.find(f => f.id === activeForecastId)
   const barName = activeForecast?.name ?? 'Scenario'
@@ -150,6 +164,11 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
     dataHook.deleteForecast(id)
   }
 
+  const openFromMenu = (action) => {
+    setMenuOpen(false)
+    action()
+  }
+
   return (
     <>
       <div className="app-bg" />
@@ -170,11 +189,11 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
           scenario: dataHook.scenario,
           onScenarioChange: dataHook.setScenario,
           importDisabled: dataHook.scenario !== 'none',
-          onImport: () => setSettingsView('import'),
-          onOpenStickerSheet: () => setStickerOpen(true),
-          onPrototypeSettings: () => setSettingsView('main'),
-          onAccount: account && openAccount,
-          onSignOut: settingsProps.onSignOut,
+          onImport: () => openFromMenu(() => setSettingsView('import')),
+          onOpenStickerSheet: () => openFromMenu(() => setStickerOpen(true)),
+          onPrototypeSettings: () => openFromMenu(() => setSettingsView('main')),
+          onAccount: account && (() => openFromMenu(openAccount)),
+          onSignOut: settingsProps.onSignOut && (() => openFromMenu(settingsProps.onSignOut)),
         }}
       />
 

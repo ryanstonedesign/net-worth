@@ -33,6 +33,8 @@ export function writeHoloMotion(animated) {
 // Frame loop runs at all — so the renderer subscribes and restarts itself.
 let current = DEFAULT_HOLO_MOTION
 const listeners = new Set()
+let pauseCount = 0
+const pauseListeners = new Set()
 
 export function getHoloMotion() {
   return current
@@ -41,6 +43,31 @@ export function getHoloMotion() {
 export function subscribeHoloMotion(fn) {
   listeners.add(fn)
   return () => listeners.delete(fn)
+}
+
+// Transient product UI such as a modal, drawer, or Ask panel should own the
+// reader's attention and the compositor budget. Consumers acquire a pause for
+// as long as that surface is present; the renderer holds its current frame and
+// resumes only after the last overlapping surface has released its lock.
+export function isHoloMotionPaused() {
+  return pauseCount > 0
+}
+
+export function subscribeHoloMotionPause(fn) {
+  pauseListeners.add(fn)
+  return () => pauseListeners.delete(fn)
+}
+
+export function acquireHoloMotionPause() {
+  pauseCount += 1
+  pauseListeners.forEach(fn => fn(true))
+  let released = false
+  return () => {
+    if (released) return
+    released = true
+    pauseCount = Math.max(0, pauseCount - 1)
+    pauseListeners.forEach(fn => fn(pauseCount > 0))
+  }
 }
 
 export function applyHoloMotion(animated) {

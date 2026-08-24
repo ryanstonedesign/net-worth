@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
   STARTER_QUESTIONS,
@@ -123,14 +123,73 @@ export default function AskWorthfolio({ onClose, context, userKey, signedIn, onS
   const [draft, setDraft] = useState('')
   const [busy, setBusy] = useState(false)
   const [status, setStatus] = useState('')
+  const [closing, setClosing] = useState(false)
   const endRef = useRef(null)
   const inputRef = useRef(null)
+  const panelRef = useRef(null)
+  const busyRef = useRef(busy)
+  const closingRef = useRef(false)
+  const closeTimerRef = useRef(null)
+  const onCloseRef = useRef(onClose)
+
+  useEffect(() => { busyRef.current = busy }, [busy])
+  useEffect(() => { onCloseRef.current = onClose }, [onClose])
+
+  const finishClose = useCallback(() => {
+    window.clearTimeout(closeTimerRef.current)
+    onCloseRef.current?.()
+  }, [])
+
+  const requestClose = useCallback(() => {
+    if (busyRef.current || closingRef.current) return
+    if (document.documentElement.dataset.theme !== 'holographic') {
+      finishClose()
+      return
+    }
+    closingRef.current = true
+    setClosing(true)
+    closeTimerRef.current = window.setTimeout(finishClose, 240)
+  }, [finishClose])
 
   useEffect(() => {
-    const onKey = event => { if (event.key === 'Escape' && !busy) onClose() }
+    const previousFocus = document.activeElement
+    const root = document.getElementById('root')
+    if (root) root.inert = true
+    requestAnimationFrame(() => panelRef.current?.focus({ preventScroll: true }))
+
+    const onKey = event => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        requestClose()
+        return
+      }
+      if (event.key !== 'Tab' || !panelRef.current) return
+      const focusable = [...panelRef.current.querySelectorAll(
+        'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])',
+      )].filter(element => element.getClientRects().length > 0)
+      if (!focusable.length) {
+        event.preventDefault()
+        panelRef.current.focus()
+        return
+      }
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
     document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [busy, onClose])
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      window.clearTimeout(closeTimerRef.current)
+      if (root) root.inert = false
+      if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true })
+    }
+  }, [requestClose])
 
   useEffect(() => {
     setMessages(loadAskThread(userKey, scenarioId))
@@ -236,8 +295,14 @@ export default function AskWorthfolio({ onClose, context, userKey, signedIn, onS
   }
 
   return createPortal(
-    <div className="ask-overlay" onClick={event => { if (event.target === event.currentTarget && !busy) onClose() }}>
-      <section className="ask-panel" role="dialog" aria-modal="true" aria-label="Ask Worthfolio">
+    <div
+      className={`ask-overlay${closing ? ' is-closing' : ''}`}
+      onAnimationEnd={event => {
+        if (closing && event.target === event.currentTarget && event.animationName === 'holoBackdropOut') finishClose()
+      }}
+      onClick={event => { if (event.target === event.currentTarget) requestClose() }}
+    >
+      <section ref={panelRef} className="ask-panel" role="dialog" aria-modal="true" aria-label="Ask Worthfolio" tabIndex={-1}>
         <header className="ask-head">
           <div>
             <div className="ask-title"><SparkleIcon /> Ask Worthfolio</div>
@@ -245,7 +310,7 @@ export default function AskWorthfolio({ onClose, context, userKey, signedIn, onS
           </div>
           <div className="ask-head-actions">
             {enabled && messages.length > 0 && <button onClick={clear}>Clear</button>}
-            <button className="btn-icon" onClick={onClose} aria-label="Close Ask Worthfolio">
+            <button className="btn-icon" onClick={requestClose} aria-label="Close Ask Worthfolio">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
               </svg>
@@ -254,7 +319,7 @@ export default function AskWorthfolio({ onClose, context, userKey, signedIn, onS
         </header>
 
         {!enabled ? (
-          <div className="ask-scroll"><Consent onClose={onClose} onEnable={() => { setAskConsent(userKey, true); setEnabled(true) }} /></div>
+          <div className="ask-scroll"><Consent onClose={requestClose} onEnable={() => { setAskConsent(userKey, true); setEnabled(true) }} /></div>
         ) : (
           <>
             <div className="ask-scroll" aria-live="polite">

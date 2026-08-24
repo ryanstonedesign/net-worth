@@ -1,4 +1,4 @@
-import { useState, useRef, useLayoutEffect, useEffect } from 'react'
+import { useState, useRef, useLayoutEffect, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 
 // System popover menu: a trigger button that opens a floating action menu
@@ -13,9 +13,33 @@ import { createPortal } from 'react-dom'
 //   tabIndex        – trigger tab index (default 0)
 export default function Popover({ children, items, ariaLabel, triggerClassName = '', tabIndex = 0 }) {
   const [open, setOpen] = useState(false)
+  const [closing, setClosing] = useState(false)
   const [pos, setPos] = useState(null)
   const triggerRef = useRef(null)
   const menuRef = useRef(null)
+  const closeTimerRef = useRef(null)
+  const afterCloseRef = useRef(null)
+
+  const finishClose = useCallback(() => {
+    window.clearTimeout(closeTimerRef.current)
+    setOpen(false)
+    setClosing(false)
+    const after = afterCloseRef.current
+    afterCloseRef.current = null
+    after?.()
+  }, [])
+
+  const requestClose = useCallback((after) => {
+    if (!open || closing) return
+    if (document.documentElement.dataset.theme !== 'holographic') {
+      setOpen(false)
+      after?.()
+      return
+    }
+    afterCloseRef.current = after || null
+    setClosing(true)
+    closeTimerRef.current = window.setTimeout(finishClose, 180)
+  }, [closing, finishClose, open])
 
   // Position the menu under the trigger, right-aligned. Flip above if it would
   // run off the bottom of the viewport. Runs after the menu has mounted, so its
@@ -34,16 +58,18 @@ export default function Popover({ children, items, ariaLabel, triggerClassName =
     if (!open) return
     const onDown = (e) => {
       if (menuRef.current?.contains(e.target) || triggerRef.current?.contains(e.target)) return
-      setOpen(false)
+      requestClose()
     }
-    const onKey = (e) => { if (e.key === 'Escape') setOpen(false) }
+    const onKey = (e) => { if (e.key === 'Escape') requestClose() }
     document.addEventListener('mousedown', onDown)
     document.addEventListener('keydown', onKey)
     return () => {
       document.removeEventListener('mousedown', onDown)
       document.removeEventListener('keydown', onKey)
     }
-  }, [open])
+  }, [open, requestClose])
+
+  useEffect(() => () => window.clearTimeout(closeTimerRef.current), [])
 
   return (
     <>
@@ -55,15 +81,22 @@ export default function Popover({ children, items, ariaLabel, triggerClassName =
         aria-haspopup="menu"
         aria-expanded={open}
         tabIndex={tabIndex}
-        onClick={(e) => { e.stopPropagation(); setOpen(o => !o) }}
+        onClick={(e) => {
+          e.stopPropagation()
+          if (open) requestClose()
+          else setOpen(true)
+        }}
       >
         {children}
       </button>
       {open && createPortal(
         <div
           ref={menuRef}
-          className="popover-menu"
+          className={`popover-menu${closing ? ' is-closing' : ''}`}
           role="menu"
+          onAnimationEnd={(event) => {
+            if (closing && event.target === event.currentTarget && event.animationName === 'holoPopoverOut') finishClose()
+          }}
           // Off-screen on the first measuring pass, then placed by the effect.
           style={pos ? { top: pos.top, right: pos.right } : { top: -9999, left: -9999 }}
         >
@@ -73,7 +106,7 @@ export default function Popover({ children, items, ariaLabel, triggerClassName =
               type="button"
               role="menuitem"
               className={`popover-item${it.danger ? ' danger' : ''}`}
-              onClick={() => { setOpen(false); it.onClick?.() }}
+              onClick={() => requestClose(it.onClick)}
             >
               {it.icon && <span className="popover-item-icon">{it.icon}</span>}
               {it.label}

@@ -1,5 +1,10 @@
 import { getRefraction, subscribeRefraction } from './refraction'
-import { getHoloMotion, subscribeHoloMotion } from './holoBackground'
+import {
+  getHoloMotion,
+  isHoloMotionPaused,
+  subscribeHoloMotion,
+  subscribeHoloMotionPause,
+} from './holoBackground'
 
 /* Procedural pearlescent pane for the Holographic theme.
  *
@@ -419,6 +424,12 @@ export function createPearlescentRenderer(canvas) {
 
   function start() {
     if (destroyed || raf) return
+    if (isHoloMotionPaused()) {
+      /* Preserve the last rendered frame while product UI is moving above it.
+         On first paint there is no frame yet, so compose the tuned still. */
+      if (!lastDraw && clock === 0) draw(STILL_TIME)
+      return
+    }
     /* Held still either because the reader asked the OS for less motion, or
        because the prototype's own switch is off. Same frame either way. */
     if ((motionQuery && motionQuery.matches) || !getHoloMotion()) {
@@ -449,6 +460,7 @@ export function createPearlescentRenderer(canvas) {
   /* Flipping the switch has to tear the loop down or build it back up, which
      start() only decides on the way in — so restart rather than repaint. */
   const unsubscribeMotion = subscribeHoloMotion(restart)
+  const unsubscribePause = subscribeHoloMotionPause(restart)
   if (motionQuery) {
     if (motionQuery.addEventListener) motionQuery.addEventListener('change', restart)
     else if (motionQuery.addListener) motionQuery.addListener(restart)
@@ -467,6 +479,7 @@ export function createPearlescentRenderer(canvas) {
       window.removeEventListener('orientationchange', markResize)
       canvas.removeEventListener('webglcontextlost', handleLost)
       unsubscribeMotion()
+      unsubscribePause()
       if (motionQuery) {
         if (motionQuery.removeEventListener) motionQuery.removeEventListener('change', restart)
         else if (motionQuery.removeListener) motionQuery.removeListener(restart)

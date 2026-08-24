@@ -1349,7 +1349,9 @@ html[data-theme="holographic"] .ask-compose form > button {
 }
 
 /* Secondary pages and design-system gallery */
-html[data-theme="holographic"] :is(.manage-cat-card, .update-cat-section, .empty-state) {
+html[data-theme="holographic"] .manage-cat-card.manage-cat-card,
+html[data-theme="holographic"] .update-cat-section.update-cat-section,
+html[data-theme="holographic"] .empty-state.empty-state {
   background: rgba(255, 255, 255, 0.38);
   border-color: rgba(255, 255, 255, 0.76);
   border-radius: 20px;
@@ -2568,4 +2570,352 @@ html[data-theme="holographic"] :is(
   outline: none !important;
   border-color: var(--cyan-500);
   box-shadow: none;
+}
+
+/* --------------------------------------------------------------------------
+   Holographic Calm — product hierarchy and motion pass
+
+   This final section is the production contract for the theme. Earlier rules
+   retain the component-level art direction; these declarations deliberately
+   normalize material levels, radii, and transient motion so the optical
+   effects remain selective and the product data stays in front.
+   -------------------------------------------------------------------------- */
+
+html[data-theme="holographic"] {
+  --r-card: 20px;
+  --r-btn: 16px;
+  --radius-sm: 14px;
+  --radius-md: 20px;
+  --radius-lg: 24px;
+  --radius-xl: 28px;
+  --holo-glass-quiet: rgba(250, 252, 255, 0.52);
+  --holo-glass-elevated: rgba(250, 252, 255, 0.72);
+}
+
+/* Controls are precise soft rectangles. Full pills remain reserved for status,
+   compact floating selectors, and the Ask affordance. */
+html[data-theme="holographic"] :is(
+  .btn,
+  .side-nav-new,
+  .lp-stone-nav__start,
+  .lp-stone-action--primary,
+  .lp-stone-action--light,
+  .lp-stone-action--quiet
+) {
+  border-radius: var(--r-btn);
+}
+
+html[data-theme="holographic"] :is(.btn-primary, .lp-stone-nav__start, .lp-stone-action--primary, .lp-stone-action--light) {
+  box-shadow:
+    0 8px 24px rgba(35, 132, 170, 0.18),
+    0 0 24px rgba(125, 108, 255, 0.11);
+}
+
+html[data-theme="holographic"] :is(.btn-primary, .lp-stone-nav__start, .lp-stone-action--primary, .lp-stone-action--light):hover:not(:disabled) {
+  box-shadow:
+    0 10px 28px rgba(35, 132, 170, 0.22),
+    0 0 30px rgba(125, 108, 255, 0.14);
+}
+
+/* Glass 1: cards and rows. Eighteen pixels is enough to create depth without
+   turning a screen full of data into a stack of expensive diffusion layers. */
+html[data-theme="holographic"] :is(
+  .card.card,
+  .card,
+  [data-surface="slab"],
+  [data-surface="raised"],
+  .settings-card,
+  .sync-card,
+  .import-preview,
+  .import-row,
+  .recovery-phrase,
+  .ask-consent-card,
+  .ask-evidence,
+  .ask-message--assistant,
+  .ds-token-group,
+  .ds-type-list,
+  .ds-specimen,
+  .lp-stone-truth__list li,
+  .lp-stone-principles__list li,
+  .lp-stone-steps li,
+  .lp-stone-feature__visual,
+  .lp-projection,
+  .lp-stone-rollup,
+  .lp-stone-final__plane,
+  .lp-stone-hero__art
+) {
+  background-color: var(--holo-glass-quiet);
+  box-shadow: 0 10px 30px rgba(27, 38, 58, 0.075);
+  -webkit-backdrop-filter: blur(18px) saturate(116%);
+  backdrop-filter: blur(18px) saturate(116%);
+}
+
+html[data-theme="holographic"] .side-nav.side-nav {
+  background-color: rgba(248, 250, 255, 0.72);
+  -webkit-backdrop-filter: blur(24px) saturate(120%);
+  backdrop-filter: blur(24px) saturate(120%);
+}
+
+html[data-theme="holographic"] .range-pills.range-pills {
+  -webkit-backdrop-filter: blur(18px) saturate(116%);
+  backdrop-filter: blur(18px) saturate(116%);
+}
+
+html[data-theme="holographic"] .summary-cell.assets {
+  background-image: radial-gradient(circle at 0% 100%, rgba(54, 217, 165, 0.1), transparent 44%);
+}
+
+html[data-theme="holographic"] .summary-cell.liabilities {
+  background-image: radial-gradient(circle at 100% 100%, rgba(246, 129, 195, 0.09), transparent 44%);
+}
+
+/* Fields are quiet, locally legible surfaces. They do not need to sample and
+   blur the scene behind a modal that is already doing that work. */
+html[data-theme="holographic"] :is(
+  .input,
+  .select,
+  .select-wrap > select,
+  .custom-range-input,
+  .update-amount-input,
+  .side-nav-item-input,
+  textarea
+) {
+  background-color: rgba(252, 253, 255, 0.82);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* Glass 2: the small number of surfaces that genuinely float. */
+html[data-theme="holographic"] :is(.month-selector, .popover-menu, .ask-panel, .auth-card.card) {
+  background-color: var(--holo-glass-elevated);
+  -webkit-backdrop-filter: blur(24px) saturate(122%);
+  backdrop-filter: blur(24px) saturate(122%);
+}
+
+/* A control nested inside glass should be opaque pearl, not another live blur. */
+html[data-theme="holographic"] :is(
+  .range-pill.active,
+  .type-toggle-thumb,
+  .sign-toggle .type-toggle-thumb,
+  .side-nav-item.active,
+  .modal-close-btn,
+  .modal-back-btn
+) {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+html[data-theme="holographic"] :is(.range-pill.active, .type-toggle-thumb, .sign-toggle .type-toggle-thumb) {
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 5px 14px rgba(45, 59, 90, 0.09);
+}
+
+/* Modal: elevated glass with one optical layer and a clearly separated page.
+   Blur is fixed while opacity/transform animate, per the performance guidance. */
+html[data-theme="holographic"] .modal-overlay {
+  background: rgba(35, 48, 68, 0.18);
+  -webkit-backdrop-filter: blur(14px) saturate(112%);
+  backdrop-filter: blur(14px) saturate(112%);
+  animation: holoBackdropIn 240ms var(--ease-standard) both;
+}
+
+html[data-theme="holographic"] .modal-sheet.modal-sheet {
+  background-color: rgba(252, 253, 255, 0.86);
+  background-image:
+    radial-gradient(circle at 10% 0%, rgba(43, 220, 216, 0.055), transparent 28%),
+    radial-gradient(circle at 92% 4%, rgba(155, 140, 255, 0.055), transparent 30%);
+  border-color: rgba(255, 255, 255, 0.9);
+  border-radius: 28px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    0 24px 64px rgba(20, 30, 55, 0.16),
+    0 0 32px rgba(125, 108, 255, 0.06);
+  -webkit-backdrop-filter: blur(26px) saturate(124%);
+  backdrop-filter: blur(26px) saturate(124%);
+  animation: holoPanelIn 340ms var(--ease-enter) both;
+}
+
+html[data-theme="holographic"] :is(.modal-head, .modal-foot) {
+  background: rgba(252, 253, 255, 0.46);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+html[data-theme="holographic"] .modal-head {
+  min-height: 64px;
+}
+
+html[data-theme="holographic"] .modal-title {
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+
+/* The sheet receives programmatic focus for a reliable trap, but it is not an
+   interactive control. Keep the ring on the controls inside it instead of
+   drawing a neon frame around the whole dialog. */
+html[data-theme="holographic"] .modal-sheet:focus {
+  outline: none !important;
+}
+
+html[data-theme="holographic"] .ask-panel:focus {
+  outline: none !important;
+}
+
+/* Repeated content cards should read as quiet paper suspended above the
+   atmosphere, not as a wall of GPU-backed glass. Reserve refraction for the
+   summary, controls, navigation, and transient layers. */
+html[data-theme="holographic"] .cat-card.card {
+  background: rgba(250, 252, 255, 0.78);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.86),
+    0 14px 34px rgba(28, 42, 66, 0.055);
+}
+
+html[data-theme="holographic"] :is(.manage-cat-card, .update-cat-section, .empty-state) {
+  background: rgba(250, 252, 255, 0.78);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+html[data-theme="holographic"] .ds-page {
+  background: rgba(247, 250, 255, 0.92);
+}
+
+html[data-theme="holographic"] .ds-token-group.ds-token-group,
+html[data-theme="holographic"] .ds-type-list.ds-type-list,
+html[data-theme="holographic"] .ds-specimen.ds-specimen {
+  background: rgba(252, 253, 255, 0.82);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+html[data-theme="holographic"] .modal-overlay.is-closing {
+  pointer-events: none;
+  animation: holoBackdropOut 190ms var(--ease-exit) both;
+}
+
+html[data-theme="holographic"] .modal-overlay.is-closing .modal-sheet {
+  animation: holoPanelOut 190ms var(--ease-exit) both;
+}
+
+html[data-theme="holographic"] .ask-overlay.is-closing {
+  pointer-events: none;
+  animation: holoBackdropOut 200ms var(--ease-exit) both;
+}
+
+html[data-theme="holographic"] .ask-overlay.is-closing .ask-panel {
+  animation: holoAskOut 200ms var(--ease-exit) both;
+}
+
+html[data-theme="holographic"] .popover-menu.is-closing {
+  pointer-events: none;
+  animation: holoPopoverOut 140ms var(--ease-exit) both;
+}
+
+@keyframes holoBackdropOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes holoPanelOut {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(8px) scale(0.995); }
+}
+
+@keyframes holoAskOut {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(10px); }
+}
+
+@keyframes holoPopoverOut {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(4px) scale(0.992); }
+}
+
+/* Drawer: the sheet moves; the product recedes only slightly. The old full-
+   width shell shove made the navigation feel like a second page. */
+@media (max-width: 899px) {
+  html[data-theme="holographic"] .side-nav {
+    z-index: 120;
+    transform: translateX(calc(-100% - 12px));
+    background-color: rgba(248, 250, 255, 0.82);
+    box-shadow: 18px 0 54px rgba(30, 45, 70, 0.12);
+    -webkit-backdrop-filter: blur(24px) saturate(122%);
+    backdrop-filter: blur(24px) saturate(122%);
+    transition:
+      transform 320ms var(--ease-enter),
+      visibility 0s linear 320ms;
+  }
+
+  html[data-theme="holographic"] .side-nav.open {
+    transform: none;
+    transition:
+      transform 320ms var(--ease-enter),
+      visibility 0s;
+  }
+
+  html[data-theme="holographic"] .app-shell.nav-open {
+    transform: translateX(6vw) scale(0.985);
+    transform-origin: right center;
+    border-radius: 24px;
+    box-shadow: -14px 0 44px rgba(37, 48, 68, 0.14);
+  }
+
+  html[data-theme="holographic"] .nav-scrim {
+    background: rgba(31, 42, 62, 0.11);
+    -webkit-backdrop-filter: blur(2px) saturate(104%);
+    backdrop-filter: blur(2px) saturate(104%);
+  }
+
+  html[data-theme="holographic"] .modal-sheet.modal-sheet {
+    border-radius: 26px;
+  }
+}
+
+@media (min-width: 900px) {
+  html[data-theme="holographic"] .side-nav {
+    transform: none;
+  }
+
+  html[data-theme="holographic"] .ask-overlay.is-closing .ask-panel {
+    animation-name: holoAskOutDesktop;
+  }
+}
+
+@keyframes holoAskOutDesktop {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateX(12px); }
+}
+
+/* The CSS atmosphere and WebGL pane both hold while a transient product layer
+   is present. The renderer pause is managed in JS; this covers the companion
+   low-frequency CSS field. */
+html[data-theme="holographic"]:has(.modal-overlay, .ask-overlay, .side-nav.open) :is(
+  .app-bg,
+  .lp.lp-stone,
+  .auth-shell,
+  .ds-page
+)::before {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="holographic"] .modal-overlay,
+  html[data-theme="holographic"] .modal-sheet,
+  html[data-theme="holographic"] .modal-overlay.is-closing,
+  html[data-theme="holographic"] .modal-overlay.is-closing .modal-sheet {
+    animation-duration: 120ms !important;
+    transform: none;
+  }
+
+
+  html[data-theme="holographic"] .ask-overlay,
+  html[data-theme="holographic"] .ask-panel,
+  html[data-theme="holographic"] .ask-overlay.is-closing,
+  html[data-theme="holographic"] .ask-overlay.is-closing .ask-panel {
+    animation-duration: 120ms !important;
+    transform: none;
+  }
 }

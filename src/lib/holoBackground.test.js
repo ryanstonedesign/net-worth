@@ -1,10 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   DEFAULT_HOLO_MOTION,
+  acquireHoloMotionPause,
   applyHoloMotion,
   getHoloMotion,
+  isHoloMotionPaused,
   readHoloMotion,
   subscribeHoloMotion,
+  subscribeHoloMotionPause,
   writeHoloMotion,
 } from './holoBackground'
 
@@ -59,5 +62,24 @@ describe('holographic background motion preference', () => {
     writeHoloMotion(true)
     expect(seen).toEqual([false])
     expect(getHoloMotion()).toBe(true)
+  })
+
+  it('holds motion until every overlapping product surface releases its lock', () => {
+    const seen = []
+    const unsubscribe = subscribeHoloMotionPause(value => seen.push(value))
+    const releaseDrawer = acquireHoloMotionPause()
+    const releaseModal = acquireHoloMotionPause()
+
+    expect(isHoloMotionPaused()).toBe(true)
+    releaseDrawer()
+    expect(isHoloMotionPaused()).toBe(true)
+    releaseModal()
+    expect(isHoloMotionPaused()).toBe(false)
+    expect(seen).toEqual([true, true, true, false])
+
+    // A cleanup function can safely run more than once under StrictMode.
+    releaseModal()
+    expect(isHoloMotionPaused()).toBe(false)
+    unsubscribe()
   })
 })
