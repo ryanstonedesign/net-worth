@@ -21,7 +21,7 @@ function ForgotPasswordView({ defaultEmail, onSubmit, onBack }) {
     return (
       <div className="auth-shell">
         <div className="auth-mark" aria-hidden="true" />
-        <div className="auth-card card">
+        <div className="auth-card card" key="reset-sent">
           <h1 className="auth-title">Reset link sent</h1>
           <p className="auth-sub">
           We sent a password reset link to <strong>{email}</strong>.
@@ -49,7 +49,7 @@ function ForgotPasswordView({ defaultEmail, onSubmit, onBack }) {
     <div className="auth-shell auth-shell--with-back">
       <AuthBackButton onClick={onBack} label="Back to sign in" />
       <div className="auth-mark" aria-hidden="true" />
-      <div className="auth-card card">
+      <div className="auth-card card" key="reset-request">
         <h1 className="auth-title">Reset your password</h1>
         <p className="auth-sub">
           We'll email you a link to set a new password. To then unlock your
@@ -114,7 +114,7 @@ export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, onBac
     <div className={`auth-shell${onBack ? ' auth-shell--with-back' : ''}`}>
       {onBack && <AuthBackButton onClick={onBack} label="Back to home" />}
       <div className="auth-mark" aria-hidden="true" />
-      <div className="auth-card card">
+      <div className="auth-card card" key={mode}>
         <h1 className="auth-title">
           {mode === 'signin' ? 'Welcome back' : 'Create account'}
         </h1>

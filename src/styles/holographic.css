@@ -2791,6 +2791,62 @@ html[data-theme="holographic"] .ds-specimen.ds-specimen {
   backdrop-filter: none;
 }
 
+/* Shared card entrance. Cards start just below their resting position, softly
+   defocused and a touch smaller, then resolve into the page in one calm
+   ease-out. `backwards` applies the starting frame before the first paint but
+   releases transform/filter after the animation, so hover and interaction
+   transforms continue to work normally. */
+html[data-theme="holographic"] :is(
+  .auth-mark,
+  .brand-lockup__picture,
+  .card.card,
+  .card,
+  .settings-card,
+  .sync-card,
+  .import-preview,
+  .import-row,
+  .recovery-phrase,
+  .ask-consent-card,
+  .manage-cat-card,
+  .update-cat-section,
+  .empty-state,
+  .cat-card-add,
+  .ds-token-group,
+  .ds-type-list,
+  .ds-specimen,
+  .lp-stone-hero__art,
+  .lp-stone-feature__visual,
+  .lp-projection,
+  .lp-stone-rollup,
+  .lp-stone-final__plane,
+  .lp-stone-truth__list li,
+  .lp-stone-principles__list li,
+  .lp-stone-steps li
+) {
+  transform-origin: center bottom;
+  animation: holoCardSettleIn 420ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+/* Update Month already wraps its visual card in a section surface. Animate
+   that outer surface once rather than compounding the offset, scale, and blur
+   across two nested layers. */
+html[data-theme="holographic"] .update-cat-section .card {
+  animation: none;
+}
+
+@keyframes holoCardSettleIn {
+  from {
+    opacity: 0;
+    filter: blur(14px);
+    transform: translate3d(0, 40px, 0) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
 html[data-theme="holographic"] .modal-overlay.is-closing {
   pointer-events: none;
   animation: holoBackdropOut 190ms var(--ease-exit) both;
@@ -2902,6 +2958,35 @@ html[data-theme="holographic"]:has(.modal-overlay, .ask-overlay, .side-nav.open)
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html[data-theme="holographic"] :is(
+    .auth-mark,
+    .brand-lockup__picture,
+    .card,
+    .settings-card,
+    .sync-card,
+    .import-preview,
+    .import-row,
+    .recovery-phrase,
+    .ask-consent-card,
+    .manage-cat-card,
+    .update-cat-section,
+    .empty-state,
+    .cat-card-add,
+    .ds-token-group,
+    .ds-type-list,
+    .ds-specimen,
+    .lp-stone-hero__art,
+    .lp-stone-feature__visual,
+    .lp-projection,
+    .lp-stone-rollup,
+    .lp-stone-final__plane,
+    .lp-stone-truth__list li,
+    .lp-stone-principles__list li,
+    .lp-stone-steps li
+  ) {
+    animation: none !important;
+  }
+
   html[data-theme="holographic"] .modal-overlay,
   html[data-theme="holographic"] .modal-sheet,
   html[data-theme="holographic"] .modal-overlay.is-closing,
