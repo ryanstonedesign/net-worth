@@ -576,6 +576,10 @@ button.settings-row:active {
   line-height: 1.6;
 }
 
+.auth-title--solo {
+  margin-bottom: 28px;
+}
+
 .auth-card form + .auth-switch,
 .auth-switch + .auth-switch {
   border-top: 1px solid color-mix(in srgb, var(--c-border) 76%, transparent);

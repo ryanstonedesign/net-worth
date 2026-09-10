@@ -115,14 +115,14 @@ export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, onBac
       {onBack && <AuthBackButton onClick={onBack} label="Back to home" />}
       <div className="auth-mark" aria-hidden="true" />
       <div className="auth-card card" key={mode}>
-        <h1 className="auth-title">
+        <h1 className={`auth-title${mode === 'signin' ? ' auth-title--solo' : ''}`}>
           {mode === 'signin' ? 'Welcome back' : 'Create account'}
         </h1>
-        <p className="auth-sub">
-          {mode === 'signin'
-            ? 'Sign in to sync your encrypted data across devices.'
-            : 'Your data is encrypted on this device before it leaves. Nobody but you can read it.'}
-        </p>
+        {mode === 'signup' && (
+          <p className="auth-sub">
+            Your data is encrypted on this device before it leaves. Nobody but you can read it.
+          </p>
+        )}
 
         <form onSubmit={submit}>
           {mode === 'signup' && (
@@ -231,7 +231,7 @@ export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, onBac
             className="btn btn-tertiary btn-full"
             onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
           >
-            {mode === 'signin' ? 'Need an account? Create one' : 'Have an account? Sign in'}
+            {mode === 'signin' ? 'Create account' : 'Have an account? Sign in'}
           </button>
         </div>
       </div>

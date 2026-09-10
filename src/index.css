@@ -2359,6 +2359,9 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
   color: var(--c-ink-mute);
   margin: 0 0 24px;
 }
+.auth-title--solo {
+  margin-bottom: 24px;
+}
 .auth-warn {
   display: flex;
   gap: 10px;
