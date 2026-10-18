@@ -1061,15 +1061,19 @@ html[data-theme="holographic"] .summary-cell-amount {
 }
 
 html[data-theme="holographic"] .dash-empty {
-  margin-top: 16px;
   align-items: flex-start;
   text-align: left;
   padding: 24px;
   gap: 10px;
 }
 
+/* Copy spans the card; only the button keeps its own width. */
+html[data-theme="holographic"] .dash-empty :is(.empty-title, .empty-desc) {
+  align-self: stretch;
+  max-width: none;
+}
+
 html[data-theme="holographic"] .dash-empty .empty-desc {
-  max-width: 44ch;
   margin: 0 0 6px;
 }
 

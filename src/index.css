@@ -606,6 +606,11 @@ a { text-decoration: none; color: inherit; }
   padding: 0 20px;
   margin-bottom: 28px;
 }
+/* With no categories the summary row is hidden, so the list follows the
+   range control directly and needs the gap the summary row would have had. */
+:is(.range-pills, .custom-range-row) + .cat-scroll {
+  margin-top: var(--space-6, 28px);
+}
 .cat-card {
   width: 100%;
   padding: 16px 20px;
