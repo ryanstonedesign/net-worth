@@ -6,7 +6,9 @@ import { createPearlescentRenderer } from '../lib/pearlescent'
  * the animation — the pane is meant to feel like one continuous piece of glass
  * behind the whole product, not something that reloads per view.
  *
- * It renders nothing for other themes, and nothing if WebGL is unavailable; in
+ * It renders nothing for other themes, nothing behind the signed-in app (which
+ * sits on plain white; App sets data-app-shell on the root while it is
+ * mounted), and nothing if WebGL is unavailable; in
  * both cases the CSS atmosphere in holographic.css is what shows. The
  * data-holo-bg flag on the root is how the stylesheet knows which of the two
  * it is drawing behind.
@@ -14,6 +16,7 @@ import { createPearlescentRenderer } from '../lib/pearlescent'
 export default function PearlescentBackground() {
   const canvasRef = useRef(null)
   const [theme, setTheme] = useState(() => document.documentElement.dataset.theme)
+  const [inApp, setInApp] = useState(() => 'appShell' in document.documentElement.dataset)
   // Set once the context is confirmed live, and cleared if the GPU takes it
   // away, which re-hides the canvas and brings the CSS gradients back.
   const [live, setLive] = useState(true)
@@ -23,12 +26,19 @@ export default function PearlescentBackground() {
   // attribute is what keeps this in step with either of them.
   useEffect(() => {
     const root = document.documentElement
-    const observer = new MutationObserver(() => setTheme(root.dataset.theme))
-    observer.observe(root, { attributes: true, attributeFilter: ['data-theme'] })
+    const sync = () => {
+      setTheme(root.dataset.theme)
+      setInApp('appShell' in root.dataset)
+    }
+    const observer = new MutationObserver(sync)
+    observer.observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-app-shell'] })
+    // App mounts first and may already have flagged the root before this
+    // observer existed, so read the current state once as well.
+    sync()
     return () => observer.disconnect()
   }, [])
 
-  const holographic = theme === 'holographic'
+  const holographic = theme === 'holographic' && !inApp
 
   useEffect(() => {
     if (!holographic || !live) return

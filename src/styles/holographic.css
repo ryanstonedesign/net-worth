@@ -230,6 +230,31 @@ html[data-theme="holographic"] .lp {
   z-index: 1;
 }
 
+/* The signed-in app sits on plain white: no shader pane (PearlescentBackground
+   stands down while data-app-shell is set) and no CSS atmosphere behind it.
+   Cards and controls keep their own edges and shadows for structure. */
+html[data-theme="holographic"][data-app-shell] {
+  --c-bg: #fff;
+  background: #fff;
+}
+
+html[data-theme="holographic"][data-app-shell] body,
+html[data-theme="holographic"][data-app-shell] #root,
+html[data-theme="holographic"][data-app-shell] .app-bg.app-bg {
+  background: #fff;
+}
+
+/* Doubled class: the atmosphere rule's :is() list includes .lp.lp-stone,
+   which lifts it above a single .app-bg. */
+html[data-theme="holographic"][data-app-shell] .app-bg.app-bg::before {
+  content: none;
+  display: none;
+}
+
+html[data-theme="holographic"][data-app-shell] .side-nav.side-nav {
+  background-color: #fff;
+}
+
 /* Procedural pane (components/PearlescentBackground). It sits on the same
    layer as .app-bg and later in the DOM, so it covers the flat fill while
    every shell — all of which start at z-index 1 — still paints above it. */
@@ -658,10 +683,10 @@ html[data-theme="holographic"] .top-nav-fade {
   height: calc(var(--safe-top) + 132px);
   background: linear-gradient(
     to bottom,
-    rgba(248, 250, 255, 0.78) 0%,
-    rgba(248, 250, 255, 0.56) 30%,
-    rgba(248, 250, 255, 0.24) 62%,
-    rgba(248, 250, 255, 0.06) 85%,
+    rgba(255, 255, 255, 0.86) 0%,
+    rgba(255, 255, 255, 0.62) 30%,
+    rgba(255, 255, 255, 0.26) 62%,
+    rgba(255, 255, 255, 0.06) 85%,
     transparent 100%
   );
   -webkit-backdrop-filter: blur(8px);
@@ -1147,14 +1172,14 @@ html[data-theme="holographic"] .month-float::before {
   left: 50%;
   bottom: calc(-1 * (var(--safe-bottom) + 24px));
   width: 100vw;
-  height: calc(100% + var(--safe-bottom) + 64px);
+  height: calc(100% + var(--safe-bottom) + 48px);
   transform: translateX(-50%);
   pointer-events: none;
   background: linear-gradient(
     to top,
-    rgba(246, 248, 253, 0.92) 0%,
-    rgba(246, 248, 253, 0.72) 45%,
-    rgba(246, 248, 253, 0) 100%
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(255, 255, 255, 0.6) 40%,
+    rgba(255, 255, 255, 0) 100%
   );
 }
 

@@ -118,6 +118,15 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
   const [newOpen, setNewOpen] = useState(false)
   const [askOpen, setAskOpen] = useState(false)
 
+  // The signed-in app sits on plain white. The flag tells the background pane
+  // to stand down and the stylesheet to drop the atmosphere behind the shell;
+  // the landing and auth screens keep both.
+  useEffect(() => {
+    const root = document.documentElement
+    root.dataset.appShell = ''
+    return () => { delete root.dataset.appShell }
+  }, [])
+
   // Crossing up to the persistent-sidebar layout must not preserve an old
   // mobile drawer state that reappears when the viewport narrows again.
   useEffect(() => {
