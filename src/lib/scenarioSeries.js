@@ -84,6 +84,20 @@ export function compareSeries(scenarios, { currentMonth, range = '1Y', customYea
   const rows = [...byMonth.values()]
     .sort((a, b) => (a.month < b.month ? -1 : 1))
     .map(r => ({ ...r, isForecast: r.month > lastMonth }))
+
+  // A scenario whose history starts later than the chart would otherwise
+  // pop into existence mid-plot. Draw it from $0 instead, rising into its
+  // first recorded month. Only the drawn :h key gets the zero; the plain
+  // [id] value stays empty, so the popover and totals never report a $0 that
+  // was never recorded.
+  for (const s of base) {
+    const first = rows.find(r => r[`${s.id}:h`] != null)?.month
+    if (!first) continue
+    for (const r of rows) {
+      if (r.month >= first) break
+      r[`${s.id}:h`] = 0
+    }
+  }
   return { rows, lastMonth }
 }
 

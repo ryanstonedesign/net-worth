@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState, useRef, useEffect } from 'react'
 import MonthSelector from '../components/MonthSelector'
+import ProgressiveBlur from '../components/ProgressiveBlur'
 import CategoryCard from '../components/CategoryCard'
 import RollingNumber from '../components/RollingNumber'
 import EditCategorySheet from '../components/EditCategorySheet'
@@ -514,6 +515,9 @@ export default function Dashboard({
           a category exists: there are no months to move between yet, and it
           would sit on top of the first-run prompt. */}
       {!isEmpty && <div className="month-float">
+        {/* Scrim behind the pill, inside its own layer so it can never paint
+            over the controls. */}
+        <ProgressiveBlur edge="bottom" className="month-float-scrim" />
         {selectedMonth !== currentMonth && (
           <button className="back-to-month" onClick={() => onMonthChange(currentMonth)}>
             Back to this month

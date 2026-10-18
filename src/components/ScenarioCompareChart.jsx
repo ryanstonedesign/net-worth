@@ -82,7 +82,8 @@ export default function ScenarioCompareChart({ rows, scenarios, selectedMonth, o
     }
   }, [])
 
-  const values = rows.flatMap(r => scenarios.map(s => r[s.id]).filter(v => v != null))
+  // Every drawn point counts toward the scale, including the $0 lead-ins.
+  const values = rows.flatMap(r => scenarios.flatMap(s => [r[`${s.id}:h`], r[`${s.id}:f`]]).filter(v => v != null))
   const max = Math.max(...values)
   const min = Math.min(...values)
   const span = Math.max(max - min, Math.abs(max) * 0.02, 1)

@@ -730,8 +730,10 @@ html[data-theme="holographic"] .slider::-moz-range-thumb {
    blur or fill on it would make it the backdrop root and the stacked layers
    inside would have nothing to blur. The layers ramp the blur; the tint
    carries the white fade. */
+/* Ends just below the header controls (12px inset + 48px buttons), so the
+   page heading is clear of it at rest and only blurs as it scrolls under. */
 html[data-theme="holographic"] .top-nav-fade {
-  height: calc(var(--safe-top) + 132px);
+  height: calc(var(--safe-top) + 84px);
   background: none;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
@@ -739,19 +741,25 @@ html[data-theme="holographic"] .top-nav-fade {
   mask-image: none;
 }
 
-html[data-theme="holographic"] .bottom-nav-fade {
+/* Bottom scrim: a child of the fixed month pill container, so it shares the
+   pill's layer and sits behind the pill. As a sibling in the app shell it
+   painted over the pill whenever the page's stage formed its own stacking
+   context. It spans the content area and reaches the bottom edge. */
+html[data-theme="holographic"] .month-float-scrim {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  z-index: -1;
+  left: 50%;
+  bottom: calc(-1 * (var(--safe-bottom) + 24px));
+  width: 100vw;
   height: calc(var(--safe-bottom) + 128px);
-  z-index: 15;
+  transform: translateX(-50%);
   pointer-events: none;
 }
 
-/* Only while there is a month pill to sit behind (none on a fresh account). */
-html[data-theme="holographic"] .app-shell:not(:has(.month-float)) .bottom-nav-fade {
-  display: none;
+@media (min-width: 900px) {
+  html[data-theme="holographic"] .month-float-scrim {
+    width: calc(100vw - var(--sidebar-w));
+  }
 }
 
 html[data-theme="holographic"] .progressive-blur__layer,
@@ -772,7 +780,7 @@ html[data-theme="holographic"] .top-nav-fade .progressive-blur__tint {
   );
 }
 
-html[data-theme="holographic"] .bottom-nav-fade .progressive-blur__tint {
+html[data-theme="holographic"] .month-float-scrim .progressive-blur__tint {
   background: linear-gradient(
     to top,
     rgba(255, 255, 255, 0.9) 0%,

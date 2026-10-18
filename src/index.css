@@ -1249,7 +1249,7 @@ a { text-decoration: none; color: inherit; }
 /* ProgressiveBlur layers are a Holographic treatment; other themes keep the
    single fade on the container above. */
 html:not([data-theme="holographic"]) .progressive-blur > *,
-html:not([data-theme="holographic"]) .bottom-nav-fade {
+html:not([data-theme="holographic"]) .month-float-scrim {
   display: none;
 }
 
@@ -3454,8 +3454,11 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
   scrollbar-width: none;
 }
 .home-cards__track::-webkit-scrollbar { display: none; }
+/* One fixed width for every card at every size; the row scrolls. */
 .home-card {
-  flex: 0 0 clamp(168px, 44vw, 220px);
+  flex: 0 0 172px;
+  width: 172px;
+  min-width: 0;
   min-height: 124px;
   display: flex;
   flex-direction: column;
@@ -3472,10 +3475,18 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
   display: flex;
   align-items: center;
   gap: 8px;
-  max-width: 100%;
+  width: 100%;
+  min-width: 0;
   font-size: 14px;
   font-weight: var(--font-weight-medium);
   color: var(--c-ink-mute);
+}
+/* One line, truncated: the ellipsis needs its own box, since a bare text
+   node in a flex row won't truncate. */
+.home-card__label,
+.home-card__total {
+  min-width: 0;
+  max-width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3521,6 +3532,4 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
 
 @media (min-width: 900px) {
   .home-cards__track { padding-inline: 40px; scroll-padding-inline: 40px; }
-  /* A handful of scenarios share the column; past that the row scrolls. */
-  .home-card { flex: 1 0 180px; }
 }

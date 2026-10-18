@@ -303,9 +303,6 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
           </div>
           )}
         </div>
-        {/* Bottom scrim behind the floating month pill (shown only while the
-            pill is; see holographic.css). */}
-        <ProgressiveBlur edge="bottom" className="bottom-nav-fade" />
         {/* Tap the slid-aside content to close the drawer. */}
         {menuOpen && (
           <button

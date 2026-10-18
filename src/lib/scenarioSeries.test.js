@@ -61,6 +61,18 @@ describe('compareSeries', () => {
     expect(rows.at(-1).month).toBe('2027-03')
   })
 
+  it('draws a later-starting scenario up from $0 without reporting the zeros', () => {
+    const late = data({ '2026-10': [700, 0] })
+    const { rows } = compareSeries(
+      [{ id: 's1', name: 'Steady', data: steady }, { id: 'late', name: 'Late', data: late }],
+      { currentMonth: '2026-10', range: '3M' },
+    )
+    const aug = rows.find(r => r.month === '2026-08')
+    expect(aug['late:h']).toBe(0)
+    expect(aug.late).toBeUndefined()
+    expect(rows.find(r => r.month === '2026-10')['late:h']).toBe(700)
+  })
+
   it('is empty when no scenario has history', () => {
     expect(compareSeries([{ id: 'x', name: 'Empty', data: { categories: [], snapshots: {} } }], { currentMonth: '2026-10' }))
       .toEqual({ rows: [], lastMonth: null })

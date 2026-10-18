@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState } from 'react'
 import MonthSelector from '../components/MonthSelector'
+import ProgressiveBlur from '../components/ProgressiveBlur'
 import { scenarioColor } from '../components/ScenarioCompareChart'
 import { formatCurrency, formatMonthDisplay, getCurrentMonth } from '../utils'
 import { RANGE_OPTIONS, RANGE_COUNTS, compareSeries, scenarioValueAt } from '../lib/scenarioSeries'
@@ -82,10 +83,10 @@ export default function Home({ scenarios, selectedMonth, onMonthChange, onOpenSc
       <section className="home-cards" aria-label="Scenario totals">
         <div className="home-cards__track">
           {cards.map(s => (
-            <button key={s.id} type="button" className="card home-card" onClick={() => onOpenScenario(s.id)}>
+            <button key={s.id} type="button" className="card home-card" onClick={() => onOpenScenario(s.id)} title={s.name}>
               <span className="home-card__name">
                 <span className="home-card__swatch" style={{ background: s.color }} aria-hidden="true" />
-                {s.name}
+                <span className="home-card__label">{s.name}</span>
               </span>
               <span className={`home-card__total${s.total?.estimated ? ' estimated' : ''}`}>
                 {s.total ? formatCurrency(s.total.value) : '—'}
@@ -99,6 +100,9 @@ export default function Home({ scenarios, selectedMonth, onMonthChange, onOpenSc
       </section>
 
       <div className="month-float">
+        {/* Scrim behind the pill, inside its own layer so it can never paint
+            over the controls. */}
+        <ProgressiveBlur edge="bottom" className="month-float-scrim" />
         {selectedMonth !== currentMonth && (
           <button className="back-to-month" onClick={() => onMonthChange(currentMonth)}>
             Back to this month
