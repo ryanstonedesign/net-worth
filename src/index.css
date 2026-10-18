@@ -1691,6 +1691,115 @@ html:not([data-theme="holographic"]) .bottom-nav-fade {
   margin-top: auto;
   padding-top: 12px;
 }
+/* ── Two-level navigation (SideNav) ──
+   The aside holds two layers: the rail (logo, Home, Scenarios, account) and
+   the scenario panel. Each carries its own padding; the aside is only the
+   frame. Mobile stacks them in the drawer and slides between them; desktop
+   lays them side by side, collapsing the rail to icons while the panel is
+   open. */
+.side-nav { padding: 0; }
+.side-nav-rail,
+.side-nav-panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: calc(var(--safe-top) + 14px) 14px calc(var(--safe-bottom) + 20px);
+  transition:
+    transform 0.28s cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 0.2s ease,
+    width 0.28s cubic-bezier(0.32, 0.72, 0, 1),
+    visibility 0s linear 0s;
+}
+.side-nav-rail { z-index: 2; width: 100%; }
+.side-nav-panel { z-index: 1; width: 100%; }
+/* Hidden layers drop out of hit-testing and the tab order once their slide
+   finishes; shown ones inherit the aside's pointer-events, so a closed
+   drawer still ignores taps. */
+.side-nav-rail,
+.side-nav--panel .side-nav-panel { pointer-events: inherit; }
+.side-nav-panel,
+.side-nav--panel .side-nav-rail { pointer-events: none; }
+
+.side-nav-primary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 24px;
+}
+.side-nav-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: none;
+  border-radius: var(--r-btn);
+  background: none;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: var(--font-weight-medium);
+  color: var(--c-ink);
+  text-align: left;
+  transition: background 0.16s;
+}
+.side-nav-link:hover { background: rgba(17, 26, 74, 0.04); }
+.side-nav-link.active { background: var(--c-surface-muted); }
+.side-nav-link-icon { display: inline-flex; flex-shrink: 0; }
+.side-nav-link-icon svg { width: 20px; height: 20px; }
+.side-nav-link-label { flex: 1; min-width: 0; white-space: nowrap; }
+.side-nav-link-chevron { width: 16px; height: 16px; color: var(--c-ink-mute); }
+.side-nav-tip { display: none; }
+
+.side-nav-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 12px;
+}
+.side-nav-panel-title {
+  font-size: 13px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-ink-mute);
+}
+.side-nav-back { width: 40px; height: 40px; margin-left: -8px; }
+.side-nav-back svg { width: 18px; height: 18px; }
+.side-nav-panel .side-nav-new { margin-top: 12px; }
+.side-nav-panel .side-nav-list { flex: 1; min-height: 0; }
+
+/* Mobile drawer: the scenario list slides in over the rail. */
+@media (max-width: 899px) {
+  .side-nav-panel {
+    transform: translateX(28px);
+    opacity: 0;
+    visibility: hidden;
+    transition-property: transform, opacity, visibility;
+    transition-delay: 0s, 0s, 0.28s;
+  }
+  .side-nav--panel .side-nav-panel {
+    transform: none;
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+  .side-nav--panel .side-nav-rail {
+    transform: translateX(-28px);
+    opacity: 0;
+    visibility: hidden;
+    transition-property: transform, opacity, visibility;
+    transition-delay: 0s, 0s, 0.28s;
+  }
+}
+
 .user-menu { position: relative; }
 .side-nav-user {
   display: flex;
@@ -2154,7 +2263,7 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
    user row at the bottom of the sidebar. Keep the 900px breakpoint in sync
    with DESKTOP_QUERY in src/hooks/useMediaQuery.js. */
 @media (min-width: 900px) {
-  :root { --sidebar-w: 280px; }
+  :root { --sidebar-w: 240px; }
   .side-nav {
     width: var(--sidebar-w);
     max-width: none;
@@ -2163,7 +2272,58 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
     transition: none;
     border-right: 1px solid var(--c-border);
   }
-  .app-shell { margin-left: var(--sidebar-w); }
+  .app-shell {
+    margin-left: var(--sidebar-w);
+    transition: margin-left 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  /* Scenarios open: a 72px icon rail plus the 248px scenario panel. */
+  html[data-nav="scenarios"] { --sidebar-w: 320px; }
+  .side-nav { transition: width 0.28s cubic-bezier(0.32, 0.72, 0, 1); }
+  .side-nav-rail { width: 240px; }
+  .side-nav-panel {
+    left: 72px;
+    width: 248px;
+    transform: translateX(-16px);
+    opacity: 0;
+    visibility: hidden;
+    border-left: 1px solid color-mix(in srgb, var(--c-border) 60%, transparent);
+    transition-property: transform, opacity, visibility;
+    transition-delay: 0s, 0s, 0.28s;
+  }
+  .side-nav--panel .side-nav-panel {
+    transform: none;
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+  /* Collapsed rail: icons only, centred; the logo stays, its wordmark and the
+     labels go (labels stay readable to assistive tech via aria-label). */
+  .side-nav--panel .side-nav-rail { width: 72px; padding-inline: 12px; pointer-events: inherit; }
+  .side-nav--panel .side-nav-header { justify-content: center; padding-inline: 0; }
+  .side-nav--panel .brand-lockup__wordmark,
+  .side-nav--panel .side-nav-link-label,
+  .side-nav--panel .side-nav-user-name { display: none; }
+  .side-nav--panel .side-nav-link { justify-content: center; padding: 0; }
+  .side-nav--panel .side-nav-user { justify-content: center; }
+  /* Hover/focus label for a collapsed rail item. */
+  .side-nav--panel .side-nav-link:hover .side-nav-tip,
+  .side-nav--panel .side-nav-link:focus-visible .side-nav-tip {
+    display: block;
+    position: absolute;
+    left: calc(100% + 10px);
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 30;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: var(--c-ink);
+    color: #fff;
+    font-size: 13px;
+    font-weight: var(--font-weight-medium);
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 6px 18px rgba(16, 24, 40, 0.16);
+  }
   /* Neutralise the drawer slide if the viewport crosses the breakpoint while
      the drawer is open. */
   .app-shell.nav-open {
@@ -3263,4 +3423,104 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
 @media (prefers-reduced-motion: reduce) {
   .lp { scroll-behavior: auto; }
   .lp-sync-ping { animation: none; }
+}
+
+/* ── Home ──
+   Every scenario on one chart, then a horizontal row of scenario total
+   cards. Shares the dashboard's column, hero and range control. */
+.home-title {
+  margin: 4px 0 0;
+  font-family: var(--font-title);
+  font-size: 32px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--c-ink);
+}
+.home-sub {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--c-ink-mute);
+}
+.home-cards { margin-top: 28px; }
+.home-cards__track {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 20px;
+  padding: 4px 20px 20px;
+  scrollbar-width: none;
+}
+.home-cards__track::-webkit-scrollbar { display: none; }
+.home-card {
+  flex: 0 0 clamp(168px, 44vw, 220px);
+  min-height: 124px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 16px 18px;
+  scroll-snap-align: start;
+  text-align: left;
+  font: inherit;
+  color: var(--c-ink);
+  cursor: pointer;
+}
+.home-card__name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+  color: var(--c-ink-mute);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.home-card__swatch { flex-shrink: 0; width: 10px; height: 10px; border-radius: 50%; }
+.home-card__total {
+  margin-top: auto;
+  font-size: 22px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.home-card__total.estimated { color: var(--c-ink-mute); }
+.home-card__note { font-size: 12px; color: var(--c-ink-mute); }
+
+.compare-tooltip__list {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  min-width: 190px;
+}
+.compare-tooltip__list li {
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.compare-tooltip__swatch { width: 8px; height: 8px; border-radius: 50%; }
+.compare-tooltip__name {
+  color: var(--c-ink-mute);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.compare-tooltip__value {
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--c-ink);
+}
+
+@media (min-width: 900px) {
+  .home-cards__track { padding-inline: 40px; scroll-padding-inline: 40px; }
+  /* A handful of scenarios share the column; past that the row scrolls. */
+  .home-card { flex: 1 0 180px; }
 }

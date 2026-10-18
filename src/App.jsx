@@ -7,6 +7,7 @@ import { useVault } from './hooks/useVault'
 import { useMediaQuery, DESKTOP_QUERY } from './hooks/useMediaQuery'
 import { getCurrentMonth } from './utils'
 import Dashboard from './pages/Dashboard'
+import Home from './pages/Home'
 import PrototypeSettings from './components/PrototypeSettings'
 import { readChartVariant, writeChartVariant } from './lib/chartVariant'
 import { applyGrain, readGrain, writeGrain } from './lib/grainOpacity'
@@ -118,6 +119,17 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
   const [outgoing, setOutgoing] = useState(null)
   const [newOpen, setNewOpen] = useState(false)
   const [askOpen, setAskOpen] = useState(false)
+  // Which top-level section is showing: 'home' (every scenario compared) or
+  // 'scenario' (the active scenario's dashboard). Signing in lands on Home.
+  const [view, setView] = useState('home')
+
+  // The desktop sidebar is wider while the scenario list is open beside the
+  // collapsed rail; the stylesheet reads this to size --sidebar-w.
+  useEffect(() => {
+    const root = document.documentElement
+    root.dataset.nav = view === 'home' ? 'home' : 'scenarios'
+    return () => { delete root.dataset.nav }
+  }, [view])
 
   // The signed-in app sits on plain white. The flag tells the background pane
   // to stand down and the stylesheet to drop the atmosphere behind the shell;
@@ -145,12 +157,28 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
   const { forecasts, activeForecastId } = dataHook
   const activeForecast = forecasts.find(f => f.id === activeForecastId)
   const barName = activeForecast?.name ?? 'Scenario'
+  const onHome = view === 'home'
+  const homeScenarios = forecasts.map(f => ({ ...f, data: dataHook.getForecastData(f.id) }))
 
   // Switch to a scenario from the side nav, then close the drawer.
   const handleSelect = (id) => {
     setEnterMode('fade')
     dataHook.setActiveForecast(id)
+    setView('scenario')
     setMenuOpen(false)
+  }
+
+  const goHome = () => {
+    setView('home')
+    setMenuOpen(false)
+  }
+
+  // Desktop "Scenarios": open the list beside the rail and show the active
+  // scenario. (On mobile the drawer moves to its scenario list instead; a
+  // scenario only opens once one is picked.)
+  const showScenarios = () => {
+    setEnterMode('fade')
+    setView('scenario')
   }
 
   // "+" opens the creation sheet: name the scenario, pick which one to
@@ -164,8 +192,14 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
   // while the previous one (frozen) is pushed out left.
   const handleCreate = ({ name, fromId, synced }) => {
     setNewOpen(false)
-    setOutgoing({ id: activeForecastId }) // freeze the card leaving to the left
-    setEnterMode('push')
+    if (onHome) {
+      // Nothing to push out from Home: just open the new scenario.
+      setEnterMode('fade')
+      setView('scenario')
+    } else {
+      setOutgoing({ id: activeForecastId }) // freeze the card leaving to the left
+      setEnterMode('push')
+    }
     dataHook.addForecast(name, { fromId, linked: synced })
   }
 
@@ -186,6 +220,9 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
       <SideNav
         open={menuOpen}
         desktop={isDesktop}
+        view={view}
+        onHome={goHome}
+        onScenarios={showScenarios}
         scenarios={forecasts}
         activeId={activeForecastId}
         onSelect={handleSelect}
@@ -210,14 +247,25 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
       <div className={`app-shell${menuOpen ? ' nav-open' : ''}`} style={{ overflow: 'hidden' }}>
         <ProgressiveBlur edge="top" className="top-nav-fade" />
         <TopNav
-          name={barName}
+          name={onHome ? 'Home' : barName}
           // Sync is only meaningful once a second scenario exists;
-          // undefined hides the badge entirely.
-          synced={forecasts.length > 1 ? !!activeForecast?.linked : undefined}
+          // undefined hides the badge entirely (and on Home, which is no
+          // single scenario).
+          synced={!onHome && forecasts.length > 1 ? !!activeForecast?.linked : undefined}
           onMenu={() => setMenuOpen(true)}
           onAsk={() => setAskOpen(true)}
         />
         <div className="page-content">
+          {onHome ? (
+            <div key="home" className="scenario-stage home-stage">
+              <Home
+                scenarios={homeScenarios}
+                selectedMonth={selectedMonth}
+                onMonthChange={setSelectedMonth}
+                onOpenScenario={handleSelect}
+              />
+            </div>
+          ) : (
           <div className="scenario-stage-track">
             {/* The scenario being left behind, frozen, sliding out to the
                 left. Cleared once its slide finishes. */}
@@ -253,6 +301,7 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
               />
             </div>
           </div>
+          )}
         </div>
         {/* Bottom scrim behind the floating month pill (shown only while the
             pill is; see holographic.css). */}

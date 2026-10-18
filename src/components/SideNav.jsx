@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Popover from './Popover'
 import Modal from './Modal'
 import SyncIcon from './SyncIcon'
@@ -29,6 +29,37 @@ const SyncActionIcon = (
   </svg>
 )
 
+const HomeIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M3 10.5 12 3l9 7.5" />
+    <path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5" />
+  </svg>
+)
+const ScenariosIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M3 17l5-5 4 4 8-9" />
+    <path d="M3 21h18" />
+  </svg>
+)
+const BackIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <polyline points="15 18 9 12 15 6" />
+  </svg>
+)
+
+// Two-level navigation.
+//
+// The rail is the top level: logo, Home, Scenarios, and the account row at
+// the bottom. The panel beside it lists the scenarios.
+//
+// Desktop: Home shows the full rail. Choosing Scenarios collapses the rail to
+// icons (logo kept, wordmark hidden, labels as hover tooltips) and slides the
+// scenario panel in beside it; choosing Home again closes the panel.
+//
+// Mobile: the drawer starts on the rail (or on the scenario list, if a
+// scenario is open). Scenarios slides the list in over the rail with a back
+// button; Home goes home and closes the drawer.
+//
 // Side navigation that lists every scenario; tap one to switch to it. The
 // "New scenario" row under the title creates one. Each row carries a 3-dot
 // action menu (rename / sync / delete); unsynced scenarios show a small sync
@@ -37,14 +68,32 @@ const SyncActionIcon = (
 // signed-in user's name is pinned to the bottom and opens the settings
 // popover (via `settingsMenu`) on every layout.
 export default function SideNav({
-  open, desktop, scenarios, activeId, onSelect, onAdd, onDelete, onRename, onToggleSync,
+  open, desktop, view = 'scenario', onHome, onScenarios,
+  scenarios, activeId, onSelect, onAdd, onDelete, onRename, onToggleSync,
   userName, userAvatar, settingsMenu,
 }) {
   const [editingId, setEditingId] = useState(null)
   const [draft, setDraft] = useState('')
   // Scenario whose sync state is pending the confirm dialog, or null.
   const [confirmSync, setConfirmSync] = useState(null)
+  // Mobile drawer level: 'root' (Home / Scenarios) or 'scenarios' (the list).
+  // Each time the drawer opens it starts where the user is.
+  const [level, setLevel] = useState(view === 'home' ? 'root' : 'scenarios')
+  useEffect(() => {
+    if (open) setLevel(view === 'home' ? 'root' : 'scenarios')
+  }, [open, view])
+
   const tabbable = open || desktop
+  // Desktop opens the panel whenever a scenario is showing; the drawer only
+  // once the user steps into the list.
+  const panelOpen = desktop ? view !== 'home' : level === 'scenarios'
+  const railTabbable = tabbable && (desktop || !panelOpen)
+  const panelTabbable = tabbable && panelOpen
+
+  const chooseScenarios = () => {
+    if (desktop) onScenarios?.()
+    else setLevel('scenarios')
+  }
 
   const startRename = (s) => { setEditingId(s.id); setDraft(s.name) }
   const commitRename = () => {
@@ -55,88 +104,141 @@ export default function SideNav({
   }
 
   return (
-    <aside className={`side-nav${open ? ' open' : ''}`} aria-hidden={desktop ? undefined : !open}>
-      <div className="side-nav-header">
-        <BrandLockup compact className="side-nav-title" />
+    <aside
+      className={`side-nav${open ? ' open' : ''}${panelOpen ? ' side-nav--panel' : ''}`}
+      aria-hidden={desktop ? undefined : !open}
+    >
+      <div className="side-nav-rail" aria-hidden={!desktop && panelOpen ? true : undefined}>
+        <div className="side-nav-header">
+          <BrandLockup compact className="side-nav-title" />
+        </div>
+        <nav className="side-nav-primary" aria-label="Main">
+          <button
+            type="button"
+            className={`side-nav-link${view === 'home' ? ' active' : ''}`}
+            aria-current={view === 'home' ? 'page' : undefined}
+            onClick={onHome}
+            aria-label="Home"
+            tabIndex={railTabbable ? 0 : -1}
+          >
+            <span className="side-nav-link-icon">{HomeIcon}</span>
+            <span className="side-nav-link-label">Home</span>
+            <span className="side-nav-tip" aria-hidden="true">Home</span>
+          </button>
+          <button
+            type="button"
+            className={`side-nav-link${view !== 'home' ? ' active' : ''}`}
+            aria-current={view !== 'home' ? 'page' : undefined}
+            aria-expanded={panelOpen}
+            onClick={chooseScenarios}
+            aria-label="Scenarios"
+            tabIndex={railTabbable ? 0 : -1}
+          >
+            <span className="side-nav-link-icon">{ScenariosIcon}</span>
+            <span className="side-nav-link-label">Scenarios</span>
+            {!desktop && (
+              <svg className="side-nav-link-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            )}
+            <span className="side-nav-tip" aria-hidden="true">Scenarios</span>
+          </button>
+        </nav>
+        <div className="side-nav-footer">
+          <UserMenu
+            name={userName}
+            avatar={userAvatar}
+            tabIndex={railTabbable ? 0 : -1}
+            menu={settingsMenu}
+          />
+        </div>
       </div>
-      <button className="side-nav-new" onClick={onAdd} tabIndex={tabbable ? 0 : -1}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-        New scenario
-      </button>
 
-      <nav className="side-nav-list">
-        {scenarios.map(s => {
-          const isEditing = editingId === s.id
-          const items = [{ label: 'Rename', icon: RenameIcon, onClick: () => startRename(s) }]
-          items.push({
-            label: s.linked ? 'Unsync' : 'Sync',
-            icon: SyncActionIcon,
-            onClick: () => setConfirmSync(s),
-          })
-          if (scenarios.length > 1) {
-            items.push({ label: 'Delete', icon: DeleteIcon, onClick: () => onDelete(s.id), danger: true })
-          }
-          return (
-            <div
-              key={s.id}
-              className={`side-nav-item${s.id === activeId ? ' active' : ''}${isEditing ? ' editing' : ''}`}
+      <div className="side-nav-panel" aria-hidden={!panelOpen ? true : undefined} aria-label="Scenarios">
+        <div className="side-nav-panel-head">
+          {!desktop && (
+            <button
+              type="button"
+              className="btn-icon side-nav-back"
+              onClick={() => setLevel('root')}
+              aria-label="Back"
+              tabIndex={panelTabbable ? 0 : -1}
             >
-              {isEditing ? (
-                <input
-                  className="side-nav-item-input"
-                  value={draft}
-                  maxLength={40}
-                  autoFocus
-                  aria-label="Scenario name"
-                  onFocus={e => e.target.select()}
-                  onChange={e => setDraft(e.target.value)}
-                  onBlur={commitRename}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') e.currentTarget.blur()
-                    if (e.key === 'Escape') setEditingId(null)
-                  }}
-                />
-              ) : (
-                <button className="side-nav-item-name" onClick={() => onSelect(s.id)}>
-                  {/* Fixed leading slot keeps names left-aligned with the
-                      "New scenario" label; it carries the unsynced glyph
-                      when applicable (synced is the norm — only flag the
-                      exception). */}
-                  <span className="side-nav-item-lead">
-                    {scenarios.length > 1 && !s.linked && <SyncIcon className="sync-badge sync-badge--off" />}
-                  </span>
-                  <span className="side-nav-item-label">{s.name}</span>
-                </button>
-              )}
-              {!isEditing && (
-                <Popover
-                  ariaLabel={`Actions for ${s.name}`}
-                  triggerClassName="side-nav-item-menu"
-                  tabIndex={tabbable ? 0 : -1}
-                  items={items}
-                >
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <circle cx="5" cy="12" r="2" />
-                    <circle cx="12" cy="12" r="2" />
-                    <circle cx="19" cy="12" r="2" />
-                  </svg>
-                </Popover>
-              )}
-            </div>
-          )
-        })}
-      </nav>
+              {BackIcon}
+            </button>
+          )}
+          <span className="side-nav-panel-title">Scenarios</span>
+        </div>
+        <button className="side-nav-new" onClick={onAdd} tabIndex={panelTabbable ? 0 : -1}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          New scenario
+        </button>
+        <nav className="side-nav-list">
+          {scenarios.map(s => {
+            const isEditing = editingId === s.id
+            const items = [{ label: 'Rename', icon: RenameIcon, onClick: () => startRename(s) }]
+            items.push({
+              label: s.linked ? 'Unsync' : 'Sync',
+              icon: SyncActionIcon,
+              onClick: () => setConfirmSync(s),
+            })
+            if (scenarios.length > 1) {
+              items.push({ label: 'Delete', icon: DeleteIcon, onClick: () => onDelete(s.id), danger: true })
+            }
+            return (
+              <div
+                key={s.id}
+                className={`side-nav-item${s.id === activeId ? ' active' : ''}${isEditing ? ' editing' : ''}`}
+              >
+                {isEditing ? (
+                  <input
+                    className="side-nav-item-input"
+                    value={draft}
+                    maxLength={40}
+                    autoFocus
+                    aria-label="Scenario name"
+                    onFocus={e => e.target.select()}
+                    onChange={e => setDraft(e.target.value)}
+                    onBlur={commitRename}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') e.currentTarget.blur()
+                      if (e.key === 'Escape') setEditingId(null)
+                    }}
+                  />
+                ) : (
+                  <button className="side-nav-item-name" onClick={() => onSelect(s.id)} tabIndex={panelTabbable ? 0 : -1}>
+                    {/* Fixed leading slot keeps names left-aligned with the
+                        "New scenario" label; it carries the unsynced glyph
+                        when applicable (synced is the norm — only flag the
+                        exception). */}
+                    <span className="side-nav-item-lead">
+                      {scenarios.length > 1 && !s.linked && <SyncIcon className="sync-badge sync-badge--off" />}
+                    </span>
+                    <span className="side-nav-item-label">{s.name}</span>
+                  </button>
+                )}
+                {!isEditing && (
+                  <Popover
+                    ariaLabel={`Actions for ${s.name}`}
+                    triggerClassName="side-nav-item-menu"
+                    tabIndex={panelTabbable ? 0 : -1}
+                    items={items}
+                  >
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <circle cx="5" cy="12" r="2" />
+                      <circle cx="12" cy="12" r="2" />
+                      <circle cx="19" cy="12" r="2" />
+                    </svg>
+                  </Popover>
+                )}
+              </div>
+            )
+          })}
+        </nav>
 
-      <div className="side-nav-footer">
-        <UserMenu
-          name={userName}
-          avatar={userAvatar}
-          tabIndex={tabbable ? 0 : -1}
-          menu={settingsMenu}
-        />
       </div>
 
       {confirmSync && (

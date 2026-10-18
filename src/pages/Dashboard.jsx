@@ -13,6 +13,7 @@ import {
   monthIndex,
 } from '../lib/forecast'
 import { markerPlan } from '../lib/chartTicks'
+import { RANGE_OPTIONS, RANGE_COUNTS, FORECAST_MONTHS } from '../lib/scenarioSeries'
 
 const NetWorthChart = lazy(() => import('../components/NetWorthChart'))
 
@@ -22,9 +23,6 @@ const NetWorthChart = lazy(() => import('../components/NetWorthChart'))
 const CHART_X_MARGIN = 14
 const EMPTY_X_INSET = 0.01
 
-const RANGE_OPTIONS = ['1M', '3M', '6M', '1Y', 'custom']
-const RANGE_COUNTS   = { '1M': 2,  '3M': 3,  '6M': 6,  '1Y': 12 }
-const FORECAST_MONTHS = { '1M': 1, '3M': 3,  '6M': 6,  '1Y': 12 }
 function getFilteredHistory(history, range, selectedMonth) {
   let windowed
   if (range === 'custom') {
