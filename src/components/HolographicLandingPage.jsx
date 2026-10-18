@@ -1,6 +1,34 @@
 import BrandLockup from './BrandLockup'
 import LandingNav from './landing/LandingNav'
 
+// One smooth curve through every point (Catmull-Rom as cubic Béziers), so the
+// dots drawn at those points always sit on the line.
+function curveSegments(points) {
+  return points.slice(0, -1).map((p1, i) => {
+    const p0 = points[i - 1] || p1
+    const p2 = points[i + 1]
+    const p3 = points[i + 2] || p2
+    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6]
+    const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6]
+    return `C${c1[0].toFixed(1)} ${c1[1].toFixed(1)} ${c2[0].toFixed(1)} ${c2[1].toFixed(1)} ${p2[0]} ${p2[1]}`
+  })
+}
+
+// Bi-monthly points: twelve months of history, today at the centre (x 320,
+// under the "Today" label), then twelve months of projection.
+const TRAJECTORY = [
+  [24, 178], [73, 170], [123, 150], [172, 156], [222, 128], [271, 118], [320, 100],
+  [369, 92], [419, 80], [468, 70], [518, 58], [567, 46], [616, 34],
+]
+const TODAY_INDEX = 6
+const SEGMENTS = curveSegments(TRAJECTORY)
+const HISTORY = TRAJECTORY.slice(0, TODAY_INDEX + 1)
+const FORECAST = TRAJECTORY.slice(TODAY_INDEX)
+const TODAY = TRAJECTORY[TODAY_INDEX]
+const HISTORY_D = `M${HISTORY[0].join(' ')} ${SEGMENTS.slice(0, TODAY_INDEX).join(' ')}`
+const FORECAST_D = `M${TODAY.join(' ')} ${SEGMENTS.slice(TODAY_INDEX).join(' ')}`
+const AREA_D = `${HISTORY_D} L${TODAY[0]} 210 L${HISTORY[0][0]} 210 Z`
+
 function TrajectoryPreview() {
   return (
     <div className="hlp-preview" aria-label="Worthfolio net-worth trajectory preview">
@@ -37,18 +65,18 @@ function TrajectoryPreview() {
             <line x1="20" y1="112" x2="620" y2="112" />
             <line x1="20" y1="176" x2="620" y2="176" />
           </g>
-          <path className="hlp-chart__area" d="M24 178 C82 168 104 174 150 140 S222 154 274 108 S336 124 368 88 L368 210 L24 210 Z" />
-          <path className="hlp-chart__history" d="M24 178 C82 168 104 174 150 140 S222 154 274 108 S336 124 368 88" />
-          <path className="hlp-chart__forecast" d="M368 88 C430 76 466 75 514 48 S575 40 616 24" />
-          {[24, 96, 150, 218, 274, 332].map((x, index) => (
-            <circle key={x} className="hlp-chart__history-dot" cx={x} cy={[178, 164, 140, 145, 108, 112][index]} r="4" />
+          <path className="hlp-chart__area" d={AREA_D} />
+          <path className="hlp-chart__history" d={HISTORY_D} />
+          <path className="hlp-chart__forecast" d={FORECAST_D} />
+          {HISTORY.slice(0, -1).map(([x, y]) => (
+            <circle key={x} className="hlp-chart__history-dot" cx={x} cy={y} r="4" />
           ))}
           <g className="hlp-chart__selected" filter="url(#hlp-glow)">
-            <circle cx="368" cy="88" r="12" />
-            <circle cx="368" cy="88" r="5" />
+            <circle cx={TODAY[0]} cy={TODAY[1]} r="12" />
+            <circle cx={TODAY[0]} cy={TODAY[1]} r="5" />
           </g>
-          {[430, 492, 554, 616].map((x, index) => (
-            <circle key={x} className="hlp-chart__future-dot" cx={x} cy={[77, 59, 38, 24][index]} r="4.5" />
+          {FORECAST.slice(1).map(([x, y]) => (
+            <circle key={x} className="hlp-chart__future-dot" cx={x} cy={y} r="4.5" />
           ))}
         </svg>
         <div className="hlp-chart__axis" aria-hidden="true"><span>12 months ago</span><span>Today</span><span>12 months ahead</span></div>
@@ -83,13 +111,25 @@ function HistoryVisual() {
   )
 }
 
+// Bar lengths come from the values themselves, against the largest one.
+const ACCOUNTS = [
+  { label: 'Cash', amount: 23540 },
+  { label: 'Investments', amount: 101126 },
+  { label: 'Real estate', amount: 331135 },
+  { label: 'Liabilities', amount: 25962, liability: true },
+]
+const ACCOUNTS_MAX = Math.max(...ACCOUNTS.map(a => a.amount))
+
 function AccountsVisual() {
   return (
     <div className="hlp-card-visual hlp-accounts-visual" aria-hidden="true">
-      <div><span>Cash</span><strong>$23,540</strong><i style={{ '--width': '38%' }} /></div>
-      <div><span>Investments</span><strong>$101,126</strong><i style={{ '--width': '68%' }} /></div>
-      <div><span>Real estate</span><strong>$331,135</strong><i style={{ '--width': '92%' }} /></div>
-      <div className="is-liability"><span>Liabilities</span><strong>−$25,962</strong><i style={{ '--width': '24%' }} /></div>
+      {ACCOUNTS.map(({ label, amount, liability }) => (
+        <div key={label} className={liability ? 'is-liability' : undefined}>
+          <span>{label}</span>
+          <strong>{liability ? '−' : ''}${amount.toLocaleString('en-US')}</strong>
+          <i style={{ '--width': `${Math.max(4, (amount / ACCOUNTS_MAX) * 100).toFixed(1)}%` }} />
+        </div>
+      ))}
     </div>
   )
 }
@@ -125,7 +165,7 @@ const FEATURES = [
   {
     overline: 'Scenario studio',
     title: 'Explore what could come next.',
-    body: 'Compare contribution, growth, and time assumptions without confusing a calculated possibility for the recorded past.',
+    body: 'Compare contribution, growth, and time assumptions. Projections never overwrite the history you recorded.',
     visual: <ScenarioVisual />,
   },
 ]
@@ -150,7 +190,7 @@ export default function HolographicLandingPage({ scrollerRef, scrolled, onGetSta
         <section className="hlp-hero" aria-labelledby="hlp-hero-title">
           <div className="hlp-shell hlp-hero__grid">
             <div className="hlp-hero__copy">
-              <p className="lp-stone-overline">Private wealth clarity</p>
+              <p className="lp-stone-overline">Your net worth, month by month</p>
               <h1 id="hlp-hero-title">See where you are. Shape what’s next.</h1>
               <p className="hlp-hero__lede">
                 Worthfolio turns your accounts into a clear monthly history,
@@ -234,7 +274,7 @@ export default function HolographicLandingPage({ scrollerRef, scrolled, onGetSta
       <footer className="hlp-footer">
         <div className="hlp-shell hlp-footer__inner">
           <div><BrandLockup as="a" href="#top" compact /><p>A calmer way to see your financial life through time.</p></div>
-          <nav aria-label="Footer navigation"><a href="#product">Product</a><a href="#how-it-works">How it works</a><button type="button" onClick={onSignIn}>Sign in</button></nav>
+          <nav aria-label="Footer navigation"><a href="#product">Product</a><a href="#how-it-works">How it works</a><a href="#principles">Why Worthfolio</a><button type="button" onClick={onSignIn}>Sign in</button></nav>
           <p className="hlp-footer__disclosure">Illustrative examples only. Projections depend on the assumptions you choose and are not financial advice.</p>
         </div>
       </footer>

@@ -300,9 +300,9 @@ export default function AccountModal({
   return (
     <Modal
       title={
-        view === 'password' ? 'Change Password'
-        : view === 'recovery-confirm' || view === 'recovery-shown' ? 'Recovery Phrase'
-        : view === 'delete' ? 'Delete Account'
+        view === 'password' ? 'Change password'
+        : view === 'recovery-confirm' || view === 'recovery-shown' ? 'Recovery phrase'
+        : view === 'delete' ? 'Delete account'
         : 'Account'
       }
       onBack={isSubView ? backToMain : undefined}

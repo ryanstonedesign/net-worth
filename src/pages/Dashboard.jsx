@@ -291,6 +291,7 @@ export default function Dashboard({
     : getTotalLiabilities(selectedMonth)
   // Derive the live category from current data so account add/delete/rename
   // inside the sheet reflect instantly — editSheet only holds the id reference.
+  const isEmpty     = data.categories.length === 0
   const editCat     = editSheet && editSheet !== 'new'
     ? (data.categories.find(c => c.id === editSheet.id) ?? editSheet)
     : null
@@ -307,7 +308,7 @@ export default function Dashboard({
           <span>
             {isEstimated
               ? `${estDelta >= 0 ? '+' : ''}${formatCurrency(estDelta)} (est)`
-              : delta == null ? '—' : `${delta >= 0 ? '+' : ''}${formatCurrency(delta)} this month`}
+              : delta == null ? (isEmpty ? 'No balances recorded yet' : '—') : `${delta >= 0 ? '+' : ''}${formatCurrency(delta)} this month`}
           </span>
           {isEstimated && (
             <button className="hero-est-info" onClick={() => setEstInfoOpen(true)} aria-label="How estimates are calculated">
@@ -364,8 +365,9 @@ export default function Dashboard({
         </div>
       )}
 
-      {/* Asset / Liability summary — always visible, $0 until data exists */}
-      <div className="summary-row">
+      {/* Asset / Liability summary — hidden until a category exists, where two
+          $0 cards would only push the first-run prompt under the month pill */}
+      {!isEmpty && <div className="summary-row">
         <div className="card summary-cell assets">
           <div className="summary-cell-label">Assets</div>
           <div className="summary-cell-amount" style={isEstimated ? { color: 'var(--c-ink-mute)' } : undefined}>{formatCurrency(assets)}</div>
@@ -374,7 +376,7 @@ export default function Dashboard({
           <div className="summary-cell-label">Liabilities</div>
           <div className="summary-cell-amount" style={isEstimated ? { color: 'var(--c-ink-mute)' } : undefined}>{formatCurrency(liabilities)}</div>
         </div>
-      </div>
+      </div>}
 
       {/* Categories */}
       <div className="cat-scroll">
@@ -395,7 +397,20 @@ export default function Dashboard({
           />
         ))}
 
-        {/* Add category card — always the last item in the list */}
+        {/* First run: one clear prompt in place of the bare add card */}
+        {isEmpty ? (
+          <div className="card empty-state dash-empty">
+            <div className="empty-title">Add your first category</div>
+            <p className="empty-desc">
+              Group your accounts, like Cash, Investments or Loans, then enter this
+              month's balances. Your net worth and chart fill in from there.
+            </p>
+            <button className="btn btn-primary" onClick={() => setEditSheet('new')}>
+              Add a category
+            </button>
+          </div>
+        ) : (
+        /* Add category card — always the last item in the list */
         <button className="cat-card-add" onClick={() => setEditSheet('new')}>
           <div className="cat-card-add-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -406,6 +421,7 @@ export default function Dashboard({
             Add category
           </div>
         </button>
+        )}
       </div>
 
       <div style={{ height: 40 }} />
@@ -433,7 +449,7 @@ export default function Dashboard({
 
       {/* Goal editor sheet */}
       {goalOpen && (
-        <Modal title="Net Worth Goal" onClose={() => setGoalOpen(false)}>
+        <Modal title="Net worth goal" onClose={() => setGoalOpen(false)}>
           <GoalEditor
             goal={goal}
             onSave={(v) => { setGoal(v); setGoalOpen(false) }}
@@ -496,15 +512,17 @@ export default function Dashboard({
         </Modal>
       )}
 
-      {/* Floating month selector — hold a chevron to fast-scroll */}
-      <div className="month-float">
+      {/* Floating month selector — hold a chevron to fast-scroll. Hidden until
+          a category exists: there are no months to move between yet, and it
+          would sit on top of the first-run prompt. */}
+      {!isEmpty && <div className="month-float">
         {selectedMonth !== currentMonth && (
           <button className="back-to-month" onClick={() => onMonthChange(currentMonth)}>
             Back to this month
           </button>
         )}
         <MonthSelector month={selectedMonth} onChange={onMonthChange} />
-      </div>
+      </div>}
     </div>
   )
 }

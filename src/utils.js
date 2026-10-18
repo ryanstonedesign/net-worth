@@ -34,10 +34,11 @@ export function formatCurrency(value, decimals = 0) {
   }).format(value)
 }
 
+// Trailing zeros are dropped ("$730K", "$1.5M", not "$730.0K", "$1.50M").
 export function formatCompact(value) {
   const abs = Math.abs(value)
-  if (abs >= 1_000_000) return `$${(value / 1_000_000).toFixed(2)}M`
-  if (abs >= 1_000) return `$${(value / 1_000).toFixed(1)}K`
+  if (abs >= 1_000_000) return `$${Number((value / 1_000_000).toFixed(2))}M`
+  if (abs >= 1_000) return `$${Number((value / 1_000).toFixed(1))}K`
   return formatCurrency(value)
 }
 

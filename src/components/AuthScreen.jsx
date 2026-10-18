@@ -220,7 +220,7 @@ export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, onBac
           {mode === 'signin' && onForgotPassword && (
             <button
               type="button"
-              className="btn btn-secondary btn-full"
+              className="btn btn-tertiary btn-full"
               onClick={() => setMode('forgot')}
             >
               Forgot password?
@@ -231,7 +231,7 @@ export default function AuthScreen({ onSignIn, onSignUp, onForgotPassword, onBac
             className="btn btn-tertiary btn-full"
             onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
           >
-            {mode === 'signin' ? 'Create account' : 'Have an account? Sign in'}
+            {mode === 'signin' ? 'New here? Create an account' : 'Have an account? Sign in'}
           </button>
         </div>
       </div>

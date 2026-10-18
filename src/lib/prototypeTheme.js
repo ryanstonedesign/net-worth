@@ -20,9 +20,14 @@ export function readPrototypeTheme() {
   }
 }
 
+// Browser chrome (the iOS status bar, Android's toolbar) tints to match each
+// theme's page background.
+const THEME_COLORS = { holographic: '#f8faff', stone: '#f3efe6' }
+
 export function applyPrototypeTheme(theme) {
   const value = isTheme(theme) ? theme : DEFAULT_PROTOTYPE_THEME
   document.documentElement.dataset.theme = value
+  document.querySelector?.('meta[name="theme-color"]')?.setAttribute('content', THEME_COLORS[value])
 }
 
 export function writePrototypeTheme(theme) {

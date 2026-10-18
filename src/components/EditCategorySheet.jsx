@@ -103,8 +103,8 @@ export default function EditCategorySheet({
     <Modal
       title={
         accountView
-          ? (accountView.mode === 'new' ? 'Add Account' : 'Edit Account')
-          : (isNew ? 'New Category' : 'Edit Category')
+          ? (accountView.mode === 'new' ? 'Add account' : 'Edit account')
+          : (isNew ? 'New category' : 'Edit category')
       }
       onBack={accountView ? () => setAccountView(null) : undefined}
       onClose={onClose}

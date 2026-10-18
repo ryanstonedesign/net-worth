@@ -110,7 +110,7 @@ function AddCategoryModal({ onClose, onSave }) {
   }
 
   return (
-    <Modal title="New Category" onClose={onClose}>
+    <Modal title="New category" onClose={onClose}>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label className="form-label">Name</label>
@@ -197,7 +197,7 @@ function AddAccountModal({ categoryName, onClose, onSave }) {
     <Modal title={`Add to ${categoryName}`} onClose={onClose}>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label className="form-label">Account Name</label>
+          <label className="form-label">Account name</label>
           <input
             className="input"
             placeholder="e.g. Wells Fargo Checking"

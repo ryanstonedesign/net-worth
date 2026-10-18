@@ -13,7 +13,7 @@ export default function NewScenarioSheet({ scenarios, activeId, onCreate, onClos
   const create = () => { if (canCreate) onCreate({ name: name.trim(), fromId, synced }) }
 
   return (
-    <Modal title="New Scenario" onClose={onClose}>
+    <Modal title="New scenario" onClose={onClose}>
       <div className="form-group" style={{ marginBottom: 24 }}>
         <label className="form-label">Name</label>
         <input
@@ -27,7 +27,7 @@ export default function NewScenarioSheet({ scenarios, activeId, onCreate, onClos
       </div>
 
       <div className="form-group">
-        <label className="form-label">Duplicate From</label>
+        <label className="form-label">Duplicate from</label>
         <div className="select-wrap">
           <select
             className="input"
