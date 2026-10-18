@@ -3498,6 +3498,21 @@ html[data-theme="holographic"] .side-nav-item.active {
   overflow: visible;
 }
 
+/* Selected scenario: a flat secondary fill, the same mist as .btn-secondary,
+   with no shadow, ring or blur. The class is doubled to clear the shared
+   floating-control :is() lists above. Hover takes a lighter step of it. */
+html[data-theme="holographic"] .side-nav-item.side-nav-item.active {
+  background: var(--mist-200);
+  border-color: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+html[data-theme="holographic"] .side-nav-item.side-nav-item:not(.active):hover {
+  background: rgba(229, 234, 244, 0.55);
+}
+
 html[data-theme="holographic"] .side-nav-item.active::after {
   content: none;
 }
