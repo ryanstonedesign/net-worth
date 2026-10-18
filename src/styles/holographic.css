@@ -251,8 +251,57 @@ html[data-theme="holographic"][data-app-shell] .app-bg.app-bg::before {
   display: none;
 }
 
+/* The sidebar is part of the white page: no fill, edge or shadow of its own.
+   On mobile the open drawer gets its backing from ::before below. */
 html[data-theme="holographic"][data-app-shell] .side-nav.side-nav {
-  background-color: #fff;
+  background: none;
+  border-right: 0;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+@media (max-width: 899px) {
+  /* Drawer backing: white on the left where the list sits, fading to clear
+     past the drawer's edge, with a blur that fades out the same way so the
+     page behind dissolves rather than ending on a hard line. */
+  html[data-theme="holographic"][data-app-shell] .side-nav.side-nav::before {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: calc(100% + 96px);
+    z-index: -1;
+    pointer-events: none;
+    /* Solid across the drawer itself, so nothing reads through the list;
+       the fade lives in the last stretch, mostly past the drawer's edge. */
+    background: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.97) 0,
+      rgba(255, 255, 255, 0.95) calc(100% - 128px),
+      rgba(255, 255, 255, 0.5) calc(100% - 56px),
+      rgba(255, 255, 255, 0) 100%
+    );
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 128px), transparent 100%);
+    mask-image: linear-gradient(to right, #000 calc(100% - 128px), transparent 100%);
+  }
+
+  /* The drawer's own gradient does the separating, so the shell slides aside
+     without a card edge, shadow or tinted scrim of its own. */
+  html[data-theme="holographic"][data-app-shell] .app-shell.nav-open {
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  html[data-theme="holographic"][data-app-shell] .nav-scrim {
+    background: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
 
 /* Procedural pane (components/PearlescentBackground). It sits on the same
