@@ -2994,6 +2994,16 @@ html[data-theme="holographic"] .lp-stone-footer a:hover {
     padding-inline: 0;
   }
 
+  /* The header spans the content column, not the whole pane: the column is
+     capped at 900px (index.css) and inset 40px, so the scenario name lines
+     up with "Net worth" and Ask with the cards' right edge. */
+  html[data-theme="holographic"] .top-nav {
+    left: 0;
+    right: 0;
+    width: calc(min(100%, 900px) - 80px);
+    margin-inline: auto;
+  }
+
   /* Five short labels don't need the full column; centred under the chart. */
   html[data-theme="holographic"] .range-pills {
     max-width: 440px;
@@ -3013,6 +3023,11 @@ html[data-theme="holographic"] .lp-stone-footer a:hover {
   /* Same single left edge as desktop, at the 20px mobile inset. */
   html[data-theme="holographic"] .hero {
     padding-inline: 20px;
+  }
+
+  html[data-theme="holographic"] .top-nav {
+    left: 20px;
+    right: 20px;
   }
 
   html[data-theme="holographic"] .net-worth-chart-well {
