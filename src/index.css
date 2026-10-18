@@ -3460,22 +3460,34 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
   text-align: left;
   cursor: pointer;
 }
+/* Spotlight row: name and badge on the left, the total on the right, ending
+   on the same edge as the totals listed below it. */
 .home-summary__top {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin: 4px -8px 6px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: calc(100% + 16px);
+  margin: 0 -8px 4px;
   padding: 8px;
   border-radius: var(--r-btn);
 }
 .home-summary__top-name {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
   min-width: 0;
   font-size: 14px;
   font-weight: var(--font-weight-medium);
   color: var(--c-ink-mute);
+}
+.home-summary__top-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  min-width: 0;
 }
 .home-summary__label {
   min-width: 0;
@@ -3492,20 +3504,21 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  white-space: nowrap;
   color: var(--c-ink-mute);
 }
 .home-summary__top-value {
-  font-size: 34px;
+  flex-shrink: 0;
+  font-size: 30px;
   font-weight: var(--font-weight-semibold);
   letter-spacing: -0.02em;
   line-height: 1.15;
+  text-align: right;
   font-variant-numeric: tabular-nums;
   color: var(--c-ink);
 }
 .home-summary__list {
   margin: 0;
-  padding-top: 10px;
-  border-top: 1px solid var(--c-surface-muted);
   gap: 0;
 }
 /* The popover's rows are the grid; here the button inside each row is. */

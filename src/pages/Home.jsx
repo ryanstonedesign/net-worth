@@ -87,14 +87,13 @@ export default function Home({ scenarios, selectedMonth, onMonthChange, onOpenSc
           the highest total in the spotlight, every other scenario below it.
           Each row opens its scenario. */}
       <section className="card home-summary" aria-label={`Scenario totals for ${formatMonthDisplay(selectedMonth)}`}>
-        <div className="nw-chart-tooltip__label">
-          {formatMonthDisplay(selectedMonth)}{lastMonth && selectedMonth > lastMonth ? ' · Est.' : ''}
-        </div>
         {top && (
           <button type="button" className="home-summary__top" onClick={() => onOpenScenario(top.id)} title={top.name}>
             <span className="home-summary__top-name">
-              <span className="compare-tooltip__swatch" style={{ background: top.color }} aria-hidden="true" />
-              <span className="home-summary__label">{top.name}</span>
+              <span className="home-summary__top-line">
+                <span className="compare-tooltip__swatch" style={{ background: top.color }} aria-hidden="true" />
+                <span className="home-summary__label">{top.name}</span>
+              </span>
               <span className="home-summary__badge">{tied ? 'Tied for highest' : 'Highest'}</span>
             </span>
             <span className="home-summary__top-value">{formatCurrency(top.total.value)}</span>
