@@ -3498,11 +3498,12 @@ html[data-theme="holographic"] .side-nav-item.active {
   overflow: visible;
 }
 
-/* Selected scenario: a flat secondary fill, the same mist as .btn-secondary,
-   with no shadow, ring or blur. The class is doubled to clear the shared
-   floating-control :is() lists above. Hover takes a lighter step of it. */
+/* Selected scenario: a flat fill in the theme's secondary surface token
+   (--c-surface-muted), with no shadow, ring or blur. The class is doubled to
+   clear the shared floating-control :is() lists above. Hover takes a lighter
+   step of it. */
 html[data-theme="holographic"] .side-nav-item.side-nav-item.active {
-  background: var(--mist-200);
+  background: var(--c-surface-muted);
   border-color: transparent;
   box-shadow: none;
   -webkit-backdrop-filter: none;
@@ -3510,7 +3511,7 @@ html[data-theme="holographic"] .side-nav-item.side-nav-item.active {
 }
 
 html[data-theme="holographic"] .side-nav-item.side-nav-item:not(.active):hover {
-  background: rgba(229, 234, 244, 0.55);
+  background: rgba(238, 242, 250, 0.6);
 }
 
 html[data-theme="holographic"] .side-nav-item.active::after {
