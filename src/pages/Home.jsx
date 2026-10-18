@@ -28,8 +28,6 @@ export default function Home({ scenarios, selectedMonth, onMonthChange, onOpenSc
     .sort((a, b) => (b.total?.value ?? -Infinity) - (a.total?.value ?? -Infinity))
   const top = totals[0]?.total ? totals[0] : null
   const rest = top ? totals.slice(1) : totals
-  // Synced scenarios often share a total; don't crown one of several.
-  const tied = top && rest[0]?.total?.value === top.total.value
 
   return (
     <div className="dashboard home">
@@ -94,7 +92,6 @@ export default function Home({ scenarios, selectedMonth, onMonthChange, onOpenSc
                 <span className="compare-tooltip__swatch" style={{ background: top.color }} aria-hidden="true" />
                 <span className="home-summary__label">{top.name}</span>
               </span>
-              <span className="home-summary__badge">{tied ? 'Tied for highest' : 'Highest'}</span>
             </span>
             <span className="home-summary__top-value">{formatCurrency(top.total.value)}</span>
           </button>

@@ -3485,7 +3485,9 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
 .home-summary__top-line {
   display: flex;
   align-items: center;
-  gap: 8px;
+  /* Matches the list rows' 10px swatch column plus their 8px gap, so the
+     names line up. */
+  gap: 10px;
   max-width: 100%;
   min-width: 0;
 }
@@ -3494,18 +3496,6 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-.home-summary__badge {
-  flex-shrink: 0;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--c-surface-muted);
-  font-size: 11px;
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: var(--c-ink-mute);
 }
 .home-summary__top-value {
   flex-shrink: 0;
