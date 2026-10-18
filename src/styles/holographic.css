@@ -726,10 +726,42 @@ html[data-theme="holographic"] .slider::-moz-range-thumb {
 }
 
 /* Product shell and navigation */
-/* A long, eased ramp. The short near-opaque one painted a pale band over the
-   tinted background that ended on a visible edge about 60px down. */
+/* Scrims (components/ProgressiveBlur). The container stays bare: a mask,
+   blur or fill on it would make it the backdrop root and the stacked layers
+   inside would have nothing to blur. The layers ramp the blur; the tint
+   carries the white fade. */
 html[data-theme="holographic"] .top-nav-fade {
   height: calc(var(--safe-top) + 132px);
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+html[data-theme="holographic"] .bottom-nav-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--safe-bottom) + 128px);
+  z-index: 15;
+  pointer-events: none;
+}
+
+/* Only while there is a month pill to sit behind (none on a fresh account). */
+html[data-theme="holographic"] .app-shell:not(:has(.month-float)) .bottom-nav-fade {
+  display: none;
+}
+
+html[data-theme="holographic"] .progressive-blur__layer,
+html[data-theme="holographic"] .progressive-blur__tint {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+html[data-theme="holographic"] .top-nav-fade .progressive-blur__tint {
   background: linear-gradient(
     to bottom,
     rgba(255, 255, 255, 0.86) 0%,
@@ -738,10 +770,15 @@ html[data-theme="holographic"] .top-nav-fade {
     rgba(255, 255, 255, 0.06) 85%,
     transparent 100%
   );
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.6) 50%, transparent 100%);
-  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.6) 50%, transparent 100%);
+}
+
+html[data-theme="holographic"] .bottom-nav-fade .progressive-blur__tint {
+  background: linear-gradient(
+    to top,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(255, 255, 255, 0.6) 40%,
+    rgba(255, 255, 255, 0) 100%
+  );
 }
 
 html[data-theme="holographic"] .app-shell {
@@ -1213,33 +1250,6 @@ html[data-theme="holographic"] .cat-card-add:hover {
   background: rgba(255, 255, 255, 0.42);
   border-color: rgba(67, 200, 255, 0.46);
   box-shadow: var(--shadow-sm), 0 0 26px rgba(125, 108, 255, 0.07);
-}
-
-/* A soft veil under the floating month pill, so card rows scrolling behind it
-   fade out instead of colliding with it. Sized to the content column: wide
-   enough to cover the cards, never over the desktop sidebar. */
-html[data-theme="holographic"] .month-float::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  left: 50%;
-  bottom: calc(-1 * (var(--safe-bottom) + 24px));
-  width: 100vw;
-  height: calc(100% + var(--safe-bottom) + 48px);
-  transform: translateX(-50%);
-  pointer-events: none;
-  background: linear-gradient(
-    to top,
-    rgba(255, 255, 255, 0.9) 0%,
-    rgba(255, 255, 255, 0.6) 40%,
-    rgba(255, 255, 255, 0) 100%
-  );
-}
-
-@media (min-width: 900px) {
-  html[data-theme="holographic"] .month-float::before {
-    width: calc(100vw - var(--sidebar-w));
-  }
 }
 
 html[data-theme="holographic"] .month-selector {
@@ -3023,11 +3033,6 @@ html[data-theme="holographic"] .lp-stone-footer a:hover {
   /* Same single left edge as desktop, at the 20px mobile inset. */
   html[data-theme="holographic"] .hero {
     padding-inline: 20px;
-  }
-
-  html[data-theme="holographic"] .top-nav {
-    left: 20px;
-    right: 20px;
   }
 
   html[data-theme="holographic"] .net-worth-chart-well {

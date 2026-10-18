@@ -24,6 +24,7 @@ import LockScreen from './components/LockScreen'
 import RecoveryPhraseSetup from './components/RecoveryPhraseSetup'
 import RestoreAccessScreen from './components/RestoreAccessScreen'
 import AskWorthfolio from './components/AskWorthfolio'
+import ProgressiveBlur from './components/ProgressiveBlur'
 import { buildAskContext } from './lib/askWorthfolio'
 
 // Shared shell for both vaulted and legacy modes: a side nav (drawer on
@@ -207,7 +208,7 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
       />
 
       <div className={`app-shell${menuOpen ? ' nav-open' : ''}`} style={{ overflow: 'hidden' }}>
-        <div className="top-nav-fade" />
+        <ProgressiveBlur edge="top" className="top-nav-fade" />
         <TopNav
           name={barName}
           // Sync is only meaningful once a second scenario exists;
@@ -253,6 +254,9 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
             </div>
           </div>
         </div>
+        {/* Bottom scrim behind the floating month pill (shown only while the
+            pill is; see holographic.css). */}
+        <ProgressiveBlur edge="bottom" className="bottom-nav-fade" />
         {/* Tap the slid-aside content to close the drawer. */}
         {menuOpen && (
           <button
