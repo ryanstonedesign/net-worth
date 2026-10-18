@@ -73,6 +73,17 @@ describe('compareSeries', () => {
     expect(rows.find(r => r.month === '2026-10')['late:h']).toBe(700)
   })
 
+  it('carries the last recorded balance across a gap so the line never breaks', () => {
+    const gappy = data({ '2026-08': [600, 0], '2026-10': [900, 0] })
+    const { rows } = compareSeries(
+      [{ id: 's1', name: 'Steady', data: steady }, { id: 'g', name: 'Gappy', data: gappy }],
+      { currentMonth: '2026-10', range: '3M' },
+    )
+    const sep = rows.find(r => r.month === '2026-09')
+    expect(sep['g:h']).toBe(600)
+    expect(sep.g).toBe(600)
+  })
+
   it('is empty when no scenario has history', () => {
     expect(compareSeries([{ id: 'x', name: 'Empty', data: { categories: [], snapshots: {} } }], { currentMonth: '2026-10' }))
       .toEqual({ rows: [], lastMonth: null })

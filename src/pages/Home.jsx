@@ -9,8 +9,8 @@ const ScenarioCompareChart = lazy(() => import('../components/ScenarioCompareCha
 const NetWorthChart = lazy(() => import('../components/NetWorthChart'))
 
 // Landing view after sign-in: every scenario's history and projection on one
-// chart, with a card per scenario showing its total for the selected month.
-// Tapping a card opens that scenario. The month selector works as it does on
+// chart, with a summary card of every scenario's total for the selected month
+// (the highest in the spotlight). Tapping a scenario opens it. The month selector works as it does on
 // a scenario: it moves the selected month, and the chart stretches to reach it.
 export default function Home({ scenarios, selectedMonth, onMonthChange, onOpenScenario }) {
   const [timeRange, setTimeRange] = useState('1Y')
@@ -22,11 +22,14 @@ export default function Home({ scenarios, selectedMonth, onMonthChange, onOpenSc
   })
   const hasData = rows.length >= 2
 
-  const cards = scenarios.map((s, i) => ({
-    ...s,
-    color: scenarioColor(i),
-    total: scenarioValueAt(s.data, selectedMonth, currentMonth),
-  }))
+  // Highest total first; scenarios with no balance yet go last.
+  const totals = scenarios
+    .map((s, i) => ({ ...s, color: scenarioColor(i), total: scenarioValueAt(s.data, selectedMonth, currentMonth) }))
+    .sort((a, b) => (b.total?.value ?? -Infinity) - (a.total?.value ?? -Infinity))
+  const top = totals[0]?.total ? totals[0] : null
+  const rest = top ? totals.slice(1) : totals
+  // Synced scenarios often share a total; don't crown one of several.
+  const tied = top && rest[0]?.total?.value === top.total.value
 
   return (
     <div className="dashboard home">
@@ -80,23 +83,36 @@ export default function Home({ scenarios, selectedMonth, onMonthChange, onOpenSc
         </div>
       )}
 
-      <section className="home-cards" aria-label="Scenario totals">
-        <div className="home-cards__track">
-          {cards.map(s => (
-            <button key={s.id} type="button" className="card home-card" onClick={() => onOpenScenario(s.id)} title={s.name}>
-              <span className="home-card__name">
-                <span className="home-card__swatch" style={{ background: s.color }} aria-hidden="true" />
-                <span className="home-card__label">{s.name}</span>
-              </span>
-              <span className={`home-card__total${s.total?.estimated ? ' estimated' : ''}`}>
-                {s.total ? formatCurrency(s.total.value) : '—'}
-              </span>
-              <span className="home-card__note">
-                {!s.total ? 'No balances yet' : s.total.estimated ? 'Projected' : 'Recorded'}
-              </span>
-            </button>
-          ))}
+      {/* The chart popover's content, always open for the selected month:
+          the highest total in the spotlight, every other scenario below it.
+          Each row opens its scenario. */}
+      <section className="card home-summary" aria-label={`Scenario totals for ${formatMonthDisplay(selectedMonth)}`}>
+        <div className="nw-chart-tooltip__label">
+          {formatMonthDisplay(selectedMonth)}{lastMonth && selectedMonth > lastMonth ? ' · Est.' : ''}
         </div>
+        {top && (
+          <button type="button" className="home-summary__top" onClick={() => onOpenScenario(top.id)} title={top.name}>
+            <span className="home-summary__top-name">
+              <span className="compare-tooltip__swatch" style={{ background: top.color }} aria-hidden="true" />
+              <span className="home-summary__label">{top.name}</span>
+              <span className="home-summary__badge">{tied ? 'Tied for highest' : 'Highest'}</span>
+            </span>
+            <span className="home-summary__top-value">{formatCurrency(top.total.value)}</span>
+          </button>
+        )}
+        {rest.length > 0 && (
+          <ul className="compare-tooltip__list home-summary__list">
+            {rest.map(s => (
+              <li key={s.id}>
+                <button type="button" className="home-summary__row" onClick={() => onOpenScenario(s.id)} title={s.name}>
+                  <span className="compare-tooltip__swatch" style={{ background: s.color }} aria-hidden="true" />
+                  <span className="compare-tooltip__name">{s.name}</span>
+                  <span className="compare-tooltip__value">{s.total ? formatCurrency(s.total.value) : '—'}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <div className="month-float">

@@ -3442,65 +3442,87 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
   font-size: 14px;
   color: var(--c-ink-mute);
 }
-.home-cards { margin-top: 28px; }
-.home-cards__track {
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
-  scroll-padding-inline: 20px;
-  padding: 4px 20px 20px;
-  scrollbar-width: none;
-}
-.home-cards__track::-webkit-scrollbar { display: none; }
-/* One fixed width for every card at every size; the row scrolls. */
-.home-card {
-  flex: 0 0 172px;
-  width: 172px;
-  min-width: 0;
-  min-height: 124px;
+/* Summary card: the chart popover's styling, opened out under the chart,
+   with the month's highest total in the spotlight. */
+.home-summary {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-  padding: 16px 18px;
-  scroll-snap-align: start;
-  text-align: left;
+  gap: 4px;
+  margin: 28px 20px 0;
+  padding: 16px 18px 14px;
+}
+.home-summary__top,
+.home-summary__row {
+  border: none;
+  background: none;
   font: inherit;
-  color: var(--c-ink);
+  color: inherit;
+  text-align: left;
   cursor: pointer;
 }
-.home-card__name {
+.home-summary__top {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 4px -8px 6px;
+  padding: 8px;
+  border-radius: var(--r-btn);
+}
+.home-summary__top-name {
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 100%;
   min-width: 0;
   font-size: 14px;
   font-weight: var(--font-weight-medium);
   color: var(--c-ink-mute);
 }
-/* One line, truncated: the ellipsis needs its own box, since a bare text
-   node in a flex row won't truncate. */
-.home-card__label,
-.home-card__total {
+.home-summary__label {
   min-width: 0;
-  max-width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.home-card__swatch { flex-shrink: 0; width: 10px; height: 10px; border-radius: 50%; }
-.home-card__total {
-  margin-top: auto;
-  font-size: 22px;
+.home-summary__badge {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--c-surface-muted);
+  font-size: 11px;
   font-weight: var(--font-weight-semibold);
-  letter-spacing: -0.01em;
-  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--c-ink-mute);
 }
-.home-card__total.estimated { color: var(--c-ink-mute); }
-.home-card__note { font-size: 12px; color: var(--c-ink-mute); }
+.home-summary__top-value {
+  font-size: 34px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-ink);
+}
+.home-summary__list {
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--c-surface-muted);
+  gap: 0;
+}
+/* The popover's rows are the grid; here the button inside each row is. */
+.home-summary__list.compare-tooltip__list li { display: block; }
+.home-summary__row {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  width: calc(100% + 16px);
+  margin: 0 -8px;
+  padding: 8px;
+  border-radius: var(--r-btn);
+  font-size: 14px;
+}
+.home-summary__top:hover,
+.home-summary__row:hover { background: rgba(17, 26, 74, 0.04); }
 
 .compare-tooltip__list {
   list-style: none;
@@ -3531,5 +3553,5 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
 }
 
 @media (min-width: 900px) {
-  .home-cards__track { padding-inline: 40px; scroll-padding-inline: 40px; }
+  .home-summary { margin-inline: 40px; }
 }

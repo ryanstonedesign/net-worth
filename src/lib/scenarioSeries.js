@@ -85,17 +85,27 @@ export function compareSeries(scenarios, { currentMonth, range = '1Y', customYea
     .sort((a, b) => (a.month < b.month ? -1 : 1))
     .map(r => ({ ...r, isForecast: r.month > lastMonth }))
 
-  // A scenario whose history starts later than the chart would otherwise
-  // pop into existence mid-plot. Draw it from $0 instead, rising into its
-  // first recorded month. Only the drawn :h key gets the zero; the plain
-  // [id] value stays empty, so the popover and totals never report a $0 that
-  // was never recorded.
+  // Every line runs unbroken across the chart; a line that stops and starts
+  // again reads as a cliff.
+  //   · Before a scenario's first recorded month it is drawn from $0, rising
+  //     into that month. Only the drawn :h key gets the zero; the plain [id]
+  //     value stays empty, so the popover and totals never report a $0 that
+  //     was never recorded.
+  //   · A month inside its history with no recorded balance carries the last
+  //     recorded one forward, the same value scenarioValueAt reports, so the
+  //     line, the popover and the totals agree.
   for (const s of base) {
-    const first = rows.find(r => r[`${s.id}:h`] != null)?.month
+    if (!s.last) continue
+    const key = `${s.id}:h`
+    const first = rows.find(r => r[key] != null)?.month
     if (!first) continue
+    let carried = null
     for (const r of rows) {
-      if (r.month >= first) break
-      r[`${s.id}:h`] = 0
+      if (r.month < first) { r[key] = 0; continue }
+      if (r.month > s.last) break
+      if (r[key] != null) { carried = r[key]; continue }
+      r[key] = carried
+      r[s.id] = carried
     }
   }
   return { rows, lastMonth }
