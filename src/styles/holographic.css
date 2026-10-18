@@ -2941,9 +2941,10 @@ html[data-theme="holographic"] .lp-stone-footer a:hover {
     padding-inline: 0;
   }
 
-  /* Five short labels don't need the full column. */
+  /* Five short labels don't need the full column; centred under the chart. */
   html[data-theme="holographic"] .range-pills {
     max-width: 440px;
+    margin-inline: auto;
   }
 
   html[data-theme="holographic"] .modal-sheet {
