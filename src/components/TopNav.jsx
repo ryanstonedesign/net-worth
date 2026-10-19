@@ -24,12 +24,12 @@ export default function TopNav({ name, synced, onMenu, onAsk }) {
         )}
       </div>
       {onAsk && (
-        <button className="top-nav-ask" onClick={onAsk} aria-label="Ask Worthfolio">
+        // Same round floating button as the menu button, icon only.
+        <button className="fab top-nav-ask-btn" onClick={onAsk} aria-label="Ask Worthfolio" title="Ask Worthfolio">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M12 3l1.3 3.7L17 8l-3.7 1.3L12 13l-1.3-3.7L7 8l3.7-1.3L12 3z" />
             <path d="M18.5 14l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2z" />
           </svg>
-          <span>Ask</span>
         </button>
       )}
     </div>
