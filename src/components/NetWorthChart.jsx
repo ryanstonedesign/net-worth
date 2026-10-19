@@ -1,7 +1,6 @@
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react'
 import { AreaChart, Area, Tooltip, ResponsiveContainer, ReferenceLine, YAxis, XAxis } from 'recharts'
 import { formatMonthDisplay, formatCurrency, formatCompact } from '../utils'
-import { markerPlan, visibleMarkers } from '../lib/chartTicks'
 
 // The chart is engraved into the same stone plane the rest of the product is
 // made of, rather than drawn on top of it. Three ideas carry that:
@@ -497,48 +496,27 @@ export default function NetWorthChart({ data, forecastData = [], selectedMonth, 
   }
   const yDomain = [Math.round(lo), Math.round(hi)]
 
-  // Thin the markers on long ranges so the sockets don't crowd the groove. The
-  // line itself stays continuous — only the time points are sampled. Nothing is
-  // forced into the pattern: the stride is phased on the last real month, which
-  // keeps the gaps identical end to end and holds the sockets still while the
-  // user scrubs. The selected medallion still draws wherever it lands; when
-  // that is off the beat, the markers around it step aside rather than crowd
-  // it — see visibleMarkers.
-  const markerSet = new Set(visibleMarkers(
-    markerPlan(combined.length, data.length - 1),
-    combined.findIndex(d => d.month === selectedMonth),
-  ))
-  const showDotAt = (index) => markerSet.has(index)
-
-  const settleProps = (index) => settled
-    ? {}
-    : { className: 'nw-marker-settle', style: { animationDelay: `${Math.min(index, 14) * 38}ms` } }
-
-  // Past months: brass. The selected one becomes the medallion.
-  const historicalDot = ({ cx, cy, payload, index }) => {
+  // Only the selected month is marked: a brass medallion in the past.
+  const historicalDot = ({ cx, cy, payload }) => {
     if (!markersIn) return null
     if (payload.historical == null || !isFinite(cx) || !isFinite(cy)) return null
     if (payload.month === selectedMonth) {
       return <Medallion key={payload.month} cx={cx} cy={cy} ns={ns} filled animate={settled} bronze={bronze} holographic={holographicTheme} />
     }
-    if (!showDotAt(index)) return null
-    return bronze
-      ? <BronzeNode key={payload.month} cx={cx} cy={cy} ns={ns} {...settleProps(index)} />
-      : <BrassInlay key={payload.month} cx={cx} cy={cy} ns={ns} {...settleProps(index)} />
+    // No per-month dots: only the selected month is marked. The popover still
+    // reads any month on hover or press.
+    return null
   }
 
-  // Future months: the same socket, left empty. The junction point belongs to
-  // the historical series, which has already filled it.
-  const forecastDot = ({ cx, cy, payload, index }) => {
+  // A future selected month: the same medallion, unfilled. The junction point
+  // belongs to the historical series.
+  const forecastDot = ({ cx, cy, payload }) => {
     if (!markersIn) return null
     if (payload.forecast == null || payload.historical != null || !isFinite(cx) || !isFinite(cy)) return null
     if (payload.month === selectedMonth) {
       return <Medallion key={payload.month} cx={cx} cy={cy} ns={ns} filled={false} animate={settled} bronze={bronze} holographic={holographicTheme} />
     }
-    if (!showDotAt(index)) return null
-    return holographicTheme
-      ? <FutureNode key={payload.month} cx={cx} cy={cy} {...settleProps(index)} />
-      : <EmptySocket key={payload.month} cx={cx} cy={cy} ns={ns} {...settleProps(index)} />
+    return null
   }
 
   return (

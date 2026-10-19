@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useRef } from 'react'
-import { LineChart, Line, Tooltip, ResponsiveContainer, ReferenceLine, YAxis, XAxis } from 'recharts'
-import { formatMonthDisplay, formatCurrency } from '../utils'
+import { LineChart, Line, ResponsiveContainer, ReferenceLine, YAxis, XAxis } from 'recharts'
 
 // Every scenario on one plot for the Home screen, drawn the way the scenario
 // chart draws one: solid history, dashed projection, same stroke weight. There
-// are no month markers — with several lines they only crowd each other. Hover
-// or press anywhere on the plot and one popover lists every scenario's total
-// for that month; a press also moves the selected month, as it does on a
-// scenario chart.
+// are no month markers — with several lines they only crowd each other, and no
+// popover: the totals live in the card under the chart. Pressing or dragging
+// across the plot moves the selected month, which that card follows.
 //
 // Scenario colours come from scenarioColor(index) so the lines, popover
 // swatches and Home cards always agree. Emerald is last: it sits closest to
@@ -35,33 +33,6 @@ function historyGroups(rows, scenarios) {
 }
 export function scenarioColor(index) {
   return SCENARIO_COLORS[index % SCENARIO_COLORS.length]
-}
-
-function CompareTooltip({ active, payload, scenarios }) {
-  if (!active || !payload?.length) return null
-  const point = payload[0]?.payload
-  if (!point) return null
-  const rows = scenarios
-    .map((s, i) => ({ ...s, color: scenarioColor(i), value: point[s.id] }))
-    .filter(s => s.value != null)
-    .sort((a, b) => b.value - a.value)
-  if (!rows.length) return null
-  return (
-    <div className="nw-chart-tooltip compare-tooltip">
-      <div className="nw-chart-tooltip__label">
-        {formatMonthDisplay(point.month)}{point.isForecast ? ' · Est.' : ''}
-      </div>
-      <ul className="compare-tooltip__list">
-        {rows.map(s => (
-          <li key={s.id}>
-            <span className="compare-tooltip__swatch" style={{ background: s.color }} aria-hidden="true" />
-            <span className="compare-tooltip__name">{s.name}</span>
-            <span className="compare-tooltip__value">{formatCurrency(s.value)}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
 }
 
 export default function ScenarioCompareChart({ rows, scenarios, selectedMonth, onSelectMonth, height = 260 }) {
@@ -104,11 +75,6 @@ export default function ScenarioCompareChart({ rows, scenarios, selectedMonth, o
       >
         <YAxis domain={yDomain} hide />
         <XAxis dataKey="month" hide />
-        <Tooltip
-          content={<CompareTooltip scenarios={scenarios} />}
-          cursor={{ stroke: 'var(--chart-groove)', strokeOpacity: 0.5, strokeWidth: 1 }}
-          isAnimationActive={false}
-        />
         {hasSelected && (
           <ReferenceLine x={selectedMonth} stroke="var(--chart-grid)" strokeWidth={1} strokeDasharray="3 4" />
         )}

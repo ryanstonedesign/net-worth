@@ -9,15 +9,24 @@ const ScenarioCompareChart = lazy(() => import('../components/ScenarioCompareCha
 const NetWorthChart = lazy(() => import('../components/NetWorthChart'))
 
 // Landing view after sign-in: every scenario's history and projection on one
-// chart, with a summary card of every scenario's total for the selected month
-// (the highest in the spotlight). Tapping a scenario opens it. The month selector works as it does on
-// a scenario: it moves the selected month, and the chart stretches to reach it.
-export default function Home({ scenarios, selectedMonth, onMonthChange, onOpenScenario }) {
+// chart, with a card listing every scenario's total for the selected month,
+// highest first. Tapping a scenario opens it. The month selector works as it
+// does on a scenario: it moves the selected month, and the chart stretches to
+// reach it.
+// "Good morning, Alex" by the viewer's local time, with their first name.
+function greeting(name) {
+  const hour = new Date().getHours()
+  const part = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening'
+  const first = (name || '').trim().split(/\s+/)[0]
+  return first ? `Good ${part}, ${first}` : `Good ${part}`
+}
+
+export default function Home({ scenarios, userName, selectedMonth, onMonthChange, onOpenScenario }) {
   const [timeRange, setTimeRange] = useState('1Y')
   const currentMonth = getCurrentMonth()
   const [customYear, setCustomYear] = useState(currentMonth.slice(0, 4))
 
-  const { rows, lastMonth } = compareSeries(scenarios, {
+  const { rows } = compareSeries(scenarios, {
     currentMonth, range: timeRange, customYear, selectedMonth,
   })
   const hasData = rows.length >= 2
@@ -26,19 +35,12 @@ export default function Home({ scenarios, selectedMonth, onMonthChange, onOpenSc
   const totals = scenarios
     .map((s, i) => ({ ...s, color: scenarioColor(i), total: scenarioValueAt(s.data, selectedMonth, currentMonth) }))
     .sort((a, b) => (b.total?.value ?? -Infinity) - (a.total?.value ?? -Infinity))
-  const top = totals[0]?.total ? totals[0] : null
-  const rest = top ? totals.slice(1) : totals
 
   return (
     <div className="dashboard home">
       <div className="hero home-hero">
-        <div className="hero-eyebrow">All scenarios</div>
-        <h1 className="home-title">{formatMonthDisplay(selectedMonth)}</h1>
-        <p className="home-sub">
-          {lastMonth && selectedMonth > lastMonth
-            ? 'Projected from your latest balances'
-            : `${scenarios.length} ${scenarios.length === 1 ? 'scenario' : 'scenarios'} compared`}
-        </p>
+        <div className="hero-eyebrow">{greeting(userName)}</div>
+        <h1 className="home-title">{scenarios.length} {scenarios.length === 1 ? 'scenario' : 'scenarios'}</h1>
       </div>
 
       <div className="net-worth-chart-well home-chart">
@@ -81,34 +83,20 @@ export default function Home({ scenarios, selectedMonth, onMonthChange, onOpenSc
         </div>
       )}
 
-      {/* The chart popover's content, always open for the selected month:
-          the highest total in the spotlight, every other scenario below it.
-          Each row opens its scenario. */}
+      {/* Every scenario's total for the selected month, highest first. Each
+          row opens its scenario. */}
       <section className="card home-summary" aria-label={`Scenario totals for ${formatMonthDisplay(selectedMonth)}`}>
-        {top && (
-          <button type="button" className="home-summary__top" onClick={() => onOpenScenario(top.id)} title={top.name}>
-            <span className="home-summary__top-name">
-              <span className="home-summary__top-line">
-                <span className="compare-tooltip__swatch" style={{ background: top.color }} aria-hidden="true" />
-                <span className="home-summary__label">{top.name}</span>
-              </span>
-            </span>
-            <span className="home-summary__top-value">{formatCurrency(top.total.value)}</span>
-          </button>
-        )}
-        {rest.length > 0 && (
-          <ul className="compare-tooltip__list home-summary__list">
-            {rest.map(s => (
-              <li key={s.id}>
-                <button type="button" className="home-summary__row" onClick={() => onOpenScenario(s.id)} title={s.name}>
-                  <span className="compare-tooltip__swatch" style={{ background: s.color }} aria-hidden="true" />
-                  <span className="compare-tooltip__name">{s.name}</span>
-                  <span className="compare-tooltip__value">{s.total ? formatCurrency(s.total.value) : '—'}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+        <ul className="compare-tooltip__list home-summary__list">
+          {totals.map(s => (
+            <li key={s.id}>
+              <button type="button" className="home-summary__row" onClick={() => onOpenScenario(s.id)} title={s.name}>
+                <span className="compare-tooltip__swatch" style={{ background: s.color }} aria-hidden="true" />
+                <span className="compare-tooltip__name">{s.name}</span>
+                <span className="compare-tooltip__value">{s.total ? formatCurrency(s.total.value) : '—'}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <div className="month-float">

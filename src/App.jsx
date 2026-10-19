@@ -224,7 +224,9 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
         onHome={goHome}
         onScenarios={showScenarios}
         scenarios={forecasts}
-        activeId={activeForecastId}
+        // Only mark a scenario as current while one is actually open; on Home
+        // none is.
+        activeId={onHome ? null : activeForecastId}
         onSelect={handleSelect}
         onAdd={handleAdd}
         onDelete={handleDelete}
@@ -247,7 +249,7 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
       <div className={`app-shell${menuOpen ? ' nav-open' : ''}`} style={{ overflow: 'hidden' }}>
         <ProgressiveBlur edge="top" className="top-nav-fade" />
         <TopNav
-          name={onHome ? 'Home' : barName}
+          name={onHome ? '' : barName}
           // Sync is only meaningful once a second scenario exists;
           // undefined hides the badge entirely (and on Home, which is no
           // single scenario).
@@ -260,6 +262,7 @@ function AppShell({ dataHook, settingsProps, userName, account }) {
             <div key="home" className="scenario-stage home-stage">
               <Home
                 scenarios={homeScenarios}
+                userName={userName}
                 selectedMonth={selectedMonth}
                 onMonthChange={setSelectedMonth}
                 onOpenScenario={handleSelect}

@@ -3437,13 +3437,8 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
   line-height: 1.1;
   color: var(--c-ink);
 }
-.home-sub {
-  margin: 8px 0 0;
-  font-size: 14px;
-  color: var(--c-ink-mute);
-}
-/* Summary card: the chart popover's styling, opened out under the chart,
-   with the month's highest total in the spotlight. */
+/* Summary card: every scenario's total for the selected month, styled like
+   the scenario chart's popover. */
 .home-summary {
   display: flex;
   flex-direction: column;
@@ -3451,7 +3446,6 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
   margin: 28px 20px 0;
   padding: 16px 18px 14px;
 }
-.home-summary__top,
 .home-summary__row {
   border: none;
   background: none;
@@ -3459,53 +3453,6 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
   color: inherit;
   text-align: left;
   cursor: pointer;
-}
-/* Spotlight row: name and badge on the left, the total on the right, ending
-   on the same edge as the totals listed below it. */
-.home-summary__top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  width: calc(100% + 16px);
-  margin: 0 -8px 4px;
-  padding: 8px;
-  border-radius: var(--r-btn);
-}
-.home-summary__top-name {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-  min-width: 0;
-  font-size: 14px;
-  font-weight: var(--font-weight-medium);
-  color: var(--c-ink-mute);
-}
-.home-summary__top-line {
-  display: flex;
-  align-items: center;
-  /* Matches the list rows' 10px swatch column plus their 8px gap, so the
-     names line up. */
-  gap: 10px;
-  max-width: 100%;
-  min-width: 0;
-}
-.home-summary__label {
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.home-summary__top-value {
-  flex-shrink: 0;
-  font-size: 30px;
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: -0.02em;
-  line-height: 1.15;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  color: var(--c-ink);
 }
 .home-summary__list {
   margin: 0;
@@ -3524,7 +3471,6 @@ button.settings-row--danger:hover { background: color-mix(in srgb, var(--c-dange
   border-radius: var(--r-btn);
   font-size: 14px;
 }
-.home-summary__top:hover,
 .home-summary__row:hover { background: rgba(17, 26, 74, 0.04); }
 
 .compare-tooltip__list {
