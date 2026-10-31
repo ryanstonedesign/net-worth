@@ -1232,13 +1232,22 @@ html[data-theme="holographic"] :is(.cat-account-input, .cat-contrib-input):focus
   box-shadow: 0 2px 0 rgba(155, 140, 255, 0.18) !important;
 }
 
-html[data-theme="holographic"] .cat-total-amount {
-  color: var(--emerald-700);
+html[data-theme="holographic"] .cat-total-amount,
+html[data-theme="holographic"] .cat-total-amount.liability {
+  color: var(--ink-900);
 }
 
-html[data-theme="holographic"] .cat-total-amount.liability {
-  color: #b23f76;
+html[data-theme="holographic"] .cat-total-amount.estimated {
+  color: var(--c-ink-mute);
 }
+
+html[data-theme="holographic"] .cat-est-track {
+  background: var(--holo-rule);
+  box-shadow: none;
+}
+
+html[data-theme="holographic"] .cat-est-rule.is-up .cat-est-fill { background: var(--emerald-500); }
+html[data-theme="holographic"] .cat-est-rule.is-up .cat-est-pct { color: var(--emerald-700); }
 
 html[data-theme="holographic"] .cat-card-add {
   min-height: 82px;

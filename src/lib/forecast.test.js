@@ -3,6 +3,8 @@ import {
   MAX_FORECAST_MONTHS,
   buildAccountModels,
   customForecastCount,
+  estimateProgress,
+  estimateRecordedMonth,
   generateForecast,
   monthIndex,
 } from './forecast'
@@ -189,5 +191,39 @@ describe('forecast primitives', () => {
     expect(forecast[0].accounts.brokerage).toBeGreaterThan(1450)
     expect(forecast[0].netWorth).toBe(forecast[0].accounts.brokerage - 400)
     expect(forecast[1].accounts.visa).toBeLessThan(400)
+  })
+})
+
+describe('estimateRecordedMonth', () => {
+  const estCategories = [{ id: 'c', contributing: true, accounts: [{ id: 'a' }, { id: 'b' }] }]
+  const models = { a: { annual: 0, contribution: 100 }, b: { annual: 0, contribution: 0 } }
+  const snapshots = { '2026-01': { a: 1000 }, '2026-03': { a: 1300, b: 50 } }
+
+  it('walks the last recorded balance forward to the month', () => {
+    const est = estimateRecordedMonth(estCategories, models, snapshots, {}, ['2026-01', '2026-03'], '2026-03')
+    expect(est.a).toBe(1200)
+    expect(est.b).toBeNull()
+  })
+
+  it('uses a month’s own contribution when recorded', () => {
+    const est = estimateRecordedMonth(estCategories, models, snapshots, { '2026-03': { a: 500 } }, ['2026-01', '2026-03'], '2026-03')
+    expect(est.a).toBe(1600)
+  })
+})
+
+describe('estimateProgress', () => {
+  it('is green and full when an asset meets its estimate', () => {
+    expect(estimateProgress(110, 100)).toEqual({ status: 'up', pct: 10, fill: 1 })
+  })
+  it('is red up to how far an asset got', () => {
+    expect(estimateProgress(75, 100)).toEqual({ status: 'down', pct: -25, fill: 0.75 })
+  })
+  it('treats a liability below its estimate as met', () => {
+    expect(estimateProgress(90, 100, true).status).toBe('up')
+    expect(estimateProgress(125, 100, true)).toEqual({ status: 'down', pct: -25, fill: 0.8 })
+  })
+  it('is neutral without an estimate or a balance', () => {
+    expect(estimateProgress(100, null).status).toBe('neutral')
+    expect(estimateProgress(null, 100).status).toBe('neutral')
   })
 })

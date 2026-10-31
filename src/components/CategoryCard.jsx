@@ -1,11 +1,46 @@
 import { useState, useCallback, useEffect, useLayoutEffect, useRef } from 'react'
 import { formatCurrency, parseAmount } from '../utils'
+import { estimateProgress } from '../lib/forecast'
 
 function formatDisplay(raw) {
   if (raw === '' || raw == null) return ''
   const n = parseAmount(raw)
   if (n === 0 && raw === '') return ''
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+}
+
+function formatPct(pct) {
+  if (pct == null) return '—'
+  const rounded = Math.round(pct * 10) / 10
+  if (rounded === 0) return '0%'
+  return `${rounded > 0 ? '+' : '−'}${Math.abs(rounded).toLocaleString('en-US', { maximumFractionDigits: 1 })}%`
+}
+
+// The rule under each account doubles as an estimate indicator: green when the
+// balance met its estimate, red up to how far it got when it fell short, grey
+// for projected months. Tapping it opens the % and the estimate itself.
+function EstimateRule({ progress, estimate, expanded, onToggle, accountName }) {
+  const { status, pct, fill } = progress
+  const width = status === 'neutral' ? 0 : fill * 100
+  return (
+    <button
+      type="button"
+      className={`cat-est-rule is-${status}${expanded ? ' is-open' : ''}`}
+      onClick={onToggle}
+      aria-expanded={expanded}
+      aria-label={`${accountName}: ${formatPct(pct)} versus estimate${estimate != null ? ` of ${formatCurrency(estimate)}` : ''}`}
+    >
+      <span className="cat-est-detail" aria-hidden="true">
+        <span className="cat-est-detail-inner">
+          <span className="cat-est-pct">{formatPct(pct)}</span>
+          <span className="cat-est-value">{estimate != null ? formatCurrency(estimate) : 'No estimate'}</span>
+        </span>
+      </span>
+      <span className="cat-est-track" aria-hidden="true">
+        <span className="cat-est-fill" style={{ width: `${width}%` }} />
+      </span>
+    </button>
+  )
 }
 
 function valuesFor(accounts, source) {
@@ -16,11 +51,14 @@ function valuesFor(accounts, source) {
   return values
 }
 
-export default function CategoryCard({ category, snapshot, contributions = {}, contribEstimates = {}, onUpdate, onContributionChange, onEdit, estimated = false, estimates = {}, month, refreshToken = 0 }) {
+export default function CategoryCard({ category, snapshot, contributions = {}, contribEstimates = {}, onUpdate, onContributionChange, onEdit, estimated = false, estimates = {}, recordedEstimates = null, month, refreshToken = 0 }) {
   const [values, setValues] = useState(() => valuesFor(category.accounts, snapshot))
   // Monthly contribution edits for the selected month (each month is independent).
   const [contribs, setContribs] = useState(() => valuesFor(category.accounts, contributions))
   const [focused, setFocused] = useState(null)
+  const [estOpen, setEstOpen] = useState(false)
+  const toggleEst = useCallback(() => setEstOpen(open => !open), [])
+  const isLiability = category.type === 'liability'
   const previousMonthRef = useRef(month)
   const numberMotionTimerRef = useRef(null)
   const [numberMotion, setNumberMotion] = useState({ id: 0, active: false })
@@ -62,6 +100,25 @@ export default function CategoryCard({ category, snapshot, contributions = {}, c
       }, 0)
     : category.accounts.reduce((s, a) => s + parseAmount(values[a.id] || '0'), 0)
 
+  // Per-account estimate and how the balance tracked against it. Projected
+  // months compare the projection with itself, so they stay neutral at 0%.
+  const estimateFor = (acc) => {
+    if (estimated) {
+      const ov = values[acc.id]
+      return ov != null && ov !== '' ? parseAmount(ov) : (estimates?.[acc.id] || 0)
+    }
+    return recordedEstimates?.[acc.id] ?? null
+  }
+  const progressFor = (acc, est) => {
+    if (estimated) return { status: 'neutral', pct: 0, fill: 0 }
+    const raw = values[acc.id]
+    const actual = raw != null && raw !== '' ? parseAmount(raw) : null
+    return estimateProgress(actual, est, isLiability)
+  }
+  const accountEstimates = category.accounts.map(estimateFor)
+  const knownEstimates = accountEstimates.filter(v => v != null)
+  const estimateTotal = knownEstimates.length ? knownEstimates.reduce((s, v) => s + v, 0) : null
+
   const handleBlur = useCallback(() => {
     setFocused(null)
     const entries = {}
@@ -95,7 +152,7 @@ export default function CategoryCard({ category, snapshot, contributions = {}, c
       {/* Accounts */}
       {category.accounts.length > 0 ? (
         <div className="cat-accounts">
-          {category.accounts.map(acc => (
+          {category.accounts.map((acc, i) => (
             <div key={acc.id} className="cat-account-block">
               <div className="cat-account-row">
                 <span className="cat-account-name">{acc.name}</span>
@@ -173,6 +230,13 @@ export default function CategoryCard({ category, snapshot, contributions = {}, c
                   })()}
                 </div>
               )}
+              <EstimateRule
+                progress={progressFor(acc, accountEstimates[i])}
+                estimate={accountEstimates[i]}
+                expanded={estOpen}
+                onToggle={toggleEst}
+                accountName={acc.name}
+              />
             </div>
           ))}
 
@@ -185,6 +249,12 @@ export default function CategoryCard({ category, snapshot, contributions = {}, c
             >
               {formatCurrency(total)}{estimated ? ' (est)' : ''}
             </span>
+          </div>
+          <div className={`cat-est-total${estOpen ? ' is-open' : ''}`} aria-hidden={!estOpen}>
+            <div className="cat-est-total-inner">
+              <span className="cat-est-total-label">Estimated</span>
+              <span className="cat-est-total-amount">{estimateTotal != null ? formatCurrency(estimateTotal) : '—'}</span>
+            </div>
           </div>
         </div>
       ) : (

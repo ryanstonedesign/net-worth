@@ -858,9 +858,139 @@
 /* Each account block is separated by an engraved rule — a chiselled groove
    with a light lip below it — including the last one, whose rule reads as the
    line above the category total. */
+/* The rule is drawn by .cat-est-rule, which doubles as the estimate
+   indicator, so the block itself carries no border. */
 .cat-account-block {
-  border-bottom: 1px solid var(--rule-engraved-color);
+  border-bottom: none;
+  box-shadow: none;
+}
+
+/* Estimate indicator. At rest it is the 1px engraved rule between accounts
+   (its padding is a larger tap target, cancelled by negative margins so it
+   adds no height). Green fills the rule when the balance met its estimate;
+   red fills it up to how far the balance got when it fell short; projected
+   months stay grey. Open, it grows to show the % against the estimate on the
+   left and the estimate itself on the right, under the actual value. */
+.cat-est-rule {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  margin: -6px 0;
+  padding: 6px 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cat-est-rule.is-open {
+  margin: 0;
+  padding: 0 0 8px;
+}
+
+.cat-est-detail {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--duration-fast, 160ms) var(--ease-standard, ease);
+}
+
+.cat-est-rule.is-open .cat-est-detail { grid-template-rows: 1fr; }
+
+.cat-est-detail-inner {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3, 12px);
+  min-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity var(--duration-fast, 160ms) var(--ease-standard, ease);
+}
+
+.cat-est-rule.is-open .cat-est-detail-inner {
+  padding: 0 0 8px;
+  opacity: 1;
+}
+
+.cat-est-pct,
+.cat-est-value {
+  font-family: var(--font-interface);
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--c-ink-mute);
+}
+
+.cat-est-rule.is-up .cat-est-pct { color: var(--c-tertiary); }
+.cat-est-rule.is-down .cat-est-pct { color: var(--c-danger); }
+
+.cat-est-track {
+  position: relative;
+  display: block;
+  height: 1px;
+  overflow: hidden;
+  background: var(--rule-engraved-color);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
+  transition:
+    height var(--duration-fast, 160ms) var(--ease-standard, ease),
+    border-radius var(--duration-fast, 160ms) var(--ease-standard, ease);
+}
+
+.cat-est-rule.is-open .cat-est-track {
+  height: 6px;
+  border-radius: 999px;
+}
+
+.cat-est-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: block;
+  transition: width var(--duration-fast, 160ms) var(--ease-standard, ease);
+}
+
+.cat-est-rule.is-up .cat-est-fill { background: var(--c-tertiary); }
+.cat-est-rule.is-down .cat-est-fill { background: var(--c-danger); }
+
+/* Estimated total, shown under the category total while the rules are open. */
+.cat-est-total {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--duration-fast, 160ms) var(--ease-standard, ease);
+}
+
+.cat-est-total.is-open { grid-template-rows: 1fr; }
+
+.cat-est-total-inner {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  min-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity var(--duration-fast, 160ms) var(--ease-standard, ease);
+}
+
+.cat-est-total.is-open .cat-est-total-inner {
+  padding: 2px 0 2px;
+  opacity: 1;
+}
+
+.cat-est-total-label,
+.cat-est-total-amount {
+  font-family: var(--font-interface);
+  font-size: 12px;
+  color: var(--c-ink-mute);
+}
+
+.cat-est-total-label { font-weight: 500; }
+
+.cat-est-total-amount {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums lining-nums;
 }
 
 .cat-account-row {
@@ -967,7 +1097,7 @@
 }
 
 .cat-total-amount.liability {
-  color: var(--c-danger);
+  color: var(--c-ink);
 }
 
 .cat-total-amount.estimated {

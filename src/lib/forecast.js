@@ -127,3 +127,56 @@ export function generateForecast(categories, models, overrides, contributionOver
 
   return output
 }
+
+// What the model expected each account to read in a recorded month: the
+// account's most recent earlier recorded balance, walked forward with the same
+// growth and contribution rules the forecast uses. Accounts with no earlier
+// recorded balance have nothing to compare against and come back null.
+export function estimateRecordedMonth(categories, models, snapshots, contributions, historyMonths, month) {
+  const target = monthIndex(month)
+  const estimates = {}
+  if (target == null) return estimates
+  const earlier = (historyMonths || []).filter(m => m < month).sort()
+
+  for (const category of categories || []) {
+    for (const account of category.accounts || []) {
+      const model = models?.[account.id]
+      let prevMonth = null
+      for (let i = earlier.length - 1; i >= 0; i -= 1) {
+        if (snapshots?.[earlier[i]]?.[account.id] != null) { prevMonth = earlier[i]; break }
+      }
+      if (!model || prevMonth == null) { estimates[account.id] = null; continue }
+
+      const monthlyRate = Math.pow(1 + model.annual, 1 / 12) - 1
+      let value = snapshots[prevMonth][account.id]
+      const steps = target - monthIndex(prevMonth)
+      for (let step = 1; step <= steps; step += 1) {
+        const m = getAdjacentMonth(prevMonth, step)
+        const contributionOverride = contributions?.[m]?.[account.id]
+        const contribution = category.contributing
+          ? (contributionOverride != null ? contributionOverride : model.contribution)
+          : 0
+        value = Math.max(0, Math.round(value * (1 + monthlyRate) + contribution))
+      }
+      estimates[account.id] = value
+    }
+  }
+
+  return estimates
+}
+
+// How a recorded balance compares with its estimate. `pct` is signed so that
+// positive is always the good direction — above estimate for an asset, below it
+// for a liability. `fill` is how much of the bar a missed estimate reaches.
+export function estimateProgress(actual, estimate, liability = false) {
+  if (actual == null || estimate == null) return { status: 'neutral', pct: null, fill: 0 }
+  const diff = liability ? estimate - actual : actual - estimate
+  const met = diff >= 0
+  const pct = estimate !== 0 ? (diff / Math.abs(estimate)) * 100 : (diff === 0 ? 0 : null)
+  let fill = 1
+  if (!met) {
+    const ratio = liability ? (actual > 0 ? estimate / actual : 0) : (estimate > 0 ? actual / estimate : 0)
+    fill = Math.min(1, Math.max(0, ratio))
+  }
+  return { status: met ? 'up' : 'down', pct, fill }
+}

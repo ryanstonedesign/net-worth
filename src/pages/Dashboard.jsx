@@ -10,6 +10,7 @@ import {
   MAX_FORECAST_MONTHS,
   buildAccountModels,
   customForecastCount,
+  estimateRecordedMonth,
   generateForecast,
   monthIndex,
 } from '../lib/forecast'
@@ -222,6 +223,11 @@ export default function Dashboard({
   const estDelta        = isEstimated ? valueAt(selectedMonth) - valueAt(getAdjacentMonth(selectedMonth, -1)) : null
   // Per-account projected balances for the selected month (estimated months only).
   const monthEstimates  = isEstimated ? (forecastByMonth[selectedMonth]?.accounts ?? {}) : null
+  // Recorded months: what the model expected each account to read, so the
+  // cards can show how the actual balance tracked against it.
+  const recordedEstimates = isEstimated
+    ? null
+    : estimateRecordedMonth(data.categories, accountModels, data.snapshots, data.contributions || {}, history.map(h => h.month), selectedMonth)
 
   // Writing a balance to an estimated month that's at/before the current month
   // turns it into real history — which would drop every other (still-empty)
@@ -388,6 +394,7 @@ export default function Dashboard({
             snapshot={snapshot}
             estimated={isEstimated}
             estimates={monthEstimates}
+            recordedEstimates={recordedEstimates}
             contributions={contribSnapshot}
             contribEstimates={contribAverages}
             onUpdate={handleSnapshotUpdate}
