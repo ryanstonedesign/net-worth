@@ -892,42 +892,6 @@
   padding: 0 0 8px;
 }
 
-.cat-est-detail {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows var(--duration-fast, 160ms) var(--ease-standard, ease);
-}
-
-.cat-est-rule.is-open .cat-est-detail { grid-template-rows: 1fr; }
-
-.cat-est-detail-inner {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-3, 12px);
-  min-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transition: opacity var(--duration-fast, 160ms) var(--ease-standard, ease);
-}
-
-.cat-est-rule.is-open .cat-est-detail-inner {
-  padding: 0 0 8px;
-  opacity: 1;
-}
-
-.cat-est-pct,
-.cat-est-value {
-  font-family: var(--font-interface);
-  font-size: 12px;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums lining-nums;
-  color: var(--c-ink-mute);
-}
-
-.cat-est-rule.is-up .cat-est-pct { color: var(--c-tertiary); }
-.cat-est-rule.is-down .cat-est-pct { color: var(--c-danger); }
-
 .cat-est-track {
   position: relative;
   display: block;
@@ -941,8 +905,9 @@
 }
 
 .cat-est-rule.is-open .cat-est-track {
-  height: 6px;
+  height: 24px;
   border-radius: 999px;
+  box-shadow: none;
 }
 
 .cat-est-fill {
@@ -954,6 +919,32 @@
 
 .cat-est-rule.is-up .cat-est-fill { background: var(--c-tertiary); }
 .cat-est-rule.is-down .cat-est-fill { background: var(--c-danger); }
+
+/* The % and the estimate sit inside the open bar: secondary text over the grey
+   track, white over the green or red fill (the white copy is clipped to the
+   fill's width inline). */
+.cat-est-labels {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3, 12px);
+  padding: 0 10px;
+  font-family: var(--font-interface);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--c-ink-mute);
+  opacity: 0;
+  transition: opacity var(--duration-fast, 160ms) var(--ease-standard, ease);
+}
+
+.cat-est-labels.is-inverse { color: #fff; }
+
+.cat-est-rule.is-open .cat-est-labels { opacity: 1; }
 
 /* Estimated total, shown under the category total while the rules are open. */
 .cat-est-total {

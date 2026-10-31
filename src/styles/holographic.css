@@ -1247,7 +1247,6 @@ html[data-theme="holographic"] .cat-est-track {
 }
 
 html[data-theme="holographic"] .cat-est-rule.is-up .cat-est-fill { background: var(--emerald-500); }
-html[data-theme="holographic"] .cat-est-rule.is-up .cat-est-pct { color: var(--emerald-700); }
 
 html[data-theme="holographic"] .cat-card-add {
   min-height: 82px;

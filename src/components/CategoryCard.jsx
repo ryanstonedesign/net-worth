@@ -22,6 +22,12 @@ function formatPct(pct) {
 function EstimateRule({ progress, estimate, expanded, onToggle, accountName }) {
   const { status, pct, fill } = progress
   const width = status === 'neutral' ? 0 : fill * 100
+  const labels = (variant, style) => (
+    <span className={`cat-est-labels${variant}`} style={style}>
+      <span>{formatPct(pct)}</span>
+      <span>{estimate != null ? formatCurrency(estimate) : 'No estimate'}</span>
+    </span>
+  )
   return (
     <button
       type="button"
@@ -30,14 +36,12 @@ function EstimateRule({ progress, estimate, expanded, onToggle, accountName }) {
       aria-expanded={expanded}
       aria-label={`${accountName}: ${formatPct(pct)} versus estimate${estimate != null ? ` of ${formatCurrency(estimate)}` : ''}`}
     >
-      <span className="cat-est-detail" aria-hidden="true">
-        <span className="cat-est-detail-inner">
-          <span className="cat-est-pct">{formatPct(pct)}</span>
-          <span className="cat-est-value">{estimate != null ? formatCurrency(estimate) : 'No estimate'}</span>
-        </span>
-      </span>
       <span className="cat-est-track" aria-hidden="true">
         <span className="cat-est-fill" style={{ width: `${width}%` }} />
+        {labels('')}
+        {/* White copy of the labels, clipped to the fill, so a label that
+            straddles the fill's edge flips colour exactly at the edge. */}
+        {labels(' is-inverse', { clipPath: `inset(0 ${100 - width}% 0 0)` })}
       </span>
     </button>
   )
